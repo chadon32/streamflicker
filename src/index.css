@@ -28,10 +28,12 @@
     font-family: var(--font-sans);
     background-color: var(--surface-page);
     color: var(--text-primary);
-    overflow-x: hidden;
+    /* Clip horizontal bleed without creating a second scroll container. */
+    overflow-x: clip;
+    overflow-y: auto;
     min-height: 100dvh;
     -webkit-text-size-adjust: 100%;
-    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
