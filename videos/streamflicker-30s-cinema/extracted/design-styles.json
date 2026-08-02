@@ -1,0 +1,301 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Outfit",
+      "fontSize": "60px",
+      "fontWeight": "900",
+      "lineHeight": "63px",
+      "letterSpacing": "-1.5px",
+      "color": "#FFFFFF",
+      "sampleText": "Scream 7"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Outfit",
+      "fontSize": "24px",
+      "fontWeight": "900",
+      "lineHeight": "32px",
+      "letterSpacing": "-0.6px",
+      "color": "#FFFFFF",
+      "sampleText": "Recent catalog highlights"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "Outfit",
+      "fontSize": "16px",
+      "fontWeight": "700",
+      "lineHeight": "24px",
+      "letterSpacing": "-0.4px",
+      "color": "oklch(0.967 0.001 286.375)",
+      "sampleText": "Scream 7"
+    },
+    {
+      "role": "body",
+      "fontFamily": "Inter",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "26px",
+      "letterSpacing": "normal",
+      "color": "oklch(0.871 0.006 286.286)",
+      "sampleText": "When a new Ghostface killer emerges in the quiet town where "
+    },
+    {
+      "role": "link",
+      "fontFamily": "Inter",
+      "fontSize": "14px",
+      "fontWeight": "700",
+      "lineHeight": "20px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "Skip to movie discovery"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      20,
+      24,
+      32
+    ],
+    "baseUnit": 4
+  },
+  "radius": [
+    "4px",
+    "8px",
+    "12px",
+    "16px",
+    "3.35544e+07px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px",
+      "count": 9
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 4px 6px -1px, rgba(0, 0, 0, 0.1) 0px 2px 4px -2px",
+      "count": 3
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.586 0.241177 0.0764364 / 0.2) 0px 4px 6px -1px, oklab(0.586 0.241177 0.0764364 / 0.2) 0px 2px 4px -2px",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.586 0.241177 0.0764364 / 0.4) 0px 20px 25px -5px, oklab(0.586 0.241177 0.0764364 / 0.4) 0px 8px 10px -6px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "StreamFlickerInstant Trailers & Streamin",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "oklch(0.967 0.001 286.375)",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px solid oklch(0.967 0.001 286.375)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "43px"
+    },
+    {
+      "label": "Watchlist",
+      "background": "oklab(0.21 0.00164225 -0.00577088 / 0.8)",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "oklch(0.92 0.004 286.32)",
+      "padding": "10px 16px",
+      "borderRadius": "3.35544e+07px",
+      "border": "1px solid oklch(0.274 0.006 286.033)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px",
+      "fontSize": "14px",
+      "fontWeight": "500",
+      "height": "42px"
+    },
+    {
+      "label": "Sign In",
+      "background": "oklch(0.586 0.253 17.585)",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "8px 16px",
+      "borderRadius": "3.35544e+07px",
+      "border": "0px solid rgb(255, 255, 255)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.586 0.241177 0.0764364 / 0.2) 0px 4px 6px -1px, oklab(0.586 0.241177 0.0764364 / 0.2) 0px 2px 4px -2px",
+      "fontSize": "14px",
+      "fontWeight": "700",
+      "height": "36px"
+    },
+    {
+      "label": "Watch Trailer",
+      "background": "transparent",
+      "backgroundImage": "linear-gradient(to right, oklch(0.586 0.253 17.585) 0%, oklch(0.645 0.246 16.439) 100%)",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "14px 28px",
+      "borderRadius": "16px",
+      "border": "0px solid rgb(255, 255, 255)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.586 0.241177 0.0764364 / 0.4) 0px 20px 25px -5px, oklab(0.586 0.241177 0.0764364 / 0.4) 0px 8px 10px -6px",
+      "fontSize": "16px",
+      "fontWeight": "700",
+      "height": "52px"
+    },
+    {
+      "label": "Add to Watchlist",
+      "background": "oklab(0.21 0.00164225 -0.00577088 / 0.8)",
+      "backgroundImage": "",
+      "backdropFilter": "blur(12px)",
+      "color": "oklch(0.92 0.004 286.32)",
+      "padding": "14px 20px",
+      "borderRadius": "16px",
+      "border": "1px solid oklch(0.274 0.006 286.033)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "600",
+      "height": "50px"
+    },
+    {
+      "label": "All Years (1799)",
+      "background": "oklch(0.586 0.253 17.585)",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "6px 14px",
+      "borderRadius": "12px",
+      "border": "1px solid oklch(0.645 0.246 16.439)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, oklab(0.586 0.241177 0.0764364 / 0.3) 0px 10px 15px -3px, oklab(0.586 0.241177 0.0764364 / 0.3) 0px 4px 6px -4px",
+      "fontSize": "12px",
+      "fontWeight": "700",
+      "height": "30px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#121218",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "oklch(0.967 0.001 286.375)",
+      "padding": "16px",
+      "borderRadius": "16px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "rgba(15, 7, 12, 0.18) 0px 16px 50px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "136px"
+    },
+    {
+      "label": "card",
+      "background": "#121218",
+      "backgroundImage": "",
+      "backdropFilter": "blur(16px)",
+      "color": "oklch(0.967 0.001 286.375)",
+      "padding": "0px",
+      "borderRadius": "16px",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "541px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#070709",
+    "backgroundImage": "",
+    "backdropFilter": "blur(20px)",
+    "color": "oklch(0.967 0.001 286.375)",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "81px"
+  },
+  "chips": [
+    {
+      "label": "Featured movie",
+      "background": "oklab(0.645 0.235944 0.0696166 / 0.2)",
+      "color": "oklch(0.712 0.194 13.428)",
+      "padding": "4px 12px",
+      "borderRadius": "3.35544e+07px",
+      "border": "1px solid oklab(0.645 0.235944 0.0696166 / 0.4)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "26px"
+    },
+    {
+      "label": "#Slasher",
+      "background": "oklab(0.21 0.00164225 -0.00577088 / 0.9)",
+      "color": "oklch(0.871 0.006 286.286)",
+      "padding": "4px 12px",
+      "borderRadius": "3.35544e+07px",
+      "border": "1px solid oklch(0.274 0.006 286.033)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "height": "26px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "linear-gradient(to top, oklch(0.141 0.005 285.823) 0%, oklab(0.141 0.00136333 -0.00481054 / 0.2) 50%, rgba(0, 0, 0, 0) 100%)",
+      "area": 1497690
+    },
+    {
+      "value": "linear-gradient(to top, oklch(0.141 0.005 285.823) 0%, oklab(0.141 0.00136333 -0.00481054 / 0.7) 50%, rgba(0, 0, 0, 0) 100%)",
+      "area": 725972
+    },
+    {
+      "value": "linear-gradient(to right, oklch(0.141 0.005 285.823) 0%, oklab(0.141 0.00136333 -0.00481054 / 0.8) 50%, rgba(0, 0, 0, 0) 100%)",
+      "area": 544479
+    },
+    {
+      "value": "linear-gradient(oklab(0.21 0.00164225 -0.00577088 / 0.4) 0%, oklab(0.141 0.00136333 -0.00481054 / 0.9) 100%)",
+      "area": 532383
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(16px)",
+      "background": "rgba(18, 18, 24, 0.65)",
+      "border": "1px solid rgba(255, 255, 255, 0.08)",
+      "borderRadius": "16px",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 20px 25px -5px, rgba(0, 0, 0, 0.1) 0px 8px 10px -6px",
+      "area": 2911740
+    },
+    {
+      "backdropFilter": "blur(20px)",
+      "background": "rgba(7, 7, 9, 0.88)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 155520
+    },
+    {
+      "backdropFilter": "blur(12px)",
+      "background": "oklab(0.21 0.00164225 -0.00577088 / 0.7)",
+      "border": "1px solid oklab(0.274 0.00165715 -0.00576662 / 0.8)",
+      "borderRadius": "16px",
+      "boxShadow": "",
+      "area": 13359
+    }
+  ]
+}

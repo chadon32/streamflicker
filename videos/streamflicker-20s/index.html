@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFlicker — 20-Second Product Promo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: #070709;
+      }
+
+      #streamflicker-promo {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background-color: #070709;
+      }
+
+      .transition {
+        position: absolute;
+        inset: 0;
+        z-index: 100;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .transition-surface {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        background-color: #ec003f;
+        will-change: transform;
+      }
+
+      .transition-mark {
+        width: 0;
+        height: 0;
+        margin-left: 18px;
+        border-top: 50px solid rgba(244, 244, 245, 0);
+        border-bottom: 50px solid rgba(244, 244, 245, 0);
+        border-left: 78px solid #f4f4f5;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-wec5" id="streamflicker-promo" data-composition-id="streamflicker-promo" data-width="1920" data-height="1080" data-start="0" data-duration="20">
+      <audio data-hf-id="hf-a3zi" id="narration" src="narration.wav" data-start="0" data-duration="20" data-track-index="0" data-volume="1"></audio>
+
+      <audio data-hf-id="hf-l2mp" id="underscore" src="underscore.wav" data-start="0" data-duration="20" data-track-index="3" data-volume="0.16"></audio>
+
+      <div data-hf-id="hf-09z4" id="beat-1" data-composition-id="beat-1-hook" data-composition-src="compositions/beat-1-hook.html" data-start="0" data-duration="3.18" data-track-index="1"></div>
+
+      <div data-hf-id="hf-8wd9" id="beat-2" data-composition-id="beat-2-filters" data-composition-src="compositions/beat-2-filters.html" data-start="3.18" data-duration="2.93" data-track-index="1"></div>
+
+      <div data-hf-id="hf-ifgr" id="beat-3" data-composition-id="beat-3-discovery" data-composition-src="compositions/beat-3-discovery.html" data-start="6.11" data-duration="2.65" data-track-index="1"></div>
+
+      <div data-hf-id="hf-609w" id="beat-4" data-composition-id="beat-4-actions" data-composition-src="compositions/beat-4-actions.html" data-start="8.76" data-duration="3.76" data-track-index="1"></div>
+
+      <div data-hf-id="hf-28k7" id="beat-5" data-composition-id="beat-5-resolve" data-composition-src="compositions/beat-5-resolve.html" data-start="12.52" data-duration="7.48" data-track-index="1"></div>
+
+      <div data-hf-id="hf-4kr4" id="transition-1" class="clip transition" data-start="2.98" data-duration="0.4" data-track-index="10">
+        <div data-hf-id="hf-ftmb" class="transition-surface">
+          <div data-hf-id="hf-myk9" class="transition-mark"></div>
+        </div>
+      </div>
+      <div data-hf-id="hf-irjm" id="transition-2" class="clip transition" data-start="5.91" data-duration="0.4" data-track-index="11">
+        <div data-hf-id="hf-4ys3" class="transition-surface">
+          <div data-hf-id="hf-lr9p" class="transition-mark"></div>
+        </div>
+      </div>
+      <div data-hf-id="hf-0g7s" id="transition-3" class="clip transition" data-start="8.56" data-duration="0.4" data-track-index="12">
+        <div data-hf-id="hf-4kh2" class="transition-surface">
+          <div data-hf-id="hf-my6s" class="transition-mark"></div>
+        </div>
+      </div>
+      <div data-hf-id="hf-ymb9" id="transition-4" class="clip transition" data-start="12.32" data-duration="0.4" data-track-index="13">
+        <div data-hf-id="hf-4661" class="transition-surface">
+          <div data-hf-id="hf-mjvr" class="transition-mark"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      [
+        { selector: "#transition-1 .transition-surface", start: 2.98 },
+        { selector: "#transition-2 .transition-surface", start: 5.91 },
+        { selector: "#transition-3 .transition-surface", start: 8.56 },
+        { selector: "#transition-4 .transition-surface", start: 12.32 },
+      ].forEach(function (item) {
+        tl.fromTo(
+          item.selector,
+          { scaleX: 0, transformOrigin: "left center" },
+          { scaleX: 1, duration: 0.2, ease: "power4.in" },
+          item.start,
+        );
+        tl.to(
+          item.selector,
+          { scaleX: 0, transformOrigin: "right center", duration: 0.2, ease: "power4.out" },
+          item.start + 0.2,
+        );
+      });
+
+      window.__timelines["streamflicker-promo"] = tl;
+    </script>
+  </body>
+</html>

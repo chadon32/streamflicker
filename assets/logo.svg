@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="streamflicker-mark" x1="178" y1="168" x2="846" y2="870" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fb7185"/>
+      <stop offset="0.52" stop-color="#e11d48"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect x="180" y="180" width="664" height="664" rx="196" fill="url(#streamflicker-mark)"/>
+  <path d="M441 357.5C421.667 346.342 397.5 360.29 397.5 382.61V641.39C397.5 663.71 421.667 677.658 441 666.5L664.5 537.52C683.833 526.362 683.833 497.638 664.5 486.48L441 357.5Z" fill="white"/>
+</svg>

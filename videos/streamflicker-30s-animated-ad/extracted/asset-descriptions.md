@@ -1,0 +1,107 @@
+# Asset Descriptions
+
+⚠️  GEMINI_API_KEY not set — descriptions below are catalog-derived (alt text, headings, section context, filename) instead of Vision-generated. To get richer Vision descriptions on the next capture, set GEMINI_API_KEY (or GOOGLE_API_KEY) and re-run.
+
+The `logo-<hash>.svg` filename prefix is a structural hint (DOM said this SVG was inside a `<header>`, home-link `<a>`, or had an aria-label matching the page brand). To pick the actual brand logo without Vision, open the `logo-*` candidates in a previewer or rasterize them with `sharp` before referencing — composing a fake logo ships off-brand in the final video.
+
+- 28-days-later-poster.jpg — 64KB, 28 days later poster
+- a-quiet-place-day-one-poster.jpg — 47KB, a quiet place day one poster
+- alien-autopsy-poster.jpg — 60KB, alien autopsy poster
+- alien-contact-government-coverup-poster.jpg — 74KB, alien contact government coverup poster
+- alien-earths-poster.jpg — 55KB, alien earths poster
+- alien-evolution-poster.jpg — 18KB, alien evolution poster
+- alien-mind-control-the-ufo-enigma-poster.jpg — 112KB, alien mind control the ufo enigma poster
+- alien-planet-poster.jpg — 27KB, alien planet poster
+- alien-poster.jpg — 44KB, alien poster
+- alien-romulus-poster.jpg — 41KB, alien romulus poster
+- avatar-fire-and-ash-poster.jpg — 119KB, avatar fire and ash poster
+- avengers-doomsday-poster.jpg — 101KB, avengers doomsday poster
+- blade-runner-2049-poster.jpg — 84KB, blade runner 2049 poster
+- dawn-of-the-dead-poster.jpg — 101KB, dawn of the dead poster
+- found-footage-festival-volume-3-live-in-.jpg — 163KB, found footage festival volume 3 live in 
+- frogrobot-poster.jpg — 125KB, frogrobot poster
+- godzilla-x-kong-the-new-empire-poster.jpg — 34KB, godzilla x kong the new empire poster
+- gone-girl-poster.jpg — 35KB, gone girl poster
+- i-am-legend-poster.jpg — 83KB, i am legend poster
+- i-hate-found-footage-poster.jpg — 119KB, i hate found footage poster
+- inception-poster.jpg — 105KB, inception poster
+- interstellar-poster.jpg — 80KB, interstellar poster
+- john-wick-poster.jpg — 65KB, john wick poster
+- mad-max-fury-road-poster.jpg — 114KB, mad max fury road poster
+- meeting-macguffin-poster.jpg — 128KB, meeting macguffin poster
+- men-in-black-ii-barry-sonnenfelds-interg.jpg — 44KB, men in black ii barry sonnenfelds interg
+- mickey-17-poster.jpg — 55KB, mickey 17 poster
+- napoleon-poster.jpg — 69KB, napoleon poster
+- paranormal-activity-8-poster.jpg — 22KB, paranormal activity 8 poster
+- parasite-poster.jpg — 89KB, parasite poster
+- parasites-of-profit-the-pandemic-of-priv.jpg — 63KB, parasites of profit the pandemic of priv
+- predator-badlands-poster.jpg — 59KB, predator badlands poster
+- prisoners-poster.jpg — 39KB, prisoners poster
+- rifftrax-live-house-on-haunted-hill-post.jpg — 110KB, rifftrax live house on haunted hill post
+- robot-chicken-star-wars-episode-iii-post.jpg — 83KB, robot chicken star wars episode iii post
+- scream-7-backdrop.jpg — 105KB, scream 7 backdrop
+- scream-7-poster.jpg — 46KB, scream 7 poster
+- scream-and-scream-again-a-history-of-the.jpg — 11KB, scream and scream again a history of the
+- shaun-of-the-dead-poster.jpg — 75KB, shaun of the dead poster
+- shutter-island-poster.jpg — 80KB, shutter island poster
+- spider-man-4-poster.jpg — 100KB, spider man 4 poster
+- superman-classic-poster.jpg — 61KB, superman classic poster
+- superman-poster.jpg — 63KB, superman poster
+- texas-cult-house-poster.jpg — 71KB, texas cult house poster
+- the-alien-saga-poster.jpg — 53KB, the alien saga poster
+- the-conjuring-last-rites-poster.jpg — 80KB, the conjuring last rites poster
+- the-elderly-parasite-or-who-is-marko-bre.jpg — 73KB, the elderly parasite or who is marko bre
+- the-fly-the-abyss-of-mutation-poster.jpg — 105KB, the fly the abyss of mutation poster
+- the-found-footage-festival-volume-2-live.jpg — 132KB, the found footage festival volume 2 live
+- the-ghost-in-the-shell-poster.jpg — 95KB, the ghost in the shell poster
+- the-mandalorian-grogu-poster.jpg — 109KB, the mandalorian grogu poster
+- the-martian-poster.jpg — 92KB, the martian poster
+- the-oral-cigarettes-parasite-dejavu-post.jpg — 86KB, the oral cigarettes parasite dejavu post
+- the-revenant-poster.jpg — 72KB, the revenant poster
+- the-worker-parasite-show-chapter-2-poste.jpg — 80KB, the worker parasite show chapter 2 poste
+- they-call-me-jeeg-poster.jpg — 63KB, they call me jeeg poster
+- thriller-theater-poster.jpg — 125KB, thriller theater poster
+- worker-and-parasite-nap-at-work-poster.jpg — 94KB, worker and parasite nap at work poster
+- world-war-z-poster.jpg — 79KB, world war z poster
+- xma-xtreme-martial-arts-poster.jpg — 72KB, xma xtreme martial arts poster
+- zombieland-poster.jpg — 104KB, zombieland poster
+- svgs/logo-f9310505.svg — logo f9310505
+- svgs/svg-171c1803.svg — svg 171c1803
+- svgs/svg-1be88951.svg — svg 1be88951
+- svgs/svg-1c06740f-2.svg — svg 1c06740f 2
+- svgs/svg-1c06740f.svg — svg 1c06740f
+- svgs/svg-1e058dce-2.svg — svg 1e058dce 2
+- svgs/svg-1e058dce.svg — svg 1e058dce
+- svgs/svg-20af59bc.svg — svg 20af59bc
+- svgs/svg-3ada5bfb-2.svg — svg 3ada5bfb 2
+- svgs/svg-3ada5bfb.svg — svg 3ada5bfb
+- svgs/svg-47ba99ac.svg — svg 47ba99ac
+- svgs/svg-4ce4c38a.svg — svg 4ce4c38a
+- svgs/svg-5383f322.svg — svg 5383f322
+- svgs/svg-56329a4f.svg — svg 56329a4f
+- svgs/svg-5f70d098.svg — svg 5f70d098
+- svgs/svg-6028da4e.svg — svg 6028da4e
+- svgs/svg-652ee059.svg — svg 652ee059
+- svgs/svg-74fefb79.svg — svg 74fefb79
+- svgs/svg-859361a8.svg — svg 859361a8
+- svgs/svg-8db96917-2.svg — svg 8db96917 2
+- svgs/svg-8db96917.svg — svg 8db96917
+- svgs/svg-91788add-2.svg — svg 91788add 2
+- svgs/svg-91788add.svg — svg 91788add
+- svgs/svg-942e5ebd.svg — svg 942e5ebd
+- svgs/svg-9e284a2d.svg — svg 9e284a2d
+- svgs/svg-b2ef4711.svg — svg b2ef4711
+- svgs/svg-bd9e226c-2.svg — svg bd9e226c 2
+- svgs/svg-bd9e226c.svg — svg bd9e226c
+- svgs/svg-ed4e998c.svg — svg ed4e998c
+- svgs/svg-fe694038.svg — svg fe694038
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4bCyC4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf — font file
+- fonts/QGYyz_MVcBeNP4NjuGObqx1XmO1I4ZmyC4E.ttf — font file
+- fonts/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf — font file
+- fonts/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf — font file
+- fonts/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf — font file
+- fonts/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf — font file
+- fonts/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf — font file

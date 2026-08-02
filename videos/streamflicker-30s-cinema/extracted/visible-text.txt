@@ -1,0 +1,781 @@
+[a] Skip to movie discovery
+[span] Stream
+[span] Flicker
+[span] Instant Trailers & Streaming
+[span] Watchlist
+[span] Sign In
+[div] Featured movie
+[h1] Scream 7
+[span] 9.9
+[span] Catalog score
+[span] PG-13
+[span] 2026
+[span] 2h 10m
+[p] When a new Ghostface killer emerges in the quiet town where Sidney Prescott has built a new life, her darkest fears are realized as her daughter becomes the next target. Determined to protect her family, Sidney must face the horrors of her past to put an end to the bloodshed once and for all.
+[span] #Slasher
+[button] Watch Trailer
+[button] Add to Watchlist
+[span] Check availability:
+[a] Max
+[a] Hulu
+[span] Era:
+[button] All Years
+[span] 1799
+[button] 2020s
+[span] 734
+[button] 2010s
+[span] 682
+[button] 2000s
+[span] 358
+[button] Before 2000
+[span] Genre:
+[button] All
+[span] 1799
+[button] Horror
+[span] 346
+[button] Sci-Fi
+[span] 238
+[button] Thriller
+[span] 253
+[button] Action
+[span] 152
+[button] Comedy
+[button] Drama
+[button] Documentary
+[button] Animation
+[button] Other
+[span] 790
+[span] Stream On:
+[button] All Apps
+[button] My Services
+[span] Netflix
+[span] 398
+[span] Prime Video
+[span] 468
+[span] Hulu
+[span] 416
+[span] Apple TV
+[span] 423
+[span] Max
+[span] 382
+[span] Shudder
+[span] 420
+[span] Tubi (Free)
+[span] Paramount+
+[span] 417
+[span] Peacock
+[span] 391
+[span] Evidence-based tags:
+[button] #ZombieOutbreak
+[button] #PostApocalyptic
+[button] #FoundFootage
+[button] #Slasher
+[button] #Psychological
+[button] #SciFiHorror
+[button] #Monsters
+[button] #Vampires
+[button] #HauntedHouse
+[button] #Survival
+[span] 142
+[button] #DarkComedy
+[button] #AlienInvasion
+[button] #MindBending
+[button] #SerialKiller
+[button] #Cyberpunk
+[button] #SpaceExploration
+[button] #BodyHorror
+[button] #MartialArts
+[h2] Recent catalog highlights
+[p] High-scoring recent titles selected from the local catalog
+[span] 9.9
+[p] Play Trailer
+[button] Scream 7
+[span] 2026
+[div] Horror • Thriller
+[span] #Slasher
+[a] MAX
+[a] HULU
+[span] 9.9
+[p] Play Trailer
+[button] The Conjuring: Last Rites
+[span] 2025
+[div] Horror
+[a] HULU
+[a] MAX
+[span] 9.8
+[p] Play Trailer
+[button] Paranormal Activity 8
+[span] 2027
+[div] Horror
+[a] PEACOCK
+[a] SHUDDER
+[span] 9.8
+[p] Play Trailer
+[button] The Fly: The Abyss of Mutation
+[span] 2026
+[div] Thriller
+[a] MAX
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] Godzilla x Kong: The New Empire
+[span] 2024
+[div] Action • Sci-Fi
+[span] #Monsters
+[a] MAX
+[span] 9.8
+[p] Play Trailer
+[button] A Quiet Place: Day One
+[span] 2024
+[div] Sci-Fi
+[span] #Monsters
+[span] #Survival
+[span] 9.7
+[p] Play Trailer
+[button] Alien: Romulus
+[span] 2024
+[div] Horror • Sci-Fi
+[span] #SciFiHorror
+[a] HULU
+[span] 9.5
+[p] Play Trailer
+[button] Avengers: Doomsday
+[span] 2026
+[div] Action • Sci-Fi
+[a] APPLE TV
+[a] HULU
+[span] 9.5
+[p] Play Trailer
+[button] Spider-Man 4
+[span] 2026
+[div] Action • Sci-Fi
+[a] MAX
+[span] 9.5
+[p] Play Trailer
+[button] The Mandalorian & Grogu
+[span] 2026
+[div] Action • Sci-Fi
+[a] PRIME
+[h2] Action Crowd-Pleasers
+[p] High-octane adventures, martial arts, and explosive action
+[span] 9.9
+[p] Play Trailer
+[button] John Wick
+[span] 2014
+[div] Action • Thriller
+[a] MAX
+[span] 9.9
+[p] Play Trailer
+[button] Inception
+[span] 2010
+[div] Sci-Fi • Thriller • Action
+[span] #MindBending
+[a] APPLE TV
+[a] HULU
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] Godzilla x Kong: The New Empire
+[span] 2024
+[div] Action • Sci-Fi
+[span] #Monsters
+[a] MAX
+[span] 9.8
+[p] Play Trailer
+[button] Mad Max: Fury Road
+[span] 2015
+[div] Action • Sci-Fi
+[span] #PostApocalyptic
+[span] #Survival
+[a] PRIME
+[a] MAX
+[span] 9.5
+[p] Play Trailer
+[button] Avengers: Doomsday
+[span] 2026
+[div] Action • Sci-Fi
+[a] APPLE TV
+[a] HULU
+[span] 9.5
+[p] Play Trailer
+[button] Spider-Man 4
+[span] 2026
+[div] Action • Sci-Fi
+[a] MAX
+[span] 9.5
+[p] Play Trailer
+[button] The Mandalorian & Grogu
+[span] 2026
+[div] Action • Sci-Fi
+[a] PRIME
+[span] 9.5
+[p] Play Trailer
+[button] Predator: Badlands
+[span] 2025
+[div] Action • Sci-Fi
+[a] APPLE TV
+[span] 9.5
+[p] Play Trailer
+[button] Avatar: Fire and Ash
+[span] 2025
+[div] Action • Sci-Fi
+[span] #Survival
+[a] MAX
+[a] APPLE TV
+[span] 9.5
+[p] Play Trailer
+[button] Superman
+[span] 2025
+[div] Action • Sci-Fi
+[a] HULU
+[a] PRIME
+[h2] Horror Night
+[p] Zombie outbreaks, slashers, monsters, and supernatural scares
+[span] 9.9
+[p] Play Trailer
+[button] Scream 7
+[span] 2026
+[div] Horror • Thriller
+[span] #Slasher
+[a] MAX
+[a] HULU
+[span] 9.9
+[p] Play Trailer
+[button] The Conjuring: Last Rites
+[span] 2025
+[div] Horror
+[a] HULU
+[a] MAX
+[span] 9.9
+[p] Play Trailer
+[button] I Am Legend
+[span] 2007
+[div] Sci-Fi • Horror • Drama
+[span] #PostApocalyptic
+[span] #SciFiHorror
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] Paranormal Activity 8
+[span] 2027
+[div] Horror
+[a] PEACOCK
+[a] SHUDDER
+[span] 9.8
+[p] Play Trailer
+[button] World War Z
+[span] 2013
+[div] Horror
+[span] #ZombieOutbreak
+[a] HULU
+[span] 9.8
+[p] Play Trailer
+[button] Zombieland
+[span] 2009
+[div] Horror
+[span] #ZombieOutbreak
+[span] #Survival
+[a] PRIME
+[span] 9.8
+[p] Play Trailer
+[button] 28 Days Later
+[span] 2002
+[div] Horror • Sci-Fi • Thriller
+[span] #ZombieOutbreak
+[span] #SciFiHorror
+[a] APPLE TV
+[a] PRIME
+[span] 9.7
+[p] Play Trailer
+[button] Alien: Romulus
+[span] 2024
+[div] Horror • Sci-Fi
+[span] #SciFiHorror
+[a] HULU
+[span] 9.7
+[p] Play Trailer
+[button] Dawn of the Dead
+[span] 2004
+[div] Horror
+[span] #ZombieOutbreak
+[span] #Survival
+[span] 9.7
+[p] Play Trailer
+[button] Shaun of the Dead
+[span] 2004
+[div] Horror • Comedy
+[span] #ZombieOutbreak
+[span] #DarkComedy
+[a] PEACOCK
+[a] PRIME
+[h2] Sci-Fi & Space Adventures
+[p] Cyberpunk futures, alien encounters, and deep-space exploration
+[span] 9.9
+[p] Play Trailer
+[button] Blade Runner 2049
+[span] 2017
+[div] Sci-Fi • Thriller • Drama
+[span] #Cyberpunk
+[a] MAX
+[a] PRIME
+[a] HULU
+[a] APPLE TV
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.9
+[p] Play Trailer
+[button] Interstellar
+[span] 2014
+[div] Sci-Fi • Drama
+[span] #SpaceExploration
+[a] SHUDDER
+[a] HULU
+[a] PEACOCK
+[a] APPLE TV
+[a] MAX
+[span] 9.9
+[p] Play Trailer
+[button] Inception
+[span] 2010
+[div] Sci-Fi • Thriller • Action
+[span] #MindBending
+[a] APPLE TV
+[a] HULU
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.9
+[p] Play Trailer
+[button] I Am Legend
+[span] 2007
+[div] Sci-Fi • Horror • Drama
+[span] #PostApocalyptic
+[span] #SciFiHorror
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] Godzilla x Kong: The New Empire
+[span] 2024
+[div] Action • Sci-Fi
+[span] #Monsters
+[a] MAX
+[span] 9.8
+[p] Play Trailer
+[button] A Quiet Place: Day One
+[span] 2024
+[div] Sci-Fi
+[span] #Monsters
+[span] #Survival
+[span] 9.8
+[p] Play Trailer
+[button] Mad Max: Fury Road
+[span] 2015
+[div] Action • Sci-Fi
+[span] #PostApocalyptic
+[span] #Survival
+[a] PRIME
+[a] MAX
+[span] 9.8
+[p] Play Trailer
+[button] The Martian
+[span] 2015
+[div] Sci-Fi
+[span] #Survival
+[span] #SpaceExploration
+[a] MAX
+[span] 9.8
+[p] Play Trailer
+[button] 28 Days Later
+[span] 2002
+[div] Horror • Sci-Fi • Thriller
+[span] #ZombieOutbreak
+[span] #SciFiHorror
+[a] APPLE TV
+[a] PRIME
+[span] 9.7
+[p] Play Trailer
+[button] Alien: Romulus
+[span] 2024
+[div] Horror • Sci-Fi
+[span] #SciFiHorror
+[a] HULU
+[h2] Edge-of-Your-Seat Thrillers
+[p] Mind games, serial-killer hunts, conspiracies, and suspense
+[span] 9.9
+[p] Play Trailer
+[button] Scream 7
+[span] 2026
+[div] Horror • Thriller
+[span] #Slasher
+[a] MAX
+[a] HULU
+[span] 9.9
+[p] Play Trailer
+[button] Blade Runner 2049
+[span] 2017
+[div] Sci-Fi • Thriller • Drama
+[span] #Cyberpunk
+[a] MAX
+[a] PRIME
+[a] HULU
+[a] APPLE TV
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.9
+[p] Play Trailer
+[button] The Revenant
+[span] 2015
+[div] Drama • Thriller
+[span] #Survival
+[a] MAX
+[a] HULU
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.9
+[p] Play Trailer
+[button] John Wick
+[span] 2014
+[div] Action • Thriller
+[a] MAX
+[span] 9.9
+[p] Play Trailer
+[button] Gone Girl
+[span] 2014
+[div] Thriller • Drama
+[span] #Psychological
+[a] PEACOCK
+[a] HULU
+[span] 9.9
+[p] Play Trailer
+[button] Inception
+[span] 2010
+[div] Sci-Fi • Thriller • Action
+[span] #MindBending
+[a] APPLE TV
+[a] HULU
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] The Fly: The Abyss of Mutation
+[span] 2026
+[div] Thriller
+[a] MAX
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] Prisoners
+[span] 2013
+[div] Thriller • Drama
+[span] #Psychological
+[a] PRIME
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] 28 Days Later
+[span] 2002
+[div] Horror • Sci-Fi • Thriller
+[span] #ZombieOutbreak
+[span] #SciFiHorror
+[a] APPLE TV
+[a] PRIME
+[span] 9.7
+[p] Play Trailer
+[button] Shutter Island
+[span] 2010
+[div] Thriller • Drama
+[span] #Psychological
+[a] MAX
+[a] HULU
+[h2] Comedy & Dark Humor
+[p] Comedies, satire, parodies, and macabre laughs
+[span] 9.7
+[p] Play Trailer
+[button] Shaun of the Dead
+[span] 2004
+[div] Horror • Comedy
+[span] #ZombieOutbreak
+[span] #DarkComedy
+[a] PEACOCK
+[a] PRIME
+[span] 9.5
+[p] Play Trailer
+[button] Mickey 17
+[span] 2025
+[div] Sci-Fi • Comedy
+[a] MAX
+[a] HULU
+[span] 9.5
+[p] Play Trailer
+[button] Men in Black II: Barry Sonnenfeld's Intergalactic Guide to Comedy
+[span] 2002
+[div] Comedy
+[a] HULU
+[a] PEACOCK
+[span] 7.4
+[p] Play Trailer
+[button] Thriller Theater!
+[span] 2011
+[div] Horror • Thriller • Comedy
+[a] HULU
+[span] 7.4
+[p] Play Trailer
+[button] Frog/Robot
+[span] 2011
+[div] Comedy
+[span] 7.4
+[p] Play Trailer
+[button] RiffTrax Live: House on Haunted Hill
+[span] 2010
+[div] Horror • Comedy
+[a] APPLE TV
+[a] SHUDDER
+[span] 7.4
+[p] Play Trailer
+[button] Robot Chicken: Star Wars Episode III
+[span] 2010
+[div] Animation • Sci-Fi • Comedy
+[a] HULU
+[span] 7.4
+[p] Play Trailer
+[button] Found Footage Festival Volume 3: Live in San Francisco
+[span] 2008
+[div] Comedy
+[a] PEACOCK
+[span] 7.4
+[p] Play Trailer
+[button] The Found Footage Festival Volume 2: Live in Minneapolis
+[span] 2007
+[div] Comedy
+[a] PRIME
+[span] 7.2
+[p] Play Trailer
+[button] I Hate Found Footage
+[span] 2026
+[div] Horror • Comedy
+[span] #FoundFootage
+[span] #Survival
+[a] PRIME
+[a] APPLE TV
+[h2] Drama Spotlight
+[p] Character studies, family stories, relationships, and emotional journeys
+[span] 9.9
+[p] Play Trailer
+[button] Blade Runner 2049
+[span] 2017
+[div] Sci-Fi • Thriller • Drama
+[span] #Cyberpunk
+[a] MAX
+[a] PRIME
+[a] HULU
+[a] APPLE TV
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.9
+[p] Play Trailer
+[button] The Revenant
+[span] 2015
+[div] Drama • Thriller
+[span] #Survival
+[a] MAX
+[a] HULU
+[a] SHUDDER
+[a] PEACOCK
+[span] 9.9
+[p] Play Trailer
+[button] Interstellar
+[span] 2014
+[div] Sci-Fi • Drama
+[span] #SpaceExploration
+[a] SHUDDER
+[a] HULU
+[a] PEACOCK
+[a] APPLE TV
+[a] MAX
+[span] 9.9
+[p] Play Trailer
+[button] Gone Girl
+[span] 2014
+[div] Thriller • Drama
+[span] #Psychological
+[a] PEACOCK
+[a] HULU
+[span] 9.9
+[p] Play Trailer
+[button] I Am Legend
+[span] 2007
+[div] Sci-Fi • Horror • Drama
+[span] #PostApocalyptic
+[span] #SciFiHorror
+[a] PEACOCK
+[span] 9.8
+[p] Play Trailer
+[button] Prisoners
+[span] 2013
+[div] Thriller • Drama
+[span] #Psychological
+[a] PRIME
+[a] PEACOCK
+[span] 9.7
+[p] Play Trailer
+[button] Shutter Island
+[span] 2010
+[div] Thriller • Drama
+[span] #Psychological
+[a] MAX
+[a] HULU
+[span] 9.5
+[p] Play Trailer
+[button] Parasite
+[span] 2014
+[div] Drama
+[a] PRIME
+[a] HULU
+[span] 7.4
+[p] Play Trailer
+[button] Texas Cult House
+[span] 2024
+[div] Horror • Drama
+[a] PEACOCK
+[a] SHUDDER
+[span] 7.4
+[p] Play Trailer
+[button] Napoleon
+[span] 2023
+[div] Drama
+[a] APPLE TV
+[h2] Documentary Deep Dives
+[p] Nonfiction stories, archival explorations, interviews, and behind-the-scenes films
+[span] 9.5
+[p] Play Trailer
+[button] Alien Contact: Government Coverup
+[span] 2025
+[div] Documentary
+[a] PEACOCK
+[a] SHUDDER
+[span] 9.5
+[p] Play Trailer
+[button] THE ORAL CIGARETTES: PARASITE DEJAVU
+[span] 2023
+[div] Documentary
+[a] MAX
+[span] 9.5
+[p] Play Trailer
+[button] Parasites Of Profit: The Pandemic of Private Renting
+[span] 2020
+[div] Documentary
+[a] PRIME
+[a] MAX
+[span] 9.5
+[p] Play Trailer
+[button] Alien
+[span] 2017
+[div] Documentary
+[a] SHUDDER
+[a] APPLE TV
+[span] 9.5
+[p] Play Trailer
+[button] Alien Mind Control: The UFO Enigma
+[span] 2015
+[div] Documentary
+[span] 9.5
+[p] Play Trailer
+[button] The Elderly Parasite or Who Is Marko Brecelj?
+[span] 2013
+[div] Documentary
+[span] 9.5
+[p] Play Trailer
+[button] Alien Autopsy
+[span] 2006
+[div] Documentary
+[a] MAX
+[span] 9.5
+[p] Play Trailer
+[button] The Alien Saga
+[span] 2002
+[div] Documentary
+[span] 9.5
+[p] Play Trailer
+[button] Alien Evolution
+[span] 2001
+[div] Documentary
+[a] HULU
+[a] PRIME
+[span] 9.5
+[p] Play Trailer
+[button] Scream and Scream Again: A History of the Slasher Film
+[span] 2000
+[div] Documentary
+[a] PEACOCK
+[h2] Animation Station
+[p] Animated, anime, and stop-motion stories from across the catalog
+[span] 9.5
+[p] Play Trailer
+[button] Worker and Parasite: Nap at Work
+[span] 2022
+[div] Animation
+[a] PRIME
+[span] 9.5
+[p] Play Trailer
+[button] The Worker & Parasite Show: Chapter 2
+[span] 2015
+[div] Animation
+[a] PRIME
+[span] 9.5
+[p] Play Trailer
+[button] Superman Classic
+[span] 2011
+[div] Animation
+[span] 9.5
+[p] Play Trailer
+[button] Alien Earths
+[span] 2009
+[div] Animation
+[a] PEACOCK
+[a] HULU
+[span] 9.5
+[p] Play Trailer
+[button] Alien Planet
+[span] 2005
+[div] Animation • Sci-Fi
+[a] HULU
+[span] 7.4
+[p] Play Trailer
+[button] Meeting MacGuffin
+[span] 2017
+[div] Animation
+[span] #PostApocalyptic
+[a] SHUDDER
+[a] PEACOCK
+[span] 7.4
+[p] Play Trailer
+[button] They Call Me Jeeg
+[span] 2016
+[div] Animation
+[a] PRIME
+[a] PEACOCK
+[span] 7.4
+[p] Play Trailer
+[button] Robot Chicken: Star Wars Episode III
+[span] 2010
+[div] Animation • Sci-Fi • Comedy
+[a] HULU
+[span] 7.4
+[p] Play Trailer
+[button] XMA: Xtreme Martial Arts
+[span] 2003
+[div] Animation • Action
+[span] #MartialArts
+[a] MAX
+[span] 7.2
+[p] Play Trailer
+[button] The Ghost in the Shell
+[span] 2026
+[div] Animation
+[a] PEACOCK
+[span] StreamFlicker
+[p] StreamFlicker. Movie trailers and streaming discovery.
+[button] Terms of Service
+[button] Privacy Policy
+[button] Affiliate Disclosure
+[button] Monetization & API Settings

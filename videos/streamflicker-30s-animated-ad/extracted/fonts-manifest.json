@@ -1,0 +1,169 @@
+{
+  "files": [
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4bCyC4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit ExtraBold",
+      "subfamily": "Regular",
+      "postscript": "Outfit-ExtraBold",
+      "weight": 800,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit",
+      "subfamily": "Bold",
+      "postscript": "Outfit-Bold",
+      "weight": 700,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit SemiBold",
+      "subfamily": "Regular",
+      "postscript": "Outfit-SemiBold",
+      "weight": 600,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit Medium",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Medium",
+      "weight": 500,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "QGYyz_MVcBeNP4NjuGObqx1XmO1I4ZmyC4E.ttf",
+      "family": "Outfit",
+      "rawFamily": "Outfit Black",
+      "subfamily": "Regular",
+      "postscript": "Outfit-Black",
+      "weight": 900,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Bold",
+      "postscript": "Inter-Bold",
+      "weight": 700,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf",
+      "family": "Inter",
+      "rawFamily": "Inter SemiBold",
+      "subfamily": "Regular",
+      "postscript": "Inter-SemiBold",
+      "weight": 600,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf",
+      "family": "Inter",
+      "rawFamily": "Inter Medium",
+      "subfamily": "Regular",
+      "postscript": "Inter-Medium",
+      "weight": 500,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf",
+      "family": "Inter",
+      "rawFamily": "Inter",
+      "subfamily": "Regular",
+      "postscript": "Inter-Regular",
+      "weight": 400,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    },
+    {
+      "file": "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf",
+      "family": "Inter",
+      "rawFamily": "Inter Light",
+      "subfamily": "Regular",
+      "postscript": "Inter-Light",
+      "weight": 300,
+      "style": "normal",
+      "variationAxes": [],
+      "identified": true,
+      "isIcon": false
+    }
+  ],
+  "families": [
+    {
+      "family": "Inter",
+      "weights": [
+        300,
+        400,
+        500,
+        600,
+        700
+      ],
+      "variable": false,
+      "fileCount": 5,
+      "files": [
+        "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf",
+        "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZg.ttf",
+        "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf",
+        "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf",
+        "UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuOKfMZg.ttf"
+      ]
+    },
+    {
+      "family": "Outfit",
+      "weights": [
+        500,
+        600,
+        700,
+        800,
+        900
+      ],
+      "variable": false,
+      "fileCount": 5,
+      "files": [
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4QK1C4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4ZmyC4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4bCyC4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4deyC4E.ttf",
+        "QGYyz_MVcBeNP4NjuGObqx1XmO1I4e6yC4E.ttf"
+      ]
+    }
+  ],
+  "unidentified": [],
+  "meta": {
+    "generatedAt": "2026-07-29T01:21:10.602Z",
+    "tool": "fontkit"
+  }
+}

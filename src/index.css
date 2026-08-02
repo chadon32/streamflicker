@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+:root {
+  --surface-page: #070709;
+  --surface-panel: #121218;
+  --surface-elevated: #18181b;
+  --text-primary: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --accent: #e11d48;
+  --focus: #fb7185;
+  --radius-control: 0.75rem;
+  --radius-panel: 1rem;
+  --motion-fast: 160ms;
+  --motion-standard: 280ms;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+}
+
+@layer base {
+  html, body {
+    font-family: var(--font-sans);
+    background-color: var(--surface-page);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    min-height: 100dvh;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+
+  button, a, input, select, textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button, a {
+    touch-action: manipulation;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+.safe-area-top {
+  padding-top: var(--safe-area-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: calc(2.5rem + var(--safe-area-bottom));
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Ambient Radial Glow Background */
+.bg-cinema-gradient {
+  background-color: #070709;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(225, 29, 72, 0.15), transparent),
+    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08), transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Scrollbar Customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070709;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e11d48;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism Panels */
+.glass-nav {
+  background: rgba(7, 7, 9, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(18, 18, 24, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel {
+  background: rgba(18, 18, 24, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 50px rgba(15, 7, 12, 0.18);
+}
+
+.glass-modal {
+  background: rgba(12, 12, 16, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Premium Movie Card Hover Effects */
+.movie-card-container {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease;
+}
+
+@media (hover: hover) {
+  .movie-card-container:hover {
+    transform: translateY(-6px) scale(1.02);
+    border-color: rgba(225, 29, 72, 0.6);
+    box-shadow: 0 20px 40px -10px rgba(87, 14, 39, 0.45);
+  }
+}
+
+.movie-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 530px;
+}
+
+/* Image Vignette Mask */
+.hero-vignette {
+  mask-image: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%);
+}
+
+/* Shimmer Loading Skeleton */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-loader {
+  background: linear-gradient(90deg, #18181b 25%, #27272a 37%, #18181b 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .movie-card-container:hover {
+    transform: none;
+  }
+}
