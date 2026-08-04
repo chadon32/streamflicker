@@ -11,6 +11,7 @@ interface NavbarProps {
   watchlistCount: number;
   onOpenWatchlist: () => void;
   onOpenSettings: () => void;
+  onOpenAccountSettings: () => void;
   onOpenLegal: () => void;
   onGoHome: () => void;
   user: SupabaseUser | null;
@@ -26,6 +27,7 @@ export function Navbar({
   watchlistCount,
   onOpenWatchlist,
   onOpenSettings,
+  onOpenAccountSettings,
   onOpenLegal,
   onGoHome,
   user,
@@ -275,6 +277,14 @@ export function Navbar({
                     {user.email}
                   </div>
                   <div className="p-1.5">
+                    <button
+                      onClick={onOpenAccountSettings}
+                      role="menuitem"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors"
+                    >
+                      <User size={16} />
+                      Account settings
+                    </button>
                     <button 
                       onClick={onSignOut}
                       role="menuitem"
@@ -356,16 +366,28 @@ export function Navbar({
           </button>
 
           {user ? (
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onSignOut();
-              }}
-              className="w-full flex items-center gap-2 p-3 rounded-xl bg-zinc-900 text-zinc-200 text-sm font-medium"
-            >
-              <LogOut size={18} className="text-rose-400" />
-              <span>Sign Out {user.email ? `(${user.email})` : ''}</span>
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenAccountSettings();
+                }}
+                className="w-full flex items-center gap-2 p-3 rounded-xl bg-zinc-900 text-zinc-200 text-sm font-medium"
+              >
+                <User size={18} className="text-emerald-400" />
+                <span>Account settings</span>
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onSignOut();
+                }}
+                className="w-full flex items-center gap-2 p-3 rounded-xl bg-zinc-900 text-zinc-200 text-sm font-medium"
+              >
+                <LogOut size={18} className="text-rose-400" />
+                <span>Sign Out {user.email ? `(${user.email})` : ''}</span>
+              </button>
+            </>
           ) : (
             <button
               onClick={() => {

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Settings, Key, Tag, Check, RefreshCw } from 'lucide-react';
-import { DEFAULT_AFFILIATE_CONFIG, type AffiliateConfig } from '../services/affiliate';
+import { getAffiliateConfig, type AffiliateConfig } from '../services/affiliate';
 import { STREAMING_PROVIDERS } from '../data/catalog';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
@@ -11,6 +11,9 @@ interface SettingsModalProps {
 
 export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
+  const [isMobileViewport, setIsMobileViewport] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches,
+  );
   const [tmdbKey, setTmdbKey] = useState(
     localStorage.getItem('streamflicker_tmdb_key') || ''
   );
@@ -24,16 +27,23 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
     }
   });
   
-  const [affiliate, setAffiliate] = useState<AffiliateConfig>(() => {
-    try {
-      const saved = localStorage.getItem('streamflicker_affiliate_config');
-      return saved ? JSON.parse(saved) : DEFAULT_AFFILIATE_CONFIG;
-    } catch {
-      return DEFAULT_AFFILIATE_CONFIG;
-    }
-  });
+  const [affiliate, setAffiliate] = useState<AffiliateConfig>(getAffiliateConfig);
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleViewportChange = (event: MediaQueryListEvent) => {
+      setIsMobileViewport(event.matches);
+    };
+
+    setIsMobileViewport(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleViewportChange);
+    return () => mediaQuery.removeEventListener('change', handleViewportChange);
+  }, []);
+
+  // Keep configuration-only controls out of public/mobile builds; production uses deployment config.
+  const showSiteOwnerOptions = import.meta.env.DEV && !isMobileViewport;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +52,14 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
     } else {
       localStorage.removeItem('streamflicker_tmdb_key');
     }
-    localStorage.setItem('streamflicker_affiliate_config', JSON.stringify(affiliate));
+    if (showSiteOwnerOptions) {
+      localStorage.setItem('streamflicker_affiliate_config', JSON.stringify(affiliate));
+    } else {
+      localStorage.removeItem('streamflicker_affiliate_config');
+    }
     localStorage.setItem('streamflicker_my_services', JSON.stringify(myServices));
 
-    onSave(tmdbKey.trim(), affiliate);
+    onSave(tmdbKey.trim(), showSiteOwnerOptions ? affiliate : getAffiliateConfig());
     setSavedSuccess(true);
     setTimeout(() => {
       setSavedSuccess(false);
@@ -78,142 +92,120 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* TMDB API Key */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-              <Key size={14} className="text-rose-400" /> Live search (optional)
-            </label>
-            <p className="text-xs text-zinc-400">
-              Add a free key from <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="text-rose-400 underline">TMDB</a> if you want broader live movie search. Most people can leave this blank.
-            </p>
-            <p className="text-xs text-amber-300/90">
-              This key stays in this browser and is visible to site scripts. Use a restricted client key only.
-            </p>
-            <input
-              type="password"
-              value={tmdbKey}
-              onChange={(e) => setTmdbKey(e.target.value)}
-              placeholder="e.g. 8a3f81b2c45d6e7f..."
-              autoComplete="off"
-              spellCheck="false"
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:border-rose-500"
-            />
-          </div>
-
-          {/* Affiliate IDs */}
-          <div className="space-y-4 pt-2 border-t border-zinc-900">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-              <Tag size={14} className="text-amber-400" /> Advanced link tracking
-            </label>
-            <p className="text-xs text-zinc-400">
-              Optional IDs for site owners. Leave these fields blank if you are simply browsing movies.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Amazon Tag</label>
-                <input
-                  type="text"
-                  value={affiliate.amazonTag}
-                  onChange={(e) => setAffiliate({ ...affiliate, amazonTag: e.target.value })}
-                  placeholder="streamflicker-20"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Apple TV Token</label>
-                <input
-                  type="text"
-                  value={affiliate.appleAffiliateToken}
-                  onChange={(e) => setAffiliate({ ...affiliate, appleAffiliateToken: e.target.value })}
-                  placeholder="1000l33x"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-zinc-400 block mb-1">Impact SubID (Hulu / Max)</label>
-                <input
-                  type="text"
-                  value={affiliate.impactSubId}
-                  onChange={(e) => setAffiliate({ ...affiliate, impactSubId: e.target.value })}
-                  placeholder="streamflicker"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-zinc-400 block mb-1">eBay Campaign ID</label>
-                <input
-                  type="text"
-                  value={affiliate.ebayCampId}
-                  onChange={(e) => setAffiliate({ ...affiliate, ebayCampId: e.target.value })}
-                  placeholder="5338123456"
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none"
-                />
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <section className="space-y-4" aria-labelledby="streaming-services-heading">
+            <div>
+              <h3 id="streaming-services-heading" className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                <Check size={14} className="text-emerald-400" /> Your streaming services
+              </h3>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+                Select the services you already use. Choose <strong className="font-semibold text-zinc-300">My services</strong> in Filters to see likely options first. These choices stay on this device.
+              </p>
             </div>
-          </div>
-
-          {/* My Streaming Services */}
-          <div className="space-y-4 pt-4 border-t border-zinc-900">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-              <Check size={14} className="text-emerald-400" /> Your streaming services
-            </label>
-            <p className="text-xs text-zinc-400">
-              Select the services you already use so the catalog can narrow to likely options. This preference stays in this browser.
-            </p>
 
             <div className="flex flex-wrap gap-2">
-              {STREAMING_PROVIDERS.map(provider => (
+              {STREAMING_PROVIDERS.map((provider) => (
                 <button
                   key={provider.id}
                   type="button"
                   onClick={() => {
-                    setMyServices(prev => 
-                      prev.includes(provider.id) 
-                        ? prev.filter(id => id !== provider.id)
-                        : [...prev, provider.id]
+                    setMyServices((previous) =>
+                      previous.includes(provider.id)
+                        ? previous.filter((id) => id !== provider.id)
+                        : [...previous, provider.id],
                     );
                   }}
                   aria-pressed={myServices.includes(provider.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                  className={`min-h-10 rounded-full border px-3.5 py-2 text-xs font-bold transition-all ${
                     myServices.includes(provider.id)
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-md'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md'
+                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
                   {provider.name}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
+          {showSiteOwnerOptions && <details className="group rounded-2xl border border-zinc-800 bg-zinc-950/35 p-4">
+            <summary className="cursor-pointer list-none text-xs font-bold uppercase tracking-wider text-zinc-300 marker:hidden">
+              <span className="flex items-center gap-1.5">
+                <Tag size={14} className="text-amber-400" /> Advanced site-owner options
+              </span>
+            </summary>
+            <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+              These optional fields are for people who manage StreamFlicker or use their own discovery keys. They are never needed to find a movie.
+            </p>
+
+            <div className="mt-5 space-y-5 border-t border-zinc-800 pt-5">
+              <div className="space-y-2">
+                <label htmlFor="tmdb-key" className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                  <Key size={14} className="text-rose-400" /> Live search key (optional)
+                </label>
+                <p className="text-xs leading-relaxed text-zinc-400">
+                  Add a restricted client key from <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener noreferrer" className="text-rose-400 underline">TMDB</a> only if you need broader live movie search.
+                </p>
+                <p className="text-xs text-amber-300/90">
+                  This key stays in this browser and is visible to site scripts. Do not enter a secret server key.
+                </p>
+                <input
+                  id="tmdb-key"
+                  type="password"
+                  value={tmdbKey}
+                  onChange={(e) => setTmdbKey(e.target.value)}
+                  placeholder="e.g. 8a3f81b2c45d6e7f..."
+                  autoComplete="off"
+                  spellCheck="false"
+                  className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:border-rose-500"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-zinc-300">Affiliate link identifiers</p>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="amazon-tag" className="mb-1 block text-[11px] font-semibold text-zinc-400">Amazon Tag</label>
+                    <input id="amazon-tag" type="text" value={affiliate.amazonTag} onChange={(e) => setAffiliate({ ...affiliate, amazonTag: e.target.value })} placeholder="your-approved-amazon-tag" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
+                  </div>
+                  <div>
+                    <label htmlFor="apple-token" className="mb-1 block text-[11px] font-semibold text-zinc-400">Apple TV Token</label>
+                    <input id="apple-token" type="text" value={affiliate.appleAffiliateToken} onChange={(e) => setAffiliate({ ...affiliate, appleAffiliateToken: e.target.value })} placeholder="your-approved-apple-token" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
+                  </div>
+                  <div>
+                    <label htmlFor="impact-sub-id" className="mb-1 block text-[11px] font-semibold text-zinc-400">Impact SubID (Hulu / Max)</label>
+                    <input id="impact-sub-id" type="text" value={affiliate.impactSubId} onChange={(e) => setAffiliate({ ...affiliate, impactSubId: e.target.value })} placeholder="your-approved-sub-id" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
+                  </div>
+                  <div>
+                    <label htmlFor="ebay-campaign-id" className="mb-1 block text-[11px] font-semibold text-zinc-400">eBay Campaign ID</label>
+                    <input id="ebay-campaign-id" type="text" value={affiliate.ebayCampId} onChange={(e) => setAffiliate({ ...affiliate, ebayCampId: e.target.value })} placeholder="your-approved-campaign-id" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>}
+
+          <div className="flex flex-col-reverse gap-3 border-t border-zinc-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
             <button
               type="button"
               onClick={() => {
                 setTmdbKey('');
                 setMyServices([]);
-                setAffiliate(DEFAULT_AFFILIATE_CONFIG);
+                setAffiliate(getAffiliateConfig());
               }}
-              className="text-xs text-zinc-400 hover:text-white flex items-center gap-1"
+              className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl px-2 text-xs text-zinc-400 transition-colors hover:text-white"
             >
-              <RefreshCw size={12} /> Reset optional settings
+              <RefreshCw size={12} /> Reset local preferences
             </button>
 
             <button
               type="submit"
-              className="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-1.5"
+              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-rose-500"
             >
               {savedSuccess ? <Check size={14} /> : null}
               <span>{savedSuccess ? 'Saved!' : 'Save preferences'}</span>
             </button>
           </div>
-
         </form>
       </div>
     </div>

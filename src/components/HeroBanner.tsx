@@ -1,6 +1,8 @@
 import type { Movie } from '../data/movies';
 import { Play, Star, Plus, Check, Sparkles, ExternalLink } from 'lucide-react';
 import { getReadableTextColor } from '../lib/color';
+import { getMicroTagLabel } from '../services/catalogClassification';
+import { recordAffiliateClick } from '../services/affiliateAnalytics';
 
 interface HeroBannerProps {
   movie: Movie;
@@ -73,7 +75,7 @@ export function HeroBanner({
               key={tag}
               className="text-xs font-medium text-zinc-400 bg-zinc-900/90 px-3 py-1 rounded-full border border-zinc-800"
             >
-              {tag}
+              {getMicroTagLabel(tag)}
             </span>
           ))}
         </div>
@@ -90,6 +92,7 @@ export function HeroBanner({
 
           <button
             onClick={() => onToggleBookmark(movie)}
+            aria-label={isBookmarked ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
             className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-semibold border backdrop-blur-md transition-all ${
               isBookmarked
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
@@ -97,7 +100,7 @@ export function HeroBanner({
             }`}
           >
             {isBookmarked ? <Check size={18} /> : <Plus size={18} />}
-            {isBookmarked ? 'In Watchlist' : 'Add to Watchlist'}
+            {isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist'}
           </button>
 
           {/* Streaming badges */}
@@ -109,6 +112,7 @@ export function HeroBanner({
                 href={sp.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
                 title={`Open ${sp.name} in an external service. Availability can change.`}
                 aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105 shadow-sm"
@@ -117,6 +121,7 @@ export function HeroBanner({
                 {sp.name} <ExternalLink size={11} />
               </a>
             ))}
+            <span className="text-[10px] text-zinc-500 px-2">Some links may earn a commission.</span>
           </div>
         </div>
 

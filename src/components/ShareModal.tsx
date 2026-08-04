@@ -179,7 +179,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
         {copyStatus === 'error' && (
           <p role="alert" aria-live="assertive" className="flex items-center gap-2 text-xs text-rose-300">
             <AlertCircle size={14} />
-            Clipboard access failed. The link is selected—press Ctrl+C (or Cmd+C) to copy it manually.
+            Clipboard access failed. The link is selected. Press Ctrl+C (or Cmd+C) to copy it manually.
           </p>
         )}
 

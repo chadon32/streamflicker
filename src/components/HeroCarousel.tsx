@@ -2,6 +2,9 @@ import { useState } from 'react';
 import type { Movie } from '../data/movies';
 import { Play, Star, Plus, Check, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { getReadableTextColor } from '../lib/color';
+import { getContentWarnings } from '../services/discovery';
+import { getMicroTagLabel } from '../services/catalogClassification';
+import { recordAffiliateClick } from '../services/affiliateAnalytics';
 
 interface HeroCarouselProps {
   movies: Movie[];
@@ -21,11 +24,13 @@ export function HeroCarousel({
   const movie = movies[currentIndex] || movies[0];
   if (!movie) return null;
 
+  const mobileContext = getContentWarnings(movie)[0] ?? movie.genre.slice(0, 2).join(' · ');
+
   return (
     <section
       aria-roledescription="carousel"
       aria-label="Featured movies"
-      className="relative w-full h-[500px] sm:h-[560px] lg:h-[600px] overflow-hidden rounded-3xl border border-zinc-800/80 shadow-2xl my-6 group/hero"
+      className="relative w-full h-[520px] sm:h-[560px] lg:h-[600px] overflow-hidden rounded-3xl border border-zinc-800/80 shadow-2xl my-6 group/hero"
     >
       
       {/* Backdrop Image */}
@@ -93,6 +98,10 @@ export function HeroCarousel({
           <span>{movie.duration}</span>
         </div>
 
+        <p className="sm:hidden mb-4 text-xs font-medium text-zinc-300">
+          {mobileContext}
+        </p>
+
         {/* Description */}
         <p className="hidden sm:block text-zinc-300 text-sm sm:text-base max-w-2xl line-clamp-2 mb-5 leading-relaxed">
           {movie.description}
@@ -105,7 +114,7 @@ export function HeroCarousel({
               key={tag}
               className="text-xs font-medium text-zinc-300 bg-zinc-900/90 px-3 py-1 rounded-full border border-zinc-800"
             >
-              {tag}
+              {getMicroTagLabel(tag)}
             </span>
           ))}
         </div>
@@ -122,6 +131,7 @@ export function HeroCarousel({
 
           <button
             onClick={() => onToggleBookmark(movie)}
+            aria-label={isBookmarked(movie.id) ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
             className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-semibold border backdrop-blur-md transition-all ${
               isBookmarked(movie.id)
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
@@ -129,7 +139,7 @@ export function HeroCarousel({
             }`}
           >
             {isBookmarked(movie.id) ? <Check size={18} /> : <Plus size={18} />}
-            {isBookmarked(movie.id) ? 'In Watchlist' : 'Add to Watchlist'}
+            {isBookmarked(movie.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
           </button>
 
           {/* Streaming badges */}
@@ -141,6 +151,7 @@ export function HeroCarousel({
                 href={sp.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
                 title={`Open ${sp.name} in an external service. Availability can change.`}
                 aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105 shadow-sm"
@@ -149,6 +160,7 @@ export function HeroCarousel({
                 {sp.name} <ExternalLink size={11} />
               </a>
             ))}
+            <span className="text-[10px] text-zinc-500 px-2">Some links may earn a commission.</span>
           </div>
         </div>
 

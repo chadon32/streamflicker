@@ -85,7 +85,7 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
         <button
           onClick={onClose}
           aria-label="Close authentication"
-          className="absolute top-4 right-4 text-zinc-400 hover:text-white bg-zinc-900/50 hover:bg-zinc-800 p-2 rounded-full transition-colors z-10"
+          className="absolute top-4 right-4 min-h-11 min-w-11 text-zinc-400 hover:text-white bg-zinc-900/50 hover:bg-zinc-800 p-2 rounded-full transition-colors z-10"
         >
           <X size={18} />
         </button>
@@ -101,9 +101,9 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
             {isLogin ? 'Welcome Back' : 'Create Account'}
           </h2>
           <p id="auth-dialog-description" className="text-center text-zinc-400 text-sm mb-8">
-            {isLogin 
-              ? 'Sign in to access your Watchlist and Alerts' 
-              : 'Sign up to track price drops and stream availability'}
+            {isLogin
+              ? 'Sign in for future account features. Your Watchlist and reminders currently stay on this device.'
+              : 'Create an account for future account features. Your local saves stay on this device.'}
           </p>
 
           {error && (

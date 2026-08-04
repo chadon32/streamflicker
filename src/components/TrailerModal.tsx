@@ -4,6 +4,8 @@ import { X, Star, ExternalLink, SkipForward, Plus, Check, Film, Tv, Play } from 
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { getReadableTextColor } from '../lib/color';
 import { getContentWarnings } from '../services/discovery';
+import { getMicroTagLabel } from '../services/catalogClassification';
+import { recordAffiliateClick } from '../services/affiliateAnalytics';
 
 interface TrailerModalProps {
   movie: Movie;
@@ -193,6 +195,7 @@ export function TrailerModal({
             {/* Bookmark button */}
             <button
               onClick={() => onToggleBookmark(movie)}
+              aria-label={isBookmarked ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
                 isBookmarked
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
@@ -200,7 +203,7 @@ export function TrailerModal({
               }`}
             >
               {isBookmarked ? <Check size={16} /> : <Plus size={16} />}
-              {isBookmarked ? 'In Watchlist' : 'Add to Watchlist'}
+              {isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist'}
             </button>
           </div>
 
@@ -233,7 +236,7 @@ export function TrailerModal({
                 key={tag}
                 className="text-xs font-medium text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full"
               >
-                {tag}
+                {getMicroTagLabel(tag)}
               </span>
             ))}
           </div>
@@ -248,6 +251,9 @@ export function TrailerModal({
                 </h4>
               </div>
             </div>
+            <p className="mb-3 text-xs leading-relaxed text-zinc-500">
+              Some service links may earn StreamFlicker a commission at no extra cost to you.
+            </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {movie.streamingPlatforms.map((sp) => (
@@ -256,6 +262,7 @@ export function TrailerModal({
                   href={sp.affiliateUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
                   title={`Open ${sp.name} in an external service. Availability can change.`}
                   aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
                   className="flex items-center justify-between p-3.5 rounded-2xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 transition-all group"

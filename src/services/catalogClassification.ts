@@ -47,6 +47,26 @@ export const MICRO_TAG_DEFINITIONS = [
 export type MicroTag = (typeof MICRO_TAG_DEFINITIONS)[number]['id'];
 export const POPULAR_TAGS = MICRO_TAG_DEFINITIONS.map(({ id }) => id);
 
+/**
+ * Converts internal taxonomy keys into the same people-readable labels used in
+ * the filter controls.  Catalog records retain their stable keys (for example
+ * `#ZombieOutbreak`), while every customer-facing surface gets `Zombie
+ * outbreak` instead of implementation-shaped camel case.
+ */
+export function getMicroTagLabel(tag: string) {
+  const normalizedTag = tag.startsWith('#') ? tag : `#${tag}`;
+  const knownTag = MICRO_TAG_DEFINITIONS.find(({ id }) => id === normalizedTag);
+  if (knownTag) return knownTag.label;
+
+  const fallback = tag
+    .replace(/^#/, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+
+  return fallback ? `${fallback[0].toUpperCase()}${fallback.slice(1)}` : 'Theme';
+}
+
 function normalizeText(value: string) {
   return value
     .toLowerCase()

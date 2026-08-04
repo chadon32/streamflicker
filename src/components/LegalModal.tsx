@@ -92,10 +92,10 @@ export function LegalModal({ initialTab = 'affiliate', onClose }: LegalModalProp
             <div className="space-y-4">
               <h3 className="font-display text-xl font-bold text-white">FTC Affiliate Disclosure</h3>
               <p>
-                StreamFlicker participates in various affiliate marketing programs, which means we may get paid commissions on editorially chosen products purchased through our links to retailer/streaming sites.
+                StreamFlicker may participate in affiliate marketing programs, which means we may earn a commission when you use certain editorially chosen links to retailer or streaming sites.
               </p>
               <p>
-                When you click on links to Amazon Prime Video, Apple TV, Hulu, Max, Shudder, or other services and make a purchase or sign up for a free trial, this can result in this site earning a commission. Affiliate links operate at no additional cost to you.
+                When configured and approved, links to services such as Amazon Prime Video, Apple TV, Hulu, Max, Shudder, or other providers may earn StreamFlicker a commission if you make a purchase or sign up for a trial. This is at no additional cost to you.
               </p>
               <p>
                 Our recommendations are strictly independent and designed to help users find where content is legally available.

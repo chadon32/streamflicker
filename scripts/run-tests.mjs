@@ -44,9 +44,15 @@ assert.equal(
   'https://netflix.com/title/example',
   'Unsupported providers should retain safe HTTPS URLs',
 );
+assert.equal(
+  generateAffiliateUrl('https://amazon.com/title/example', 'prime'),
+  'https://amazon.com/title/example',
+  'Unconfigured providers should not receive placeholder attribution IDs',
+);
 
 const { smartSearchMovies } = await importTypeScriptModule('src/services/smartSearch.ts');
 const {
+  getDateNightPriority,
   isDateNightFriendly,
   isFamilyFriendly,
   isQuickWatch,
@@ -111,6 +117,15 @@ assert.equal(isFamilyFriendly(searchFixture[0]), false, 'R-rated horror should n
 assert.equal(isFamilyFriendly(familySafeFixture), true, 'Low-risk PG-13 drama should be family-friendly');
 assert.equal(isDateNightFriendly(familySafeFixture), true, 'Relationship-driven drama should fit date night');
 assert.equal(isQuickWatch(familySafeFixture), true, 'Movies at or below 110 minutes should fit quick-watch mode');
+assert.ok(
+  getDateNightPriority({
+    ...familySafeFixture,
+    id: 'fixture-explicit-romance',
+    genre: ['Romance'],
+    description: 'A romantic couple finds lasting love before their wedding.',
+  }) > getDateNightPriority(familySafeFixture),
+  'Explicit romance should rank above a broad relationship-driven date-night match',
+);
 assert.equal(
   smartSearchMovies([...searchFixture, familySafeFixture], 'family').length,
   1,

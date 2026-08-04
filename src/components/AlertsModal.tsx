@@ -8,7 +8,6 @@ interface AlertsModalProps {
   movie: Movie;
   user: User | null;
   onClose: () => void;
-  onOpenAuth: () => void;
 }
 
 interface StoredAlertPreference {
@@ -21,7 +20,7 @@ interface StoredAlertPreference {
 
 const ALERT_PREFERENCES_KEY = 'streamflicker_alert_preferences';
 
-export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalProps) {
+export function AlertsModal({ movie, user, onClose }: AlertsModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
   const [activeTab, setActiveTab] = useState<'price' | 'stream'>('price');
   const [targetPrice, setTargetPrice] = useState('4.99');
@@ -29,46 +28,6 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  if (!user) {
-    return (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-zinc-950/80 backdrop-blur-md"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose();
-        }}
-      >
-        <div
-          ref={dialogRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="alerts-auth-title"
-          tabIndex={-1}
-          className="glass-modal w-full max-w-md rounded-2xl border border-zinc-800 shadow-2xl p-8 text-center relative"
-        >
-          <button onClick={onClose} aria-label="Close alert preference" className="absolute top-4 right-4 p-2.5 min-w-11 min-h-11 text-zinc-400 hover:text-white">
-            <X size={18} />
-          </button>
-          <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center mx-auto mb-4 border border-zinc-800">
-            <Bell size={28} className="text-zinc-500" />
-          </div>
-          <h2 id="alerts-auth-title" className="text-xl font-bold text-white mb-2">Sign In Required</h2>
-          <p className="text-zinc-400 text-sm mb-6">
-            Sign in to save an alert preference for {movie.title} on this device.
-          </p>
-          <button
-            onClick={() => {
-              onClose();
-              onOpenAuth();
-            }}
-            className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all"
-          >
-            Sign In / Create Account
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const handleSetAlert = async () => {
     setLoading(true);
     setError(null);
@@ -85,11 +44,12 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
       const existing = Array.isArray(parsed)
         ? parsed.filter((item): item is StoredAlertPreference => typeof item === 'object' && item !== null)
         : [];
+      const userId = user?.id ?? 'local';
       const withoutDuplicate = existing.filter(
-        (item) => !(item.userId === user.id && item.movieId === movie.id && item.type === activeTab),
+        (item) => !(item.userId === userId && item.movieId === movie.id && item.type === activeTab),
       );
       const nextPreference: StoredAlertPreference = {
-        userId: user.id,
+        userId,
         movieId: movie.id,
         type: activeTab,
         ...(activeTab === 'price' ? { targetPrice: price } : {}),
@@ -127,9 +87,9 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
         <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/50">
           <div id="alerts-dialog-title" className="flex items-center gap-2 text-white font-bold">
             <Bell size={18} className="text-amber-500" />
-            <span>Set Alert</span>
+            <span>Save reminder</span>
           </div>
-          <button onClick={onClose} aria-label="Close alert preference" className="text-zinc-400 hover:text-white p-2.5 min-w-11 min-h-11 rounded-full bg-zinc-800/50 hover:bg-zinc-700 transition-colors">
+          <button onClick={onClose} aria-label="Close reminder" className="text-zinc-400 hover:text-white p-2.5 min-w-11 min-h-11 rounded-full bg-zinc-800/50 hover:bg-zinc-700 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -152,7 +112,7 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
                 activeTab === 'price' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-300'
               }`}
             >
-              <DollarSign size={14} /> Price Drop
+              <DollarSign size={14} /> Price target
             </button>
             <button
               onClick={() => setActiveTab('stream')}
@@ -160,7 +120,7 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
                 activeTab === 'stream' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-300'
               }`}
             >
-              <MonitorPlay size={14} /> Streaming
+              <MonitorPlay size={14} /> Streaming note
             </button>
           </div>
 
@@ -169,12 +129,12 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-start gap-3">
                 <AlertCircle size={16} className="text-emerald-400 mt-0.5 shrink-0" />
                 <p className="text-xs text-emerald-400/90 leading-relaxed">
-                  This local build saves your target on this device. Email delivery requires a notification backend and is not active yet.
+                  Save a price target here for reference. It stays on this device and does not send email or push notifications yet.
                 </p>
               </div>
               
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Target Price (USD)</label>
+                <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Your target price (USD)</label>
                 <div className="relative">
                   <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
@@ -198,7 +158,7 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
               <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
                 <AlertCircle size={16} className="text-blue-400 mt-0.5 shrink-0" />
                 <p className="text-xs text-blue-400/90 leading-relaxed">
-                  This local build saves your service preference on this device. Automatic availability notifications are not active yet.
+                  Save this availability preference on this device. It is a personal note, not an automatic streaming notification.
                 </p>
               </div>
             </div>
@@ -223,15 +183,15 @@ export function AlertsModal({ movie, user, onClose, onOpenAuth }: AlertsModalPro
               <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
             ) : success ? (
               <>
-                <Check size={18} /> Preference Saved
+                <Check size={18} /> Reminder saved
               </>
             ) : (
-              'Save Preference'
+              'Save reminder'
             )}
           </button>
           {success && (
             <p role="status" className="mt-3 text-center text-xs text-zinc-400">
-              Saved on this device. No email or notification was sent.
+              Saved on this device. No email, push notification, or account sync was used.
             </p>
           )}
         </div>

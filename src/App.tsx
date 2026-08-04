@@ -7,17 +7,22 @@ import {
   applyCatalogFilters,
   ERA_FILTERS,
   getCatalogFilterCounts,
+  getMicroTagLabel,
   normalizeMovieClassification,
   type EraFilterId,
 } from './services/catalogClassification';
 import {
   getSearchReason,
+  getDateNightPriority,
+  isDateNightFriendly,
+  isFamilyFriendly,
+  isQuickWatch,
   matchesDiscoveryMode,
   matchesOccasion,
   type DiscoveryMode,
   type OccasionFilter,
 } from './services/discovery';
-import { generateAffiliateUrl, DEFAULT_AFFILIATE_CONFIG, type AffiliateConfig } from './services/affiliate';
+import { generateAffiliateUrl, getAffiliateConfig, type AffiliateConfig } from './services/affiliate';
 import { Navbar } from './components/Navbar';
 import { HeroCarousel } from './components/HeroCarousel';
 import { FilterBar } from './components/FilterBar';
@@ -26,12 +31,16 @@ import { MovieRow } from './components/MovieRow';
 import { TrailerModal } from './components/TrailerModal';
 import { ShareModal } from './components/ShareModal';
 import { SettingsModal } from './components/SettingsModal';
+import { AccountSettingsModal } from './components/AccountSettingsModal';
 import { LegalModal, type LegalTab } from './components/LegalModal';
 import { WatchlistModal } from './components/WatchlistModal';
 import { AuthModal } from './components/AuthModal';
 import { AlertsModal } from './components/AlertsModal';
-import { Film, Clapperboard, Sparkles, Skull, Award, Flame, Ghost } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Film, Clapperboard, Sparkles, Award, Heart, Clock3, UsersRound } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import { deleteCurrentAccount } from './services/account';
+import { getPublicMonetizationLinks } from './services/monetization';
 import type { User } from '@supabase/supabase-js';
 
 const WATCHLIST_STORAGE_KEY = 'streamflicker_watchlist';
@@ -64,6 +73,8 @@ function parseStoredWatchlist(value: string | null): Movie[] {
 }
 
 export function AppContent() {
+  const [publicMonetizationLinks] = useState(getPublicMonetizationLinks);
+  const showWebMonetizationLinks = !Capacitor.isNativePlatform();
   const [catalog, setCatalog] = useState<Movie[]>([]);
   const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [catalogUsingFallback, setCatalogUsingFallback] = useState(false);
@@ -85,6 +96,7 @@ export function AppContent() {
   const [shareMovie, setShareMovie] = useState<Movie | null>(null);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [alertMovie, setAlertMovie] = useState<Movie | null>(null);
@@ -152,18 +164,19 @@ export function AppContent() {
     }, 3000);
   }, []);
 
+  const handleDeleteAccount = useCallback(async () => {
+    await deleteCurrentAccount();
+    setShowAccountSettings(false);
+    showToast('Your account was permanently deleted.');
+  }, [showToast]);
+
   useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
   }, []);
 
   // Affiliate Config State
   const [affiliateConfig, setAffiliateConfig] = useState<AffiliateConfig>(() => {
-    try {
-      const saved = localStorage.getItem('streamflicker_affiliate_config');
-      return saved ? JSON.parse(saved) : DEFAULT_AFFILIATE_CONFIG;
-    } catch {
-      return DEFAULT_AFFILIATE_CONFIG;
-    }
+    return getAffiliateConfig();
   });
 
   // Watchlist State with Persistence
@@ -300,11 +313,18 @@ export function AppContent() {
       providerIds,
     });
 
-    // Keep the catalog's score-based ordering while using canonical classifications.
+    // Keep catalog scores primary except for date night, where an explicit
+    // relationship match should never be buried below a generic high score.
     return [...result]
       .filter((movie) => matchesDiscoveryMode(movie, discoveryMode))
       .filter((movie) => matchesOccasion(movie, occasion))
-      .sort((a, b) => b.score - a.score || b.year - a.year);
+      .sort((a, b) => {
+        if (occasion === 'date-night') {
+          const dateNightDifference = getDateNightPriority(b) - getDateNightPriority(a);
+          if (dateNightDifference !== 0) return dateNightDifference;
+        }
+        return b.score - a.score || b.year - a.year;
+      });
   }, [fullCatalog, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion]);
 
   // Suggestions must respect the same filters as the visible results. This
@@ -320,15 +340,12 @@ export function AppContent() {
     return fullCatalog.filter((m) => m.year >= 2022 && m.score >= 9.0).slice(0, 10);
   }, [fullCatalog]);
 
-  // Compact Top 10 Premier Movies Divided by Genre for Homepage Rows
-  const topActionMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Action')).slice(0, 10), [fullCatalog]);
-  const topHorrorMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Horror')).slice(0, 10), [fullCatalog]);
-  const topSciFiMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Sci-Fi')).slice(0, 10), [fullCatalog]);
-  const topThrillerMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Thriller')).slice(0, 10), [fullCatalog]);
-  const topComedyMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Comedy')).slice(0, 10), [fullCatalog]);
-  const topDramaMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Drama')).slice(0, 10), [fullCatalog]);
-  const topDocumentaryMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Documentary')).slice(0, 10), [fullCatalog]);
-  const topAnimationMovies = useMemo(() => fullCatalog.filter((m) => m.genre.includes('Animation')).slice(0, 10), [fullCatalog]);
+  // Four purposeful rails keep the landing page quick to scan and avoid
+  // rendering a long stack of near-duplicate genre rows before someone knows
+  // what they want to watch. Genre and theme controls remain one tap away.
+  const familyMovieNight = useMemo(() => fullCatalog.filter(isFamilyFriendly).slice(0, 10), [fullCatalog]);
+  const dateNightPicks = useMemo(() => fullCatalog.filter(isDateNightFriendly).slice(0, 10), [fullCatalog]);
+  const quickWatchPicks = useMemo(() => fullCatalog.filter(isQuickWatch).slice(0, 10), [fullCatalog]);
 
   // Spotlight Hero Movies
   const spotlightMovies = useMemo(() => {
@@ -416,7 +433,7 @@ export function AppContent() {
   const pageTitle = activeTrailerMovie
     ? `${activeTrailerMovie.title} | StreamFlicker`
     : selectedTag
-    ? `${selectedTag.replace('#', '')} Movies | StreamFlicker`
+    ? `${getMicroTagLabel(selectedTag)} Movies | StreamFlicker`
     : selectedGenre !== 'All'
     ? `${selectedGenre} Movies | StreamFlicker`
     : discoveryMode === 'family'
@@ -465,6 +482,7 @@ export function AppContent() {
         watchlistCount={watchlist.length}
         onOpenWatchlist={() => setShowWatchlist(true)}
         onOpenSettings={() => setShowSettings(true)}
+        onOpenAccountSettings={() => setShowAccountSettings(true)}
         onOpenLegal={() => setLegalTab('affiliate')}
         onGoHome={() => {
           setSearchQuery('');
@@ -556,12 +574,12 @@ export function AppContent() {
           setOccasion={setOccasion}
         />}
 
-        {/* Netflix-Style Category Rows (Top 10 Streaming & Genre Showcase) */}
+        {/* Purposeful discovery rows */}
         {catalogStatus === 'ready' && isHomeView && (
           <div className="space-y-4 mb-12">
             <MovieRow
-              title="Recent catalog highlights"
-              subtitle="High-scoring recent titles selected from the local catalog"
+              title="Top picks right now"
+              subtitle="High-scoring recent titles for a fast first choice"
               icon={<Award className="text-rose-400" size={24} />}
               movies={recentCatalogHighlights}
               onWatchTrailer={openTrailer}
@@ -572,10 +590,10 @@ export function AppContent() {
             />
 
             <MovieRow
-              title="Action Crowd-Pleasers"
-              subtitle="High-octane adventures, martial arts, and explosive action"
-              icon={<Flame className="text-rose-500" size={24} />}
-              movies={topActionMovies}
+              title="Family movie night"
+              subtitle="Age-conscious picks with higher-risk themes filtered out"
+              icon={<UsersRound className="text-emerald-400" size={24} />}
+              movies={familyMovieNight}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
@@ -584,10 +602,10 @@ export function AppContent() {
             />
 
             <MovieRow
-              title="Horror Night"
-              subtitle="Zombie outbreaks, slashers, monsters, and supernatural scares"
-              icon={<Skull className="text-rose-500" size={24} />}
-              movies={topHorrorMovies}
+              title="Date-night picks"
+              subtitle="Romance and relationship-driven, conversation-friendly movies"
+              icon={<Heart className="text-rose-400" size={24} />}
+              movies={dateNightPicks}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
@@ -596,70 +614,10 @@ export function AppContent() {
             />
 
             <MovieRow
-              title="Sci-Fi & Space Adventures"
-              subtitle="Cyberpunk futures, alien encounters, and deep-space exploration"
-              icon={<Sparkles className="text-rose-400" size={24} />}
-              movies={topSciFiMovies}
-              onWatchTrailer={openTrailer}
-              isBookmarked={isBookmarked}
-              onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
-            />
-
-            <MovieRow
-              title="Edge-of-Your-Seat Thrillers"
-              subtitle="Mind games, serial-killer hunts, conspiracies, and suspense"
-              icon={<Ghost className="text-rose-400" size={24} />}
-              movies={topThrillerMovies}
-              onWatchTrailer={openTrailer}
-              isBookmarked={isBookmarked}
-              onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
-            />
-
-            <MovieRow
-              title="Comedy & Dark Humor"
-              subtitle="Comedies, satire, parodies, and macabre laughs"
-              icon={<Film className="text-rose-400" size={24} />}
-              movies={topComedyMovies}
-              onWatchTrailer={openTrailer}
-              isBookmarked={isBookmarked}
-              onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
-            />
-
-            <MovieRow
-              title="Drama Spotlight"
-              subtitle="Character studies, family stories, relationships, and emotional journeys"
-              icon={<Award className="text-rose-400" size={24} />}
-              movies={topDramaMovies}
-              onWatchTrailer={openTrailer}
-              isBookmarked={isBookmarked}
-              onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
-            />
-
-            <MovieRow
-              title="Documentary Deep Dives"
-              subtitle="Nonfiction stories, archival explorations, interviews, and behind-the-scenes films"
-              icon={<Clapperboard className="text-rose-400" size={24} />}
-              movies={topDocumentaryMovies}
-              onWatchTrailer={openTrailer}
-              isBookmarked={isBookmarked}
-              onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
-            />
-
-            <MovieRow
-              title="Animation Station"
-              subtitle="Animated, anime, and stop-motion stories from across the catalog"
-              icon={<Sparkles className="text-rose-400" size={24} />}
-              movies={topAnimationMovies}
+              title="Quick watches"
+              subtitle="Movies around 110 minutes or less when time is short"
+              icon={<Clock3 className="text-amber-400" size={24} />}
+              movies={quickWatchPicks}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
@@ -677,7 +635,7 @@ export function AppContent() {
                 <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight flex items-center gap-2">
                   <Clapperboard className="text-rose-500" size={26} />
                   {selectedTag
-                    ? `${selectedTag} Movies`
+                    ? `${getMicroTagLabel(selectedTag)} Movies`
                     : selectedGenre !== 'All'
                     ? `${selectedGenre} Movies`
                     : discoveryMode === 'family'
@@ -708,7 +666,7 @@ export function AppContent() {
                       ?? (discoveryMode === 'family'
                         ? 'Family-friendly mode filters out R-rated titles and high-risk themes.'
                         : occasion === 'date-night'
-                        ? 'Date-night mode prioritizes romance, comedy, and conversation-friendly drama.'
+                        ? 'Date-night mode focuses on romance and relationship-driven, conversation-friendly movies.'
                         : 'Quick-watch mode prioritizes titles around 110 minutes or less.')}
                   </p>
                 )}
@@ -790,6 +748,26 @@ export function AppContent() {
             <p>© {new Date().getFullYear()} StreamFlicker. Movie trailers and streaming discovery.</p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-zinc-400 font-medium">
+            {showWebMonetizationLinks && publicMonetizationLinks.newsletterUrl && (
+              <a
+                href={publicMonetizationLinks.newsletterUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"
+              >
+                Get weekly movie picks
+              </a>
+            )}
+            {showWebMonetizationLinks && publicMonetizationLinks.supportUrl && (
+              <a
+                href={publicMonetizationLinks.supportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"
+              >
+                Support StreamFlicker
+              </a>
+            )}
             <button
               onClick={() => setLegalTab('terms')}
               className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
@@ -856,6 +834,14 @@ export function AppContent() {
         />
       )}
 
+      {showAccountSettings && user && (
+        <AccountSettingsModal
+          user={user}
+          onClose={() => setShowAccountSettings(false)}
+          onDeleteAccount={handleDeleteAccount}
+        />
+      )}
+
       {/* Legal & Compliance Modal */}
       {legalTab && (
         <LegalModal
@@ -878,10 +864,6 @@ export function AppContent() {
           movie={alertMovie}
           user={user}
           onClose={() => setAlertMovie(null)}
-          onOpenAuth={() => {
-            setAlertMovie(null);
-            setShowAuth(true);
-          }}
         />
       )}
     </div>

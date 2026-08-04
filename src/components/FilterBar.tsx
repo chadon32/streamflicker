@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import { CalendarDays, Check, ChevronDown, Filter, RotateCcw, Sparkles, X } from 'lucide-react';
 import { STREAMING_PROVIDERS } from '../data/catalog';
 import {
@@ -14,6 +14,7 @@ import {
   type DiscoveryMode,
   type OccasionFilter,
 } from '../services/discovery';
+import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
 interface FilterBarProps {
   selectedGenre: string;
@@ -47,6 +48,8 @@ export function FilterBar({
   setOccasion,
 }: FilterBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobileFilters = useCallback(() => setMobileOpen(false), []);
+  const mobileDialogRef = useAccessibleDialog(closeMobileFilters, mobileOpen);
 
   const toggleProvider = (id: string) => {
     setSelectedProviders((current) =>
@@ -95,7 +98,7 @@ export function FilterBar({
             onClick={() => setMobileOpen((open) => !open)}
             aria-expanded={mobileOpen}
             aria-controls="movie-filter-controls"
-            className="xl:hidden inline-flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200"
+            className="xl:hidden inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200"
           >
             <Filter size={14} /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
             <ChevronDown
@@ -107,7 +110,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-400 hover:text-white"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-zinc-800 px-3 py-2 text-xs font-semibold text-zinc-400 hover:text-white"
             >
               <RotateCcw size={13} /> Reset
             </button>
@@ -115,13 +118,24 @@ export function FilterBar({
         </div>
       </div>
 
-      <div id="movie-filter-controls" className={`${mobileOpen ? 'block' : 'hidden'} xl:block space-y-4`}>
-        <div className="xl:hidden flex items-center justify-between gap-3 px-1">
-          <p className="text-xs text-zinc-400">Choose filters, then close this panel to keep browsing.</p>
+      <div
+        id="movie-filter-controls"
+        ref={mobileOpen ? mobileDialogRef : undefined}
+        role={mobileOpen ? 'dialog' : undefined}
+        aria-modal={mobileOpen || undefined}
+        aria-labelledby={mobileOpen ? 'mobile-filter-title' : undefined}
+        tabIndex={mobileOpen ? -1 : undefined}
+        className={`${mobileOpen ? 'fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-zinc-950/98 p-4 pt-[max(1rem,env(safe-area-inset-top))] shadow-2xl' : 'hidden'} xl:static xl:z-auto xl:block xl:overflow-visible xl:bg-transparent xl:p-0 xl:shadow-none space-y-4`}
+      >
+        <div className="xl:hidden sticky top-0 z-10 -mx-4 -mt-4 mb-1 flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950/95 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
+          <div>
+            <p id="mobile-filter-title" className="text-sm font-bold text-white">Filters</p>
+            <p className="mt-0.5 text-xs text-zinc-400">Start with the kind of night you want, then narrow down.</p>
+          </div>
           <button
             type="button"
-            onClick={() => setMobileOpen(false)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-bold text-zinc-950"
+            onClick={closeMobileFilters}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-bold text-zinc-950"
           >
             <Check size={13} aria-hidden="true" /> Done
           </button>
@@ -140,7 +154,7 @@ export function FilterBar({
                     onClick={() => setDiscoveryMode(option.id)}
                     aria-pressed={discoveryMode === option.id}
                     title={option.description}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    className={`min-h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
                       discoveryMode === option.id
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-md'
                         : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -169,7 +183,7 @@ export function FilterBar({
                     onClick={() => setOccasion(option.id)}
                     aria-pressed={occasion === option.id}
                     title={option.description}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    className={`min-h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
                       occasion === option.id
                         ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/25'
                         : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -201,7 +215,7 @@ export function FilterBar({
                   type="button"
                   onClick={() => setSelectedEra(era.id)}
                   aria-pressed={selectedEra === era.id}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                  className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border ${
                     selectedEra === era.id
                       ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
                       : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -225,7 +239,7 @@ export function FilterBar({
                       ? 'Titles whose supplied synopsis does not support one of the focused categories'
                       : undefined
                   }
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                     selectedGenre === genre
                       ? 'bg-amber-500 text-zinc-950 shadow-md font-extrabold'
                       : 'bg-zinc-900/90 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
@@ -248,7 +262,7 @@ export function FilterBar({
                 type="button"
                 onClick={() => setSelectedProviders([])}
                 aria-pressed={selectedProviders.length === 0}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   selectedProviders.length === 0
                     ? 'bg-zinc-100 text-zinc-950 font-extrabold'
                     : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200'
@@ -261,7 +275,7 @@ export function FilterBar({
                 type="button"
                 onClick={toggleMyServices}
                 aria-pressed={selectedProviders.includes('my_services')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1 ${
+                className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1 ${
                   selectedProviders.includes('my_services')
                     ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 shadow-md'
                     : 'bg-zinc-900/80 border-zinc-800 text-emerald-500/50 hover:border-emerald-500/50 hover:text-emerald-400'
@@ -278,7 +292,7 @@ export function FilterBar({
                     type="button"
                     onClick={() => toggleProvider(provider.id)}
                     aria-pressed={isSelected}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
+                    className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
                       isSelected
                         ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/40'
                         : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
@@ -312,7 +326,7 @@ export function FilterBar({
             <button
               type="button"
               onClick={() => setSelectedTag(null)}
-              className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-600/30 text-rose-300 border border-rose-500/40 hover:bg-rose-600/50 shrink-0"
+              className="flex min-h-10 items-center gap-1 rounded-full border border-rose-500/40 bg-rose-600/30 px-3 py-1 text-xs font-bold text-rose-300 hover:bg-rose-600/50 shrink-0"
             >
               <X size={12} aria-hidden="true" /> Clear theme
             </button>
@@ -327,7 +341,7 @@ export function FilterBar({
                 onClick={() => setSelectedTag(isSelected ? null : tag.id)}
                 aria-pressed={isSelected}
                 title={tag.description}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border ${
+                className={`min-h-10 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border ${
                   isSelected
                     ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/40 scale-105'
                     : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800'

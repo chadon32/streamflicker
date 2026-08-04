@@ -9,10 +9,12 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
-export function useAccessibleDialog(onClose: () => void) {
+export function useAccessibleDialog(onClose: () => void, enabled = true) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const dialog = dialogRef.current;
     if (!dialog) return;
 
@@ -65,7 +67,7 @@ export function useAccessibleDialog(onClose: () => void) {
       document.body.style.overflow = previousOverflow;
       previouslyFocused?.focus();
     };
-  }, [onClose]);
+  }, [enabled, onClose]);
 
   return dialogRef;
 }

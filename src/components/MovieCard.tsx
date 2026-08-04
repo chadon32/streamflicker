@@ -3,6 +3,8 @@ import type { Movie } from '../data/movies';
 import { Play, Star, Plus, Check, Share2, Film, Bell } from 'lucide-react';
 import { getReadableTextColor } from '../lib/color';
 import { getAudienceLabel, getContentWarnings } from '../services/discovery';
+import { getMicroTagLabel } from '../services/catalogClassification';
+import { recordAffiliateClick } from '../services/affiliateAnalytics';
 
 interface MovieCardProps {
   movie: Movie;
@@ -26,17 +28,10 @@ export function MovieCard({
 
   return (
     <div className="movie-card-container group glass-card rounded-2xl overflow-hidden flex flex-col justify-between border border-zinc-800/80 bg-zinc-900/60 shadow-xl relative">
-      <div
+      <button
+        type="button"
         className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 cursor-pointer select-none"
         onClick={() => onWatchTrailer(movie)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            onWatchTrailer(movie);
-          }
-        }}
-        role="button"
-        tabIndex={0}
         aria-label={`Watch the trailer for ${movie.title}`}
       >
         {!imgError ? (
@@ -79,7 +74,7 @@ export function MovieCard({
             Play trailer
           </p>
         </div>
-      </div>
+      </button>
 
       <div className="p-3.5 flex-1 flex flex-col justify-between bg-gradient-to-b from-zinc-900/40 to-zinc-950/90">
         <div>
@@ -116,9 +111,9 @@ export function MovieCard({
             {movie.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="text-[9px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded"
+                className="text-[10px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded"
               >
-                {tag.replace('#', '')}
+                {getMicroTagLabel(tag)}
               </span>
             ))}
           </div>
@@ -132,9 +127,10 @@ export function MovieCard({
                 href={sp.affiliateUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
                 title={`Open ${sp.name} in an external service. Availability can change.`}
                 aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
-                className="px-1.5 py-0.5 rounded text-[9px] font-bold transition-transform hover:scale-105 shrink-0 shadow-sm"
+                className="inline-flex min-h-7 min-w-7 items-center justify-center rounded px-1.5 py-0.5 text-[9px] font-bold shadow-sm transition-transform hover:scale-105 shrink-0"
                 style={{ backgroundColor: sp.color, color: getReadableTextColor(sp.color) }}
               >
                 {sp.logo}
@@ -150,9 +146,9 @@ export function MovieCard({
                   event.stopPropagation();
                   onSetAlert(movie);
                 }}
-                title="Save an alert preference"
-                aria-label={`Save an alert preference for ${movie.title}`}
-                className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-amber-400 hover:text-amber-300 hover:bg-zinc-800 transition-colors"
+                title="Save a local reminder"
+                aria-label={`Save a local reminder for ${movie.title}`}
+                className="inline-flex min-w-9 min-h-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
               >
                 <Bell size={13} />
               </button>
@@ -166,7 +162,7 @@ export function MovieCard({
               }}
               title="Share movie"
               aria-label={`Share ${movie.title}`}
-              className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              className="inline-flex min-w-9 min-h-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
             >
               <Share2 size={13} />
             </button>
@@ -179,7 +175,7 @@ export function MovieCard({
               }}
               title={isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist'}
               aria-label={isBookmarked ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
-              className={`p-1.5 rounded-lg border transition-all ${
+              className={`inline-flex min-w-9 min-h-9 items-center justify-center rounded-lg border transition-all ${
                 isBookmarked
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
@@ -189,6 +185,9 @@ export function MovieCard({
             </button>
           </div>
         </div>
+        <p className="mt-1 text-[9px] leading-relaxed text-zinc-600">
+          Some service links may earn StreamFlicker a commission at no extra cost.
+        </p>
       </div>
     </div>
   );
