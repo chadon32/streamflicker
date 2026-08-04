@@ -1,7 +1,8 @@
-import { Search, Bookmark, Play, Settings, ShieldCheck, Menu, X, Star, LogIn, User, LogOut } from 'lucide-react';
+import { Search, Bookmark, Settings, ShieldCheck, Menu, X, Star, LogIn, User, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import type { Movie } from '../data/catalog';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import streamFlickerLogo from '../../assets/logo.svg';
 
 interface NavbarProps {
   searchQuery: string;
@@ -79,9 +80,12 @@ export function Navbar({
             className="flex items-center gap-2.5 sm:gap-3 group text-left shrink-0"
             aria-label="StreamFlicker home"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-rose-500 to-amber-500 flex items-center justify-center shadow-lg shadow-rose-600/30 group-hover:scale-105 transition-transform duration-300">
-              <Play size={20} className="fill-white text-white translate-x-0.5" />
-            </div>
+            <img
+              src={streamFlickerLogo}
+              alt=""
+              aria-hidden="true"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shadow-lg shadow-rose-600/30 group-hover:scale-105 transition-transform duration-300"
+            />
             <div>
               <span className="font-display font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
                 Stream<span className="text-rose-500">Flicker</span>
