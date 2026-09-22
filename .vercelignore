@@ -1,0 +1,20 @@
+# Only ship the website build inputs. Never upload local credentials, native
+# signing/build files, audit screenshots, or video-production workspaces.
+*
+!src
+!src/**
+!api
+!api/**
+!assets
+!assets/logo.svg
+!public
+!public/**
+public/remotion
+public/remotion/**
+!scripts
+!scripts/generate-catalog.mjs
+!index.html
+!package.json
+!package-lock.json
+!tsconfig*.json
+!vite.config.ts

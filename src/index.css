@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
+@layer components {
+  .discovery-shortcut {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #3f3f46;
+    border-radius: 0.75rem;
+    background: #18181b;
+    color: #e4e4e7;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: background-color 160ms, border-color 160ms;
+  }
+
+  .discovery-shortcut:hover {
+    background: #27272a;
+    border-color: #71717a;
+  }
+
+  .discovery-shortcut[aria-pressed="true"] {
+    background: #4c1024;
+    border-color: #fb7185;
+    color: #ffe4e6;
+  }
+
+  #movie-filter-controls button {
+    min-height: 44px;
+  }
+}
+
 @theme {
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;

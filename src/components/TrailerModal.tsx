@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import type { Movie } from '../data/movies';
-import { X, Star, ExternalLink, SkipForward, Plus, Check, Film, Tv, Play } from 'lucide-react';
+import { X, Star, ExternalLink, SkipForward, Plus, Check, Film, Play, Search } from 'lucide-react';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
-import { getReadableTextColor } from '../lib/color';
 import { getContentWarnings } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
-import { recordAffiliateClick } from '../services/affiliateAnalytics';
+import { getValidatedYouTubeTrailerId } from '../services/trailer';
+import { AvailabilityLinks } from './AvailabilityLinks';
+import { Capacitor } from '@capacitor/core';
+import { openExternalUrl } from '../services/native';
 
 interface TrailerModalProps {
   movie: Movie;
@@ -24,19 +26,45 @@ export function TrailerModal({
 }: TrailerModalProps) {
   const [trailerRequested, setTrailerRequested] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const dialogRef = useAccessibleDialog(onClose);
+  const isNativeApp = Capacitor.isNativePlatform();
 
   // Reset video loaded state when active movie changes
   useEffect(() => {
     setTrailerRequested(false);
     setVideoLoaded(false);
+    setVideoFailed(false);
   }, [movie.id]);
 
-  const youtubeWatchUrl = `https://www.youtube.com/watch?v=${movie.youtubeTrailerId}`;
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${movie.youtubeTrailerId}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1`;
+  const trailerId = getValidatedYouTubeTrailerId(movie.youtubeTrailerId);
+  const hasTrailer = trailerId.length > 0;
+  const youtubeWatchUrl = hasTrailer
+    ? `https://www.youtube.com/watch?v=${trailerId}`
+    : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${movie.title} ${movie.year} official trailer`)}`;
+  const embedUrl = `https://www.youtube.com/embed/${trailerId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
   const hasDirector = movie.director.trim().length > 0 && !/director|studio release/i.test(movie.director);
   const visibleCast = movie.cast.filter((name) => name.trim().length > 0 && !/cast/i.test(name));
   const contentWarnings = getContentWarnings(movie);
+
+  const handleOpenTrailer = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isNativeApp) return;
+    event.preventDefault();
+    void openExternalUrl(youtubeWatchUrl).catch(() => {
+      // Keep the normal anchor as a last-resort fallback if Safari cannot be
+      // presented (for example while another native sheet is already open).
+      window.location.assign(youtubeWatchUrl);
+    });
+  };
+
+  // WKWebView can report a successful iframe navigation even when YouTube's
+  // player cannot render the video. A bounded timeout keeps the modal from
+  // spinning forever and gives the user a reliable external fallback.
+  useEffect(() => {
+    if (!trailerRequested || videoLoaded || isNativeApp || videoFailed) return;
+    const timeout = window.setTimeout(() => setVideoFailed(true), 8000);
+    return () => window.clearTimeout(timeout);
+  }, [isNativeApp, trailerRequested, videoFailed, videoLoaded]);
 
   return (
     <div
@@ -79,9 +107,10 @@ export function TrailerModal({
               href={youtubeWatchUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={handleOpenTrailer}
               className="hidden sm:flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             >
-              <span>Watch on YouTube</span>
+              <span>{hasTrailer ? 'Watch on YouTube' : 'Find trailer on YouTube'}</span>
               <ExternalLink size={13} />
             </a>
 
@@ -108,7 +137,31 @@ export function TrailerModal({
 
         {/* Video Trailer Player Area (16:9 Ratio) */}
         <div className="relative w-full aspect-video bg-zinc-950 shadow-inner group">
-          {!trailerRequested ? (
+          {!hasTrailer ? (
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+              <img
+                src={movie.backdropUrl}
+                alt=""
+                width="1280"
+                height="720"
+                className="absolute inset-0 h-full w-full object-cover opacity-45"
+              />
+              <div className="absolute inset-0 bg-zinc-950/55" />
+              <div className="relative z-10 flex max-w-md flex-col items-center gap-3 px-6 text-center">
+                <p className="text-sm font-semibold text-zinc-200">No verified trailer is attached to this catalog entry.</p>
+                <a
+                  href={youtubeWatchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleOpenTrailer}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-500"
+                >
+                  <Search size={18} aria-hidden="true" /> Find the official trailer
+                  <ExternalLink size={14} aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          ) : !trailerRequested ? (
             <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
               <img
                 src={movie.backdropUrl}
@@ -131,7 +184,7 @@ export function TrailerModal({
             </div>
           ) : (
             <>
-          {!videoLoaded && (
+          {!videoLoaded && !videoFailed && !isNativeApp && (
             <div className="absolute inset-0 bg-zinc-950 flex flex-col items-center justify-center z-10">
               <img
                 src={movie.posterUrl}
@@ -147,15 +200,61 @@ export function TrailerModal({
             </div>
           )}
 
-          <iframe
-            src={embedUrl}
-            title={`${movie.title} Official Trailer`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerPolicy="strict-origin-when-cross-origin"
-            allowFullScreen
-            onLoad={() => setVideoLoaded(true)}
-            className="w-full h-full relative z-0"
-          />
+          {isNativeApp || videoFailed ? (
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+              <img
+                src={movie.backdropUrl}
+                alt=""
+                width="1280"
+                height="720"
+                className="absolute inset-0 h-full w-full object-cover opacity-35"
+              />
+              <div className="absolute inset-0 bg-zinc-950/65" />
+              <div className="relative z-10 flex max-w-md flex-col items-center gap-3 px-6 text-center">
+                <p className="text-sm font-semibold text-zinc-100">
+                  {isNativeApp
+                    ? 'Open the official trailer in YouTube to watch it securely.'
+                    : 'YouTube could not load this trailer in the embedded player.'}
+                </p>
+                <a
+                  href={youtubeWatchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleOpenTrailer}
+                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-500"
+                >
+                  <ExternalLink size={17} aria-hidden="true" /> Watch on YouTube
+                </a>
+                {!isNativeApp && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoFailed(false);
+                      setVideoLoaded(false);
+                      setTrailerRequested(false);
+                    }}
+                    className="text-xs font-semibold text-zinc-300 underline underline-offset-4 hover:text-white"
+                  >
+                    Try loading again
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <iframe
+              src={embedUrl}
+              title={`${movie.title} Official Trailer`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+              onLoad={() => setVideoLoaded(true)}
+              onError={() => {
+                setVideoLoaded(false);
+                setVideoFailed(true);
+              }}
+              className="w-full h-full relative z-0"
+            />
+          )}
             </>
           )}
         </div>
@@ -241,56 +340,7 @@ export function TrailerModal({
             ))}
           </div>
 
-          {/* Streaming Platform Affiliate Links Banner */}
-          <div className="pt-4 border-t border-zinc-900">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Tv size={18} className="text-rose-500" />
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Check availability on these services
-                </h4>
-              </div>
-            </div>
-            <p className="mb-3 text-xs leading-relaxed text-zinc-500">
-              Some service links may earn StreamFlicker a commission at no extra cost to you.
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {movie.streamingPlatforms.map((sp) => (
-                <a
-                  key={sp.id}
-                  href={sp.affiliateUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
-                  title={`Open ${sp.name} in an external service. Availability can change.`}
-                  aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
-                  className="flex items-center justify-between p-3.5 rounded-2xl border border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-sm"
-                      style={{ backgroundColor: sp.color, color: getReadableTextColor(sp.color) }}
-                    >
-                      {sp.logo}
-                    </span>
-                    <div>
-                      <span className="block font-bold text-sm text-zinc-100 group-hover:text-rose-400 transition-colors">
-                        {sp.name}
-                      </span>
-                      <span className="text-[11px] text-zinc-400">
-                        {sp.type === 'free' ? 'Free with ads' : sp.price ?? 'Discovery link'}
-                      </span>
-                    </div>
-                  </div>
-                  <ExternalLink size={16} className="text-zinc-500 group-hover:text-white transition-colors" />
-                </a>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-zinc-500">
-              Availability and pricing are discovery-only, vary by region, and can change. Confirm the title on the service before subscribing or renting.
-            </p>
-          </div>
+          <AvailabilityLinks movie={movie} variant="detail" />
 
         </div>
 

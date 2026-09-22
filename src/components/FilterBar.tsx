@@ -1,10 +1,11 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 import { CalendarDays, Check, ChevronDown, Filter, RotateCcw, Sparkles, X } from 'lucide-react';
 import { STREAMING_PROVIDERS } from '../data/catalog';
 import {
   ERA_FILTERS,
   GENRE_FILTERS,
   MICRO_TAG_DEFINITIONS,
+  getMicroTagLabel,
   type CatalogFilterCounts,
   type EraFilterId,
 } from '../services/catalogClassification';
@@ -26,6 +27,7 @@ interface FilterBarProps {
   selectedProviders: string[];
   setSelectedProviders: Dispatch<SetStateAction<string[]>>;
   counts: CatalogFilterCounts;
+  resultCount: number;
   discoveryMode: DiscoveryMode;
   setDiscoveryMode: (mode: DiscoveryMode) => void;
   occasion: OccasionFilter;
@@ -42,14 +44,24 @@ export function FilterBar({
   selectedProviders,
   setSelectedProviders,
   counts,
+  resultCount,
   discoveryMode,
   setDiscoveryMode,
   occasion,
   setOccasion,
 }: FilterBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1280px)').matches);
   const closeMobileFilters = useCallback(() => setMobileOpen(false), []);
-  const mobileDialogRef = useAccessibleDialog(closeMobileFilters, mobileOpen);
+  const isModal = mobileOpen && !isDesktop;
+  const mobileDialogRef = useAccessibleDialog(closeMobileFilters, isModal);
+
+  useEffect(() => {
+    const breakpoint = window.matchMedia('(min-width: 1280px)');
+    const syncBreakpoint = () => setIsDesktop(breakpoint.matches);
+    breakpoint.addEventListener('change', syncBreakpoint);
+    return () => breakpoint.removeEventListener('change', syncBreakpoint);
+  }, []);
 
   const toggleProvider = (id: string) => {
     setSelectedProviders((current) =>
@@ -71,6 +83,18 @@ export function FilterBar({
     discoveryMode !== 'all',
     occasion !== 'all',
   ].filter(Boolean).length;
+  const hasVerifiedProviders = Object.values(counts.providers).some((count) => count > 0);
+  const activeFilters = [
+    ...(selectedGenre !== 'All' ? [{ label: selectedGenre, clear: () => setSelectedGenre('All') }] : []),
+    ...(selectedEra !== 'All' ? [{ label: ERA_FILTERS.find(({ id }) => id === selectedEra)?.label ?? selectedEra, clear: () => setSelectedEra('All') }] : []),
+    ...(selectedTag ? [{ label: getMicroTagLabel(selectedTag), clear: () => setSelectedTag(null) }] : []),
+    ...(discoveryMode !== 'all' ? [{ label: 'Family-friendly', clear: () => setDiscoveryMode('all') }] : []),
+    ...(occasion !== 'all' ? [{ label: OCCASION_OPTIONS.find(({ id }) => id === occasion)?.label ?? occasion, clear: () => setOccasion('all') }] : []),
+    ...selectedProviders.map((id) => ({
+      label: id === 'my_services' ? 'My services' : STREAMING_PROVIDERS.find((provider) => provider.id === id)?.name ?? id,
+      clear: () => setSelectedProviders((current) => current.filter((provider) => provider !== id)),
+    })),
+  ];
 
   const resetFilters = () => {
     setSelectedEra('All');
@@ -82,14 +106,14 @@ export function FilterBar({
   };
 
   return (
-    <div className="space-y-4 my-8">
-      <div className="flex items-start justify-between gap-3">
+    <div className="space-y-4 my-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-zinc-200" id="filter-help">
-            Find the right movie for tonight.
+            Make it your kind of movie.
           </p>
-          <p className="text-xs text-zinc-500 mt-1">
-            Search a title, actor, theme, or occasion, then narrow the results.
+          <p className="text-xs text-zinc-400 mt-1">
+            Narrow by genre, year, or a theme like zombies.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -98,9 +122,9 @@ export function FilterBar({
             onClick={() => setMobileOpen((open) => !open)}
             aria-expanded={mobileOpen}
             aria-controls="movie-filter-controls"
-            className="xl:hidden inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:border-zinc-500 hover:text-white"
           >
-            <Filter size={14} /> Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            <Filter size={14} /> {mobileOpen ? 'Hide filters' : 'Filters'}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
             <ChevronDown
               size={14}
               className={mobileOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
@@ -118,26 +142,36 @@ export function FilterBar({
         </div>
       </div>
 
+      {activeFilters.length > 0 && (
+        <div className="flex flex-wrap gap-2" aria-label="Active filters">
+          {activeFilters.map(({ label, clear }) => (
+            <button key={label} type="button" onClick={clear} aria-label={`Remove ${label} filter`} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-500/20">
+              {label}<X size={14} aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      )}
+
       <div
         id="movie-filter-controls"
-        ref={mobileOpen ? mobileDialogRef : undefined}
-        role={mobileOpen ? 'dialog' : undefined}
-        aria-modal={mobileOpen || undefined}
-        aria-labelledby={mobileOpen ? 'mobile-filter-title' : undefined}
-        tabIndex={mobileOpen ? -1 : undefined}
-        className={`${mobileOpen ? 'fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-zinc-950/98 p-4 pt-[max(1rem,env(safe-area-inset-top))] shadow-2xl' : 'hidden'} xl:static xl:z-auto xl:block xl:overflow-visible xl:bg-transparent xl:p-0 xl:shadow-none space-y-4`}
+        ref={mobileDialogRef}
+        role={isModal ? 'dialog' : undefined}
+        aria-modal={isModal || undefined}
+        aria-labelledby={isModal ? 'mobile-filter-title' : undefined}
+        tabIndex={isModal ? -1 : undefined}
+        className={`${mobileOpen ? 'fixed inset-0 z-[70] flex flex-col overflow-y-auto bg-zinc-950 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl xl:static xl:z-auto xl:block xl:overflow-visible xl:bg-transparent xl:p-0 xl:shadow-none' : 'hidden'} space-y-4`}
       >
         <div className="xl:hidden sticky top-0 z-10 -mx-4 -mt-4 mb-1 flex items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950/95 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-md">
           <div>
             <p id="mobile-filter-title" className="text-sm font-bold text-white">Filters</p>
-            <p className="mt-0.5 text-xs text-zinc-400">Start with the kind of night you want, then narrow down.</p>
+            <p className="mt-0.5 text-xs text-zinc-400" role="status">{resultCount.toLocaleString()} matching {resultCount === 1 ? 'movie' : 'movies'}</p>
           </div>
           <button
             type="button"
             onClick={closeMobileFilters}
             className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-bold text-zinc-950"
           >
-            <Check size={13} aria-hidden="true" /> Done
+            <Check size={13} aria-hidden="true" /> Show results
           </button>
         </div>
         <div className="flex flex-col gap-4 glass-panel p-4 rounded-2xl">
@@ -156,7 +190,7 @@ export function FilterBar({
                     title={option.description}
                     className={`min-h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
                       discoveryMode === option.id
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-md'
+                        ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
                         : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                     }`}
                   >
@@ -185,7 +219,7 @@ export function FilterBar({
                     title={option.description}
                     className={`min-h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
                       occasion === option.id
-                        ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/25'
+                        ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
                         : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                     }`}
                   >
@@ -206,10 +240,10 @@ export function FilterBar({
               className="flex flex-wrap items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none"
               aria-label="Movie era and genre filters"
             >
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mr-2 shrink-0 flex items-center gap-1">
+              <span className="basis-full text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1 flex items-center gap-1">
                 <CalendarDays size={14} /> Era:
               </span>
-              {ERA_FILTERS.filter(({ id }) => (counts.eras[id] ?? 0) > 0).map((era) => (
+              {ERA_FILTERS.filter(({ id }) => id === 'All' || id === selectedEra || (counts.eras[id] ?? 0) > 0).map((era) => (
                 <button
                   key={era.id}
                   type="button"
@@ -217,18 +251,18 @@ export function FilterBar({
                   aria-pressed={selectedEra === era.id}
                   className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border ${
                     selectedEra === era.id
-                      ? 'bg-rose-600 text-white border-rose-500 shadow-lg shadow-rose-600/30'
+                      ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
                       : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                   }`}
                 >
-                  {era.label} <span className="opacity-70">({counts.eras[era.id]})</span>
+                  {era.label} <span className="opacity-70">({counts.eras[era.id] ?? 0})</span>
                 </button>
               ))}
 
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 ml-4 mr-2 shrink-0 hidden md:inline">
+              <span className="basis-full text-xs font-semibold uppercase tracking-wider text-zinc-400 mt-3 mb-1">
                 Genre:
               </span>
-              {GENRE_FILTERS.filter((genre) => (counts.genres[genre] ?? 0) > 0).map((genre) => (
+              {GENRE_FILTERS.filter((genre) => genre === 'All' || genre === selectedGenre || (counts.genres[genre] ?? 0) > 0).map((genre) => (
                 <button
                   key={genre}
                   type="button"
@@ -239,21 +273,22 @@ export function FilterBar({
                       ? 'Titles whose supplied synopsis does not support one of the focused categories'
                       : undefined
                   }
-                  className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border ${
                     selectedGenre === genre
-                      ? 'bg-amber-500 text-zinc-950 shadow-md font-extrabold'
-                      : 'bg-zinc-900/90 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
+                      ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
+                      : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                   }`}
                 >
-                  {genre} <span className="opacity-70">({counts.genres[genre]})</span>
+                  {genre} <span className="opacity-70">({counts.genres[genre] ?? 0})</span>
                 </button>
               ))}
             </div>
 
-            <div
-              className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0"
-              aria-label="Streaming service filters"
-            >
+            {hasVerifiedProviders && (
+              <div
+                className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0"
+                aria-label="Verified streaming service filters"
+              >
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mr-2 shrink-0 flex items-center gap-1">
                 <Filter size={14} /> Stream on:
               </span>
@@ -304,7 +339,8 @@ export function FilterBar({
                   </button>
                 );
               })}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -314,7 +350,7 @@ export function FilterBar({
           </p>
         )}
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none" aria-label="Movie theme filters">
+        <div className="flex flex-wrap items-center gap-2 pb-2" aria-label="Movie theme filters">
           <span
             className="text-xs font-semibold text-rose-400 uppercase tracking-wider shrink-0 flex items-center gap-1.5 mr-1"
             title="Themes detected from the supplied movie synopsis."
@@ -332,7 +368,7 @@ export function FilterBar({
             </button>
           )}
 
-          {MICRO_TAG_DEFINITIONS.filter(({ id }) => (counts.tags[id] ?? 0) > 0).map((tag) => {
+          {MICRO_TAG_DEFINITIONS.filter(({ id }) => id === selectedTag || (counts.tags[id] ?? 0) > 0).map((tag) => {
             const isSelected = selectedTag === tag.id;
             return (
               <button
@@ -343,15 +379,16 @@ export function FilterBar({
                 title={tag.description}
                 className={`min-h-10 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border ${
                   isSelected
-                    ? 'bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/40 scale-105'
+                    ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
                     : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800'
                 }`}
               >
-                {tag.label} <span className="opacity-65">({counts.tags[tag.id]})</span>
+                {tag.label} <span className="opacity-65">({counts.tags[tag.id] ?? 0})</span>
               </button>
             );
           })}
         </div>
+        <p className="text-xs leading-relaxed text-zinc-400">Counts show each option within your search, before combining filters. Streaming services appear only with verified regional listings.</p>
       </div>
     </div>
   );

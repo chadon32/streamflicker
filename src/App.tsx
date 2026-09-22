@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { lazy, Suspense, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { STREAMING_PROVIDERS, type Movie } from './data/catalog';
 import { searchTMDB } from './services/tmdbApi';
@@ -28,22 +28,40 @@ import { HeroCarousel } from './components/HeroCarousel';
 import { FilterBar } from './components/FilterBar';
 import { MovieCard } from './components/MovieCard';
 import { MovieRow } from './components/MovieRow';
-import { TrailerModal } from './components/TrailerModal';
-import { ShareModal } from './components/ShareModal';
-import { SettingsModal } from './components/SettingsModal';
-import { AccountSettingsModal } from './components/AccountSettingsModal';
-import { LegalModal, type LegalTab } from './components/LegalModal';
-import { WatchlistModal } from './components/WatchlistModal';
-import { AuthModal } from './components/AuthModal';
-import { AlertsModal } from './components/AlertsModal';
+import { GoogleAd } from './components/GoogleAd';
+import { MonetizationPanel } from './components/MonetizationPanel';
+import { SponsorSpotlight } from './components/SponsorSpotlight';
 import { Capacitor } from '@capacitor/core';
-import { Film, Clapperboard, Sparkles, Award, Heart, Clock3, UsersRound } from 'lucide-react';
-import { supabase } from './lib/supabase';
-import { deleteCurrentAccount } from './services/account';
-import { getPublicMonetizationLinks } from './services/monetization';
+import { Film, Clapperboard, Sparkles, Award, Heart, Clock3, UsersRound, ArrowRight, LayoutGrid } from 'lucide-react';
+import { isSupabaseConfigured } from './lib/supabaseConfig';
+import { getPublicMonetizationConfig } from './services/monetization';
+import { getValidatedYouTubeTrailerId } from './services/trailer';
+import { mergeLiveAndLocalMovies, mergeLiveMoviePages } from './services/searchCatalog';
+import { openNativeMovieNight } from './services/native';
+import {
+  getLegacyWatchlist,
+  getWatchlistStorageKey,
+  importLegacyWatchlistToGuest,
+  importLegacyWatchlistToUser,
+  loadWatchlistForUser,
+  parseStoredWatchlist,
+  saveWatchlistForUser,
+} from './services/watchlistStorage';
+import type { TMDBPagination, TMDBExpandedCollection } from './services/tmdbApi';
 import type { User } from '@supabase/supabase-js';
 
-const WATCHLIST_STORAGE_KEY = 'streamflicker_watchlist';
+const TrailerModal = lazy(() => import('./components/TrailerModal').then(({ TrailerModal }) => ({ default: TrailerModal })));
+const ShareModal = lazy(() => import('./components/ShareModal').then(({ ShareModal }) => ({ default: ShareModal })));
+const SettingsModal = lazy(() => import('./components/SettingsModal').then(({ SettingsModal }) => ({ default: SettingsModal })));
+const AccountSettingsModal = lazy(() => import('./components/AccountSettingsModal').then(({ AccountSettingsModal }) => ({ default: AccountSettingsModal })));
+const LegalModal = lazy(() => import('./components/LegalModal').then(({ LegalModal }) => ({ default: LegalModal })));
+const WatchlistModal = lazy(() => import('./components/WatchlistModal').then(({ WatchlistModal }) => ({ default: WatchlistModal })));
+const MovieNightPlanner = lazy(() => import('./components/MovieNightPlanner').then(({ MovieNightPlanner }) => ({ default: MovieNightPlanner })));
+const AuthModal = lazy(() => import('./components/AuthModal').then(({ AuthModal }) => ({ default: AuthModal })));
+const AlertsModal = lazy(() => import('./components/AlertsModal').then(({ AlertsModal }) => ({ default: AlertsModal })));
+const BusinessPage = lazy(() => import('./components/BusinessPage').then(({ BusinessPage }) => ({ default: BusinessPage })));
+type LegalTab = 'terms' | 'privacy' | 'affiliate' | 'dmca';
+
 const PROVIDER_METADATA = new Map<string, (typeof STREAMING_PROVIDERS)[number]>(
   STREAMING_PROVIDERS.map((provider) => [provider.id, provider]),
 );
@@ -52,29 +70,32 @@ function normalizeVisibleText(value: string) {
   return value.replace(/[\u2013\u2014]/g, '-');
 }
 
-function parseStoredWatchlist(value: string | null): Movie[] {
-  if (!value) return [];
+function sortCatalogQuality(movies: Movie[]): Movie[] {
+  return [...movies].sort((left, right) =>
+    right.score - left.score || right.year - left.year || left.title.localeCompare(right.title));
+}
 
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed.filter(
-      (item): item is Movie =>
-        typeof item === 'object' &&
-        item !== null &&
-        typeof (item as Movie).id === 'string' &&
-        typeof (item as Movie).title === 'string' &&
-        Array.isArray((item as Movie).streamingPlatforms),
-    );
-  } catch {
-    return [];
-  }
+function sortDateNightQuality(movies: Movie[]): Movie[] {
+  return [...movies].sort((left, right) =>
+    getDateNightPriority(right) - getDateNightPriority(left)
+    || right.score - left.score
+    || right.year - left.year
+    || left.title.localeCompare(right.title));
 }
 
 export function AppContent() {
-  const [publicMonetizationLinks] = useState(getPublicMonetizationLinks);
+  const [pagePath, setPagePath] = useState(() => window.location.pathname);
+  const [publicMonetization] = useState(getPublicMonetizationConfig);
   const showWebMonetizationLinks = !Capacitor.isNativePlatform();
+  const authEnabled = isSupabaseConfigured && !Capacitor.isNativePlatform();
+  const [authReady, setAuthReady] = useState(!authEnabled);
+
+  useEffect(() => {
+    const syncPagePath = () => setPagePath(window.location.pathname);
+    window.addEventListener('popstate', syncPagePath);
+    return () => window.removeEventListener('popstate', syncPagePath);
+  }, []);
+
   const [catalog, setCatalog] = useState<Movie[]>([]);
   const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [catalogUsingFallback, setCatalogUsingFallback] = useState(false);
@@ -86,26 +107,60 @@ export function AppContent() {
   const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>('all');
   const [occasion, setOccasion] = useState<OccasionFilter>('all');
+  const [browseCatalog, setBrowseCatalog] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const activeWatchlistStorageKey = authReady ? getWatchlistStorageKey(user?.id) : '';
+  const activeWatchlistStorageKeyRef = useRef(activeWatchlistStorageKey);
+  activeWatchlistStorageKeyRef.current = activeWatchlistStorageKey;
+
+  const startDiscovery = (choice: 'home' | 'all' | 'family' | 'date-night' | 'quick-watch' | 'zombies') => {
+    setSearchQuery('');
+    setSelectedGenre('All');
+    setSelectedEra('All');
+    setSelectedTag(choice === 'zombies' ? '#ZombieOutbreak' : null);
+    setSelectedProviders([]);
+    setDiscoveryMode(choice === 'family' ? 'family' : 'all');
+    setOccasion(choice === 'date-night' || choice === 'quick-watch' ? choice : 'all');
+    setBrowseCatalog(choice !== 'home');
+  };
   
   // Live TMDB Results State
   const [tmdbResults, setTmdbResults] = useState<Movie[]>([]);
   const [isSearchingTMDB, setIsSearchingTMDB] = useState(false);
+  const [liveSearchStatus, setLiveSearchStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
+  const [tmdbPagination, setTmdbPagination] = useState<TMDBPagination | null>(null);
+  const [tmdbExpandedCollections, setTmdbExpandedCollections] = useState<TMDBExpandedCollection[]>([]);
+  const [tmdbWarnings, setTmdbWarnings] = useState<string[]>([]);
+  const [tmdbCheckedAt, setTmdbCheckedAt] = useState<string | null>(null);
+  const [tmdbRegion, setTmdbRegion] = useState<string | null>(null);
+  const [isLoadingMoreLive, setIsLoadingMoreLive] = useState(false);
+  const liveRequestIdRef = useRef(0);
+  const liveMoreAbortRef = useRef<AbortController | null>(null);
 
   // Modals State
   const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
   const [shareMovie, setShareMovie] = useState<Movie | null>(null);
   const [showWatchlist, setShowWatchlist] = useState(false);
+  const [showMovieNight, setShowMovieNight] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [alertMovie, setAlertMovie] = useState<Movie | null>(null);
 
+  const handleOpenMovieNight = useCallback(async () => {
+    // iOS/iPadOS gets an app-owned native workflow that remains useful when
+    // the network is unavailable. The web planner remains the fallback for
+    // browsers and for older native builds while the plugin is unavailable.
+    if (Capacitor.isNativePlatform() && await openNativeMovieNight()) return;
+    setShowMovieNight(true);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
     setCatalogStatus('loading');
-    import('./data/movies')
+    import('./data/generatedMovies')
       .then(({ SAMPLE_MOVIES }) => {
         if (cancelled) return;
         setCatalog(SAMPLE_MOVIES);
@@ -115,7 +170,7 @@ export function AppContent() {
       .catch(() => {
         if (cancelled) return;
         // A previously saved Watchlist is a useful local fallback while the catalog chunk is retried.
-        const fallback = parseStoredWatchlist(localStorage.getItem(WATCHLIST_STORAGE_KEY));
+        const fallback = parseStoredWatchlist(localStorage.getItem(activeWatchlistStorageKeyRef.current));
         if (fallback.length > 0) {
           setCatalog(fallback);
           setCatalogUsingFallback(true);
@@ -131,23 +186,53 @@ export function AppContent() {
   }, [catalogReloadToken]);
 
   // Auth state
-  const [user, setUser] = useState<User | null>(null);
-
   useEffect(() => {
-    // Fetch initial user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    // Native builds use an offline-first guest mode. This keeps the app's
+    // core planner and watchlist reliable even when an account service is
+    // unavailable, and avoids exposing a sign-up control that cannot work in
+    // a release build without a reachable Supabase project.
+    if (!authEnabled) return;
+
+    let disposed = false;
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    void import('./lib/supabase').then(({ supabase }) => {
+      if (disposed) return;
+
+      // Fetch initial user after the shell has rendered. Supabase is only
+      // needed for account features, so keep its client out of the initial JS.
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!disposed) {
+          setUser(user);
+          setAuthReady(true);
+        }
+      }).catch(() => {
+        if (!disposed) {
+          setUser(null);
+          setAuthReady(true);
+        }
+      });
+
+      // Listen for auth changes
+      const authState = supabase.auth.onAuthStateChange((event, session) => {
+        if (!disposed) {
+          setUser(session?.user ?? null);
+          if (event !== 'INITIAL_SESSION') setAuthReady(true);
+        }
+      });
+      subscription = authState.data.subscription;
+    }).catch(() => {
+      if (!disposed) {
+        setUser(null);
+        setAuthReady(true);
+      }
     });
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      disposed = true;
+      subscription?.unsubscribe();
+    };
+  }, [authEnabled]);
 
   // Toast Feedback State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -165,10 +250,27 @@ export function AppContent() {
   }, []);
 
   const handleDeleteAccount = useCallback(async () => {
+    const { deleteCurrentAccount } = await import('./services/account');
     await deleteCurrentAccount();
     setShowAccountSettings(false);
     showToast('Your account was permanently deleted.');
   }, [showToast]);
+
+  const handleImportLegacyWatchlist = useCallback(() => {
+    const imported = user
+      ? importLegacyWatchlistToUser(user.id)
+      : importLegacyWatchlistToGuest();
+    setWatchlist(imported);
+    showToast(
+      user
+        ? `Imported ${imported.length} saved movie${imported.length === 1 ? '' : 's'} to this account.`
+        : `Imported ${imported.length} saved movie${imported.length === 1 ? '' : 's'} to this device.`,
+    );
+  }, [showToast, user]);
+
+  const handleSignOut = useCallback(() => {
+    void import('./lib/supabase').then(({ supabase }) => supabase.auth.signOut());
+  }, []);
 
   useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
@@ -181,23 +283,43 @@ export function AppContent() {
 
   // Watchlist State with Persistence
   const [watchlist, setWatchlist] = useState<Movie[]>(() =>
-    parseStoredWatchlist(localStorage.getItem(WATCHLIST_STORAGE_KEY)),
+    authReady ? loadWatchlistForUser(user?.id) : [],
   );
+  const [watchlistStorageKey, setWatchlistStorageKey] = useState(activeWatchlistStorageKey);
 
   useEffect(() => {
-    localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
-  }, [watchlist]);
+    if (!authReady) return;
+    if (watchlistStorageKey !== activeWatchlistStorageKey) {
+      setWatchlistStorageKey(activeWatchlistStorageKey);
+      setWatchlist(loadWatchlistForUser(user?.id));
+      setActiveTrailerMovie(null);
+      setShareMovie(null);
+      setShowWatchlist(false);
+      setShowMovieNight(false);
+      setShowSettings(false);
+      setShowAccountSettings(false);
+      setShowAuth(false);
+      setAlertMovie(null);
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = null;
+      }
+      setToastMessage(null);
+      return;
+    }
+    saveWatchlistForUser(user?.id, watchlist);
+  }, [activeWatchlistStorageKey, authReady, user?.id, watchlistStorageKey, watchlist]);
 
   useEffect(() => {
     const syncWatchlist = (event: StorageEvent) => {
-      if (event.key === WATCHLIST_STORAGE_KEY) {
+      if (event.key === watchlistStorageKey) {
         setWatchlist(parseStoredWatchlist(event.newValue));
       }
     };
 
     window.addEventListener('storage', syncWatchlist);
     return () => window.removeEventListener('storage', syncWatchlist);
-  }, []);
+  }, [watchlistStorageKey]);
 
   const toggleBookmark = useCallback((movie: Movie) => {
     setWatchlist((prev) => {
@@ -214,23 +336,55 @@ export function AppContent() {
 
   // Live TMDB Search Trigger with Debounce
   useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
+    const requestId = liveRequestIdRef.current + 1;
+    liveRequestIdRef.current = requestId;
+    liveMoreAbortRef.current?.abort();
+    liveMoreAbortRef.current = null;
+    const trimmedQuery = searchQuery.trim();
+    if (!trimmedQuery || trimmedQuery.length < 2) {
       setTmdbResults([]);
       setIsSearchingTMDB(false);
+      setLiveSearchStatus('idle');
+      setTmdbPagination(null);
+      setTmdbExpandedCollections([]);
+      setTmdbWarnings([]);
+      setTmdbCheckedAt(null);
+      setTmdbRegion(null);
+      setIsLoadingMoreLive(false);
       return;
     }
 
     const controller = new AbortController();
+    setTmdbResults([]);
+    setTmdbPagination(null);
+    setTmdbExpandedCollections([]);
+    setTmdbWarnings([]);
+    setTmdbCheckedAt(null);
+    setTmdbRegion(null);
     const timer = window.setTimeout(async () => {
       setIsSearchingTMDB(true);
+      setLiveSearchStatus('checking');
       try {
-        const results = await searchTMDB(searchQuery, controller.signal);
-        if (!controller.signal.aborted) setTmdbResults(results);
+        const result = await searchTMDB(trimmedQuery, controller.signal, 1);
+        if (!controller.signal.aborted && liveRequestIdRef.current === requestId) {
+          setTmdbResults(result.movies);
+          setLiveSearchStatus(result.status);
+          setTmdbPagination(result.pagination ?? null);
+          setTmdbExpandedCollections(result.expandedCollections ?? []);
+          setTmdbWarnings(result.warnings ?? []);
+          setTmdbCheckedAt(result.checkedAt ?? null);
+          setTmdbRegion(result.region ?? null);
+        }
       } catch {
         // Keep local catalog results available when live search is unavailable.
-        if (!controller.signal.aborted) setTmdbResults([]);
+        if (!controller.signal.aborted && liveRequestIdRef.current === requestId) {
+          setTmdbResults([]);
+          setLiveSearchStatus('unavailable');
+          setTmdbPagination(null);
+          setTmdbWarnings(['Live catalog search is temporarily unavailable.']);
+        }
       } finally {
-        if (!controller.signal.aborted) setIsSearchingTMDB(false);
+        if (!controller.signal.aborted && liveRequestIdRef.current === requestId) setIsSearchingTMDB(false);
       }
     }, 400);
 
@@ -240,10 +394,47 @@ export function AppContent() {
     };
   }, [searchQuery]);
 
-  const prepareCatalogMovie = useCallback((movie: Movie) => {
-    const uniquePlatforms = [
-      ...new Map((movie.streamingPlatforms || []).map((platform) => [platform.id, platform])).values(),
-    ];
+  const loadMoreLiveResults = useCallback(async () => {
+    if (!searchQuery.trim() || !tmdbPagination?.hasMore || isLoadingMoreLive) return;
+    const requestId = liveRequestIdRef.current;
+    const queryAtRequest = searchQuery;
+    const nextPage = tmdbPagination.page + 1;
+    const controller = new AbortController();
+    liveMoreAbortRef.current?.abort();
+    liveMoreAbortRef.current = controller;
+    setIsLoadingMoreLive(true);
+    try {
+      const result = await searchTMDB(queryAtRequest, controller.signal, nextPage);
+      if (controller.signal.aborted || liveRequestIdRef.current !== requestId || searchQuery !== queryAtRequest) return;
+      if (result.status !== 'available') {
+        setTmdbWarnings((current) => [...new Set([...current, 'More live results could not be loaded right now.'])]);
+        return;
+      }
+      setTmdbResults((current) => mergeLiveMoviePages(current, result.movies));
+      setTmdbPagination(result.pagination ?? null);
+      setTmdbWarnings((current) => [...new Set([...current, ...(result.warnings ?? [])])]);
+      setTmdbCheckedAt(result.checkedAt ?? tmdbCheckedAt);
+      setTmdbRegion(result.region ?? tmdbRegion);
+    } catch {
+      if (!controller.signal.aborted && liveRequestIdRef.current === requestId) {
+        setTmdbWarnings((current) => [...new Set([...current, 'More live results could not be loaded right now.'])]);
+      }
+    } finally {
+      if (!controller.signal.aborted && liveRequestIdRef.current === requestId) setIsLoadingMoreLive(false);
+    }
+  }, [isLoadingMoreLive, searchQuery, tmdbCheckedAt, tmdbPagination, tmdbRegion]);
+
+  const prepareLiveMovie = useCallback((movie: Movie) => {
+    const hasVerifiedAvailability = movie.availability?.status === 'verified';
+    const uniquePlatforms = hasVerifiedAvailability
+      ? [
+          ...new Map(
+            (movie.streamingPlatforms || [])
+              .filter((platform) => platform.availabilityStatus === 'verified')
+              .map((platform) => [`${platform.id}-${platform.type}`, platform]),
+          ).values(),
+        ]
+      : [];
 
     return normalizeMovieClassification({
       ...movie,
@@ -251,6 +442,12 @@ export function AppContent() {
       description: normalizeVisibleText(movie.description),
       director: normalizeVisibleText(movie.director),
       cast: movie.cast.map(normalizeVisibleText),
+      youtubeTrailerId: getValidatedYouTubeTrailerId(movie.youtubeTrailerId),
+      availability: movie.availability ?? {
+        status: 'discovery',
+        source: 'bundled',
+        region: 'US',
+      },
       streamingPlatforms: uniquePlatforms.map((platform) => {
         const canonicalProvider = PROVIDER_METADATA.get(platform.id);
         return {
@@ -258,16 +455,17 @@ export function AppContent() {
           name: canonicalProvider?.name ?? platform.name,
           logo: canonicalProvider?.logo ?? platform.logo,
           color: canonicalProvider?.color ?? platform.color,
-          affiliateUrl: generateAffiliateUrl(platform.affiliateUrl, platform.id, affiliateConfig),
+          affiliateUrl: platform.source === 'tmdb'
+            ? platform.affiliateUrl
+            : generateAffiliateUrl(platform.affiliateUrl, platform.id, affiliateConfig),
         };
       }),
     });
   }, [affiliateConfig]);
 
-  const canonicalCatalog = useMemo(
-    () => catalog.map(prepareCatalogMovie),
-    [catalog, prepareCatalogMovie],
-  );
+  // Bundled movies are preclassified and compacted during the build. Only
+  // live TMDB records need the runtime normalization and provider pass.
+  const canonicalCatalog = catalog;
 
   // Combined canonical catalog with optional live search results.
   const fullCatalog = useMemo(() => {
@@ -276,14 +474,12 @@ export function AppContent() {
     const localMatches = smartSearchMovies(canonicalCatalog, searchQuery);
     if (tmdbResults.length === 0) return localMatches;
 
-    const canonicalTMDBResults = smartSearchMovies(
-      tmdbResults.map(prepareCatalogMovie),
+    const liveMatches = smartSearchMovies(
+      tmdbResults.map(prepareLiveMovie),
       searchQuery,
     );
-    const existingTitles = new Set(canonicalTMDBResults.map((movie) => movie.title.toLowerCase()));
-    const uniqueLocalMatches = localMatches.filter((movie) => !existingTitles.has(movie.title.toLowerCase()));
-    return [...canonicalTMDBResults, ...uniqueLocalMatches];
-  }, [canonicalCatalog, tmdbResults, searchQuery, prepareCatalogMovie]);
+    return mergeLiveAndLocalMovies(liveMatches, localMatches);
+  }, [canonicalCatalog, tmdbResults, searchQuery, prepareLiveMovie]);
 
   const filterCounts = useMemo(() => getCatalogFilterCounts(fullCatalog), [fullCatalog]);
 
@@ -313,19 +509,16 @@ export function AppContent() {
       providerIds,
     });
 
-    // Keep catalog scores primary except for date night, where an explicit
-    // relationship match should never be buried below a generic high score.
-    return [...result]
+    const filtered = [...result]
       .filter((movie) => matchesDiscoveryMode(movie, discoveryMode))
-      .filter((movie) => matchesOccasion(movie, occasion))
-      .sort((a, b) => {
-        if (occasion === 'date-night') {
-          const dateNightDifference = getDateNightPriority(b) - getDateNightPriority(a);
-          if (dateNightDifference !== 0) return dateNightDifference;
-        }
-        return b.score - a.score || b.year - a.year;
-      });
-  }, [fullCatalog, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion]);
+      .filter((movie) => matchesOccasion(movie, occasion));
+
+    // smartSearchMovies already ranks active text queries by title, alias,
+    // intent, and typo relevance. Do not erase that ordering with a generic
+    // score sort after applying the remaining filters.
+    if (searchQuery.trim()) return filtered;
+    return occasion === 'date-night' ? sortDateNightQuality(filtered) : sortCatalogQuality(filtered);
+  }, [fullCatalog, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion, searchQuery]);
 
   // Suggestions must respect the same filters as the visible results. This
   // prevents a keyboard selection from opening a title that the current
@@ -337,21 +530,23 @@ export function AppContent() {
 
   // Recent high-scoring titles from the local catalog.
   const recentCatalogHighlights = useMemo(() => {
-    return fullCatalog.filter((m) => m.year >= 2022 && m.score >= 9.0).slice(0, 10);
-  }, [fullCatalog]);
+    return sortCatalogQuality(canonicalCatalog.filter((m) => m.year >= 2022 && m.score >= 9.0)).slice(0, 10);
+  }, [canonicalCatalog]);
 
   // Four purposeful rails keep the landing page quick to scan and avoid
   // rendering a long stack of near-duplicate genre rows before someone knows
   // what they want to watch. Genre and theme controls remain one tap away.
-  const familyMovieNight = useMemo(() => fullCatalog.filter(isFamilyFriendly).slice(0, 10), [fullCatalog]);
-  const dateNightPicks = useMemo(() => fullCatalog.filter(isDateNightFriendly).slice(0, 10), [fullCatalog]);
-  const quickWatchPicks = useMemo(() => fullCatalog.filter(isQuickWatch).slice(0, 10), [fullCatalog]);
+  // These rows are only shown on the unfiltered homepage. A text query or
+  // arriving live result must not rebuild four hidden rows on every keystroke.
+  const familyMovieNight = useMemo(() => sortCatalogQuality(canonicalCatalog.filter(isFamilyFriendly)).slice(0, 10), [canonicalCatalog]);
+  const dateNightPicks = useMemo(() => sortDateNightQuality(canonicalCatalog.filter(isDateNightFriendly)).slice(0, 10), [canonicalCatalog]);
+  const quickWatchPicks = useMemo(() => sortCatalogQuality(canonicalCatalog.filter(isQuickWatch)).slice(0, 10), [canonicalCatalog]);
 
   // Spotlight Hero Movies
   const spotlightMovies = useMemo(() => {
-    const featured = fullCatalog.filter((m) => m.featured || m.trending);
-    return featured.length > 0 ? featured : fullCatalog.length > 0 ? [fullCatalog[0]] : [];
-  }, [fullCatalog]);
+    const featured = canonicalCatalog.filter((m) => m.featured || m.trending);
+    return featured.length > 0 ? featured : canonicalCatalog.length > 0 ? [canonicalCatalog[0]] : [];
+  }, [canonicalCatalog]);
 
   const modalHistoryEntryRef = useRef(false);
 
@@ -422,6 +617,7 @@ export function AppContent() {
   }, [filteredMovies, displayLimit]);
 
   const isHomeView =
+    !browseCatalog &&
     !searchQuery &&
     !selectedTag &&
     selectedGenre === 'All' &&
@@ -450,6 +646,17 @@ export function AppContent() {
   canonicalUrl.hash = '';
   if (activeTrailerMovie) canonicalUrl.searchParams.set('movie', activeTrailerMovie.id);
 
+  if (pagePath === '/about' || pagePath === '/business') {
+    return (
+      <Suspense fallback={<div className="min-h-[100dvh] bg-[#070709]" aria-busy="true" />}>
+        <BusinessPage
+          movies={fullCatalog.slice(0, 8)}
+          sponsorInquiryUrl={publicMonetization.sponsorInquiryUrl}
+        />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="min-h-[100dvh] bg-[#070709] text-zinc-100 flex flex-col selection:bg-rose-600 selection:text-white">
       
@@ -464,6 +671,9 @@ export function AppContent() {
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalUrl.toString()} />
         <meta name="twitter:card" content="summary_large_image" />
+        {showWebMonetizationLinks && publicMonetization.ads.enabled && (
+          <meta name="google-adsense-account" content={publicMonetization.ads.clientId} />
+        )}
       </Helmet>
 
       <a
@@ -481,21 +691,15 @@ export function AppContent() {
         onSelectSuggestion={openTrailer}
         watchlistCount={watchlist.length}
         onOpenWatchlist={() => setShowWatchlist(true)}
+        onOpenMovieNight={handleOpenMovieNight}
         onOpenSettings={() => setShowSettings(true)}
         onOpenAccountSettings={() => setShowAccountSettings(true)}
         onOpenLegal={() => setLegalTab('affiliate')}
-        onGoHome={() => {
-          setSearchQuery('');
-          setSelectedGenre('All');
-          setSelectedEra('All');
-          setSelectedTag(null);
-          setSelectedProviders([]);
-          setDiscoveryMode('all');
-          setOccasion('all');
-        }}
+        onGoHome={() => startDiscovery('home')}
         user={user}
         onOpenAuth={() => setShowAuth(true)}
-        onSignOut={() => supabase.auth.signOut()}
+        onSignOut={handleSignOut}
+        authEnabled={authEnabled}
       />
 
       {/* Toast Notification Popup */}
@@ -547,6 +751,37 @@ export function AppContent() {
           </section>
         )}
         
+        {catalogStatus === 'ready' && (
+          <section aria-label="Quick discovery" className="mb-5">
+            {isHomeView && (
+              <div className="flex flex-col gap-4 py-3 sm:py-5 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">What are we watching tonight?</h1>
+                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400">Find a film, preview the trailer, and check where to watch.</p>
+                </div>
+                <button type="button" onClick={handleOpenMovieNight} className="inline-flex min-h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-500">
+                  <Sparkles size={18} aria-hidden="true" /> Help me pick <ArrowRight size={16} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 pt-3" aria-label="Ways to discover movies">
+              <button type="button" onClick={() => startDiscovery('all')} className="discovery-shortcut">
+                <LayoutGrid size={15} aria-hidden="true" /> Browse all <span className="text-zinc-400">{canonicalCatalog.length.toLocaleString()}</span>
+              </button>
+              <button type="button" onClick={() => startDiscovery('family')} aria-pressed={discoveryMode === 'family'} className="discovery-shortcut">
+                <UsersRound size={15} aria-hidden="true" /> Family night
+              </button>
+              <button type="button" onClick={() => startDiscovery('date-night')} aria-pressed={occasion === 'date-night'} className="discovery-shortcut">
+                <Heart size={15} aria-hidden="true" /> Date night
+              </button>
+              <button type="button" onClick={() => startDiscovery('quick-watch')} aria-pressed={occasion === 'quick-watch'} className="discovery-shortcut">
+                <Clock3 size={15} aria-hidden="true" /> Quick watch
+              </button>
+              <button type="button" onClick={() => startDiscovery('zombies')} aria-pressed={selectedTag === '#ZombieOutbreak'} className="discovery-shortcut">Zombie movies</button>
+            </div>
+          </section>
+        )}
+
         {/* Spotlight Hero Carousel */}
         {catalogStatus === 'ready' && isHomeView && spotlightMovies.length > 0 && (
           <HeroCarousel
@@ -568,11 +803,19 @@ export function AppContent() {
           selectedProviders={selectedProviders}
           setSelectedProviders={setSelectedProviders}
           counts={filterCounts}
+          resultCount={filteredMovies.length}
           discoveryMode={discoveryMode}
           setDiscoveryMode={setDiscoveryMode}
           occasion={occasion}
           setOccasion={setOccasion}
         />}
+
+        {catalogStatus === 'ready'
+          && isHomeView
+          && showWebMonetizationLinks
+          && publicMonetization.sponsorship && (
+          <SponsorSpotlight sponsorship={publicMonetization.sponsorship} />
+        )}
 
         {/* Purposeful discovery rows */}
         {catalogStatus === 'ready' && isHomeView && (
@@ -624,6 +867,16 @@ export function AppContent() {
               onShare={(m) => setShareMovie(m)}
               onSetAlert={(m) => setAlertMovie(m)}
             />
+
+            {showWebMonetizationLinks
+              && publicMonetization.ads.enabled
+              && publicMonetization.ads.homeSlot && (
+              <GoogleAd
+                clientId={publicMonetization.ads.clientId}
+                slot={publicMonetization.ads.homeSlot}
+                placement="home"
+              />
+            )}
           </div>
         )}
 
@@ -632,8 +885,8 @@ export function AppContent() {
           <>
             <div className="flex items-center justify-between my-6">
               <div>
-                <h2 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight flex items-center gap-2">
-                  <Clapperboard className="text-rose-500" size={26} />
+                <h1 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight break-words">
+                  <Clapperboard className="mr-2 inline-block text-rose-500" size={26} aria-hidden="true" />
                   {selectedTag
                     ? `${getMicroTagLabel(selectedTag)} Movies`
                     : selectedGenre !== 'All'
@@ -650,16 +903,35 @@ export function AppContent() {
                     ? `${ERA_FILTERS.find(({ id }) => id === selectedEra)?.label ?? selectedEra} Movies`
                     : searchQuery
                     ? `Results for "${searchQuery.length > 80 ? `${searchQuery.slice(0, 77)}...` : searchQuery}"`
-                    : 'Filtered Catalog'}
-                </h2>
+                    : 'Browse all movies'}
+                </h1>
                 <p className="text-xs sm:text-sm text-zinc-400 mt-0.5" aria-live="polite">
                   {isSearchingTMDB
                     ? 'Checking optional live search results...'
-                    : `Showing ${displayedMovies.length} of ${filteredMovies.length} top-rated title${filteredMovies.length === 1 ? '' : 's'}`}
+                    : `Showing ${displayedMovies.length} of ${filteredMovies.length} matching title${filteredMovies.length === 1 ? '' : 's'}`}
                 </p>
                 <p className="text-[11px] text-zinc-500 mt-2 max-w-xl">
-                  Streaming availability is for discovery and can change. Confirm current availability and pricing with the service before watching.
+                  Provider names appear only when live, {(tmdbRegion ?? 'US').toUpperCase()}-specific availability data was returned. Use “Where to watch” to recheck because listings can change.
+                  {tmdbCheckedAt && Number.isFinite(Date.parse(tmdbCheckedAt))
+                    ? ` Live data checked ${new Date(tmdbCheckedAt).toLocaleString()}.`
+                    : ''}
                 </p>
+                {searchQuery && tmdbExpandedCollections.length > 0 && (
+                  <p role="status" className="mt-2 max-w-xl text-[11px] leading-relaxed text-sky-200/80">
+                    Including franchise titles from {tmdbExpandedCollections.map(({ name }) => name).join(', ')}. TMDB lists {tmdbExpandedCollections.reduce((total, collection) => total + (collection.partCount ?? 0), 0)} parts across these collections; direct search remains paginated.
+                  </p>
+                )}
+                {searchQuery && tmdbWarnings.length > 0 && (
+                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] leading-relaxed text-amber-100/80">
+                    Live catalog note: {tmdbWarnings[0]}
+                    {tmdbWarnings.length > 1 ? ` (${tmdbWarnings.length - 1} more verification note${tmdbWarnings.length === 2 ? '' : 's'}.)` : ''}
+                  </p>
+                )}
+                {searchQuery && liveSearchStatus === 'unavailable' && (
+                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] leading-relaxed text-amber-100/75">
+                    Expanded live catalog search is unavailable right now, so these results come from StreamFlicker&apos;s bundled discovery catalog. Current service listings open in a separate availability search.
+                  </p>
+                )}
                 {(getSearchReason(filteredMovies[0], searchQuery) || discoveryMode === 'family' || occasion !== 'all') && (
                   <p className="text-[11px] text-emerald-200/75 mt-2 max-w-xl">
                     {getSearchReason(filteredMovies[0], searchQuery)
@@ -669,6 +941,18 @@ export function AppContent() {
                         ? 'Date-night mode focuses on romance and relationship-driven, conversation-friendly movies.'
                         : 'Quick-watch mode prioritizes titles around 110 minutes or less.')}
                   </p>
+                )}
+                {searchQuery && tmdbPagination?.hasMore && (
+                  <button
+                    type="button"
+                    onClick={loadMoreLiveResults}
+                    disabled={isLoadingMoreLive}
+                    className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-sky-400/30 bg-sky-500/10 px-4 py-2.5 text-xs font-bold text-sky-100 transition hover:bg-sky-500/20 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {isLoadingMoreLive
+                      ? 'Loading more live results…'
+                      : `Load more live results (page ${tmdbPagination.page + 1} of ${tmdbPagination.totalPages})`}
+                  </button>
                 )}
               </div>
             </div>
@@ -690,6 +974,16 @@ export function AppContent() {
                   ))}
                 </div>
 
+                {showWebMonetizationLinks
+                  && publicMonetization.ads.enabled
+                  && publicMonetization.ads.resultsSlot && (
+                  <GoogleAd
+                    clientId={publicMonetization.ads.clientId}
+                    slot={publicMonetization.ads.resultsSlot}
+                    placement="results"
+                  />
+                )}
+
                 {/* Load More Button */}
                 {displayLimit < filteredMovies.length && (
                   <div className="flex justify-center mt-12 mb-6">
@@ -703,12 +997,12 @@ export function AppContent() {
                 )}
               </>
             ) : (
-              <div className="glass-panel rounded-3xl p-12 text-center my-12 max-w-xl mx-auto border border-zinc-800">
-                <Film size={48} className="mx-auto mb-4 text-zinc-600 animate-bounce" />
+              <div className="glass-panel rounded-3xl px-5 py-10 sm:p-12 text-center my-8 max-w-xl mx-auto border border-zinc-800">
+                <Film size={40} className="mx-auto mb-4 text-zinc-500" aria-hidden="true" />
                 <h3 className="font-display font-bold text-xl text-white mb-2">No movies match your filters</h3>
                 <p className="text-sm text-zinc-400 mb-6">
                   {searchQuery
-                    ? 'Try a broader title, actor, theme, or occasion, or clear the search.'
+                    ? 'Try a shorter title or remove one of the active filters above. You can also clear everything and browse the catalog.'
                     : discoveryMode === 'family'
                     ? 'Try Everything mode, or confirm the provider rating before choosing a family title.'
                     : occasion === 'date-night'
@@ -718,22 +1012,18 @@ export function AppContent() {
                     : 'Try resetting a filter to discover more titles.'}
                 </p>
                 <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedGenre('All');
-                    setSelectedEra('All');
-                    setSelectedTag(null);
-                    setSelectedProviders([]);
-                    setDiscoveryMode('all');
-                    setOccasion('all');
-                  }}
-                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-2.5 rounded-full text-sm shadow-lg shadow-rose-600/30 transition-all"
+                  onClick={() => startDiscovery('all')}
+                  className="min-h-11 bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
                 >
-                  Reset All Filters
+                  Clear filters and browse all
                 </button>
               </div>
             )}
           </>
+        )}
+
+        {showWebMonetizationLinks && (
+          <MonetizationPanel links={publicMonetization} />
         )}
 
       </main>
@@ -746,28 +1036,19 @@ export function AppContent() {
               StreamFlicker
             </span>
             <p>© {new Date().getFullYear()} StreamFlicker. Movie trailers and streaming discovery.</p>
+            {affiliateConfig.amazonTag && (
+              <p className="mt-2 max-w-xl text-[10px] leading-relaxed text-zinc-600">
+                As an Amazon Associate, StreamFlicker earns from qualifying purchases.
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-zinc-400 font-medium">
-            {showWebMonetizationLinks && publicMonetizationLinks.newsletterUrl && (
-              <a
-                href={publicMonetizationLinks.newsletterUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"
-              >
-                Get weekly movie picks
-              </a>
-            )}
-            {showWebMonetizationLinks && publicMonetizationLinks.supportUrl && (
-              <a
-                href={publicMonetizationLinks.supportUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"
-              >
-                Support StreamFlicker
-              </a>
-            )}
+            <a
+              href="/about"
+              className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"
+            >
+              About StreamFlicker
+            </a>
             <button
               onClick={() => setLegalTab('terms')}
               className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
@@ -784,7 +1065,7 @@ export function AppContent() {
               onClick={() => setLegalTab('affiliate')}
               className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
             >
-              Affiliate Disclosure
+              Monetization Disclosure
             </button>
             <button
               onClick={() => setShowSettings(true)}
@@ -797,75 +1078,95 @@ export function AppContent() {
         </div>
       </footer>
 
-      {/* Trailer Video Player Modal */}
-      {activeTrailerMovie && (
-        <TrailerModal
-          movie={activeTrailerMovie}
-          onClose={closeTrailer}
-          onNextTrailer={handleNextTrailer}
-          isBookmarked={isBookmarked(activeTrailerMovie.id)}
-          onToggleBookmark={toggleBookmark}
-        />
-      )}
+      <Suspense fallback={null}>
+        {/* Trailer Video Player Modal */}
+        {activeTrailerMovie && (
+          <TrailerModal
+            movie={activeTrailerMovie}
+            onClose={closeTrailer}
+            onNextTrailer={handleNextTrailer}
+            isBookmarked={isBookmarked(activeTrailerMovie.id)}
+            onToggleBookmark={toggleBookmark}
+          />
+        )}
 
-      {/* Watchlist Drawer/Modal */}
-      {showWatchlist && (
-        <WatchlistModal
-          watchlist={watchlist}
-          onClose={() => setShowWatchlist(false)}
-          onWatchTrailer={openTrailer}
-          onRemove={toggleBookmark}
-        />
-      )}
+        {/* Watchlist Drawer/Modal */}
+        {showWatchlist && (
+          <WatchlistModal
+            watchlist={watchlist}
+            legacyWatchlistCount={getLegacyWatchlist().length}
+            onImportLegacyWatchlist={handleImportLegacyWatchlist}
+            onClose={() => setShowWatchlist(false)}
+            onWatchTrailer={openTrailer}
+            onRemove={toggleBookmark}
+          />
+        )}
 
-      {/* Share Modal */}
-      {shareMovie && (
-        <ShareModal
-          movie={shareMovie}
-          onClose={() => setShareMovie(null)}
-        />
-      )}
+        {showMovieNight && catalogStatus === 'ready' && (
+          <MovieNightPlanner
+            movies={fullCatalog}
+            watchlist={watchlist}
+            onClose={() => setShowMovieNight(false)}
+            onWatchTrailer={(movie) => {
+              setShowMovieNight(false);
+              openTrailer(movie);
+            }}
+            isBookmarked={isBookmarked}
+            onToggleBookmark={toggleBookmark}
+          />
+        )}
 
-      {/* Settings Modal */}
-      {showSettings && (
-        <SettingsModal
-          onClose={() => setShowSettings(false)}
-          onSave={(_key, config) => setAffiliateConfig(config)}
-        />
-      )}
+        {/* Share Modal */}
+        {shareMovie && (
+          <ShareModal
+            movie={shareMovie}
+            onClose={() => setShareMovie(null)}
+          />
+        )}
 
-      {showAccountSettings && user && (
-        <AccountSettingsModal
-          user={user}
-          onClose={() => setShowAccountSettings(false)}
-          onDeleteAccount={handleDeleteAccount}
-        />
-      )}
+        {/* Settings Modal */}
+        {showSettings && (
+          <SettingsModal
+            onClose={() => setShowSettings(false)}
+            onSave={(_key, config) => setAffiliateConfig(config)}
+          />
+        )}
 
-      {/* Legal & Compliance Modal */}
-      {legalTab && (
-        <LegalModal
-          initialTab={legalTab}
-          onClose={() => setLegalTab(null)}
-        />
-      )}
+        {showAccountSettings && user && (
+          <AccountSettingsModal
+            user={user}
+            onClose={() => setShowAccountSettings(false)}
+            onDeleteAccount={handleDeleteAccount}
+            legacyWatchlistCount={getLegacyWatchlist().length}
+            onImportLegacyWatchlist={handleImportLegacyWatchlist}
+          />
+        )}
 
-      {/* Auth Modal */}
-      {showAuth && (
-        <AuthModal
-          onClose={() => setShowAuth(false)}
-          onAuthSuccess={() => setShowAuth(false)}
-        />
-      )}
+        {/* Legal & Compliance Modal */}
+        {legalTab && (
+          <LegalModal
+            initialTab={legalTab}
+            onClose={() => setLegalTab(null)}
+          />
+        )}
 
-      {/* Alerts Modal */}
-      {alertMovie && (
-        <AlertsModal
-          movie={alertMovie}
-          user={user}
-          onClose={() => setAlertMovie(null)}
-        />
-      )}
+        {/* Auth Modal */}
+        {showAuth && authEnabled && (
+          <AuthModal
+            onClose={() => setShowAuth(false)}
+            onAuthSuccess={() => setShowAuth(false)}
+          />
+        )}
+
+        {/* Alerts Modal */}
+        {alertMovie && (
+          <AlertsModal
+            movie={alertMovie}
+            user={user}
+            onClose={() => setAlertMovie(null)}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

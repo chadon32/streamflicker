@@ -1272,12 +1272,12 @@ export const SAMPLE_MOVIES: Movie[] = [
   },
   {
     "id": "spider-man-4-2026",
-    "title": "Spider-Man 4",
+    "title": "Spider-Man: Brand New Day",
     "year": 2026,
     "rating": "PG-13",
     "score": 9.5,
     "matchPercentage": 98,
-    "duration": "2h 10m",
+    "duration": "Runtime unavailable",
     "genre": [
       "Action",
       "Sci-Fi",
@@ -1289,32 +1289,19 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#MustWatch",
       "#ZombieOutbreak"
     ],
-    "director": "Hollywood A-List Director",
+    "director": "Destin Daniel Cretton",
     "cast": [
-      "A-List Cast"
+      "Tom Holland",
+      "Zendaya",
+      "Sadie Sink",
+      "Jacob Batalon",
+      "Jon Bernthal"
     ],
     "description": "Fighting crime full-time as Spider-Man in a world that doesn't remember him—and the pressure of seeing his old friends move on without him—sparks a change in Peter Parker he may not have the power to control. But that transformation might also be the only thing that can stop a shocking new threat to the city and those he loves - a powerful villain no one can even see.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/6Q21yptoOCUq4ErwVncesLPVplb.jpg",
     "backdropUrl": "https://image.tmdb.org/t/p/w1280/kbvNLChuMl2nyAzPZvqkD8hZGZn.jpg",
-    "youtubeTrailerId": "P3uI5sLosKU",
-    "streamingPlatforms": [
-      {
-        "id": "netflix",
-        "name": "Netflix",
-        "logo": "N",
-        "color": "#E50914",
-        "type": "subscription",
-        "affiliateUrl": "https://netflix.com"
-      },
-      {
-        "id": "max",
-        "name": "Max",
-        "logo": "MAX",
-        "color": "#002BE7",
-        "type": "subscription",
-        "affiliateUrl": "https://max.com"
-      }
-    ],
+    "youtubeTrailerId": "8TZMtslA3UY",
+    "streamingPlatforms": [],
     "trending": true
   },
   {

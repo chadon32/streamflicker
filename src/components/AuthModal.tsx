@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { X, Mail, Lock, Film, AlertCircle } from 'lucide-react';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
@@ -39,6 +39,12 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
       return;
     }
 
+    if (!isSupabaseConfigured) {
+      setError('Accounts are temporarily unavailable in this build. You can still browse movies and save a watchlist on this device.');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
@@ -48,19 +54,41 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
         if (error) throw error;
         onAuthSuccess();
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
         });
         if (error) throw error;
-        setMessage('Check your email for the confirmation link.');
+        if (data.session) {
+          onAuthSuccess();
+        } else {
+          setMessage('Account created. Check your email for the confirmation link before signing in.');
+        }
       }
-    } catch {
-      setError(
-        isLogin
-          ? 'Unable to sign in with those credentials.'
-          : 'Unable to create the account. Check the form and try again.',
-      );
+    } catch (authError) {
+      const errorCode = authError && typeof authError === 'object' && 'code' in authError
+        ? String(authError.code)
+        : '';
+      const errorStatus = authError && typeof authError === 'object' && 'status' in authError
+        ? Number(authError.status)
+        : 0;
+      const errorMessage = authError instanceof Error ? authError.message.toLowerCase() : '';
+
+      if (!isLogin && (errorCode === 'user_already_exists' || /already registered|already exists/.test(errorMessage))) {
+        setError('An account with this email already exists. Try signing in instead.');
+      } else if (isLogin && (errorCode === 'invalid_credentials' || /invalid login credentials/.test(errorMessage))) {
+        setError('That email or password is not correct.');
+      } else if (errorCode === 'weak_password' || /password.*(weak|strength)/.test(errorMessage)) {
+        setError('Choose a stronger password and try again.');
+      } else if (errorStatus === 429 || /rate limit|too many requests/.test(errorMessage)) {
+        setError('Too many attempts. Wait a moment and try again.');
+      } else if (/network|fetch|failed to fetch|offline|timeout/.test(errorMessage)) {
+        setError('We could not reach account services. Check your connection and try again.');
+      } else {
+        setError(isLogin
+          ? 'Unable to sign in right now. Check your details and try again.'
+          : 'Unable to create the account right now. Check your details and try again.');
+      }
     } finally {
       setLoading(false);
     }

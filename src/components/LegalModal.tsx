@@ -41,7 +41,7 @@ export function LegalModal({ initialTab = 'affiliate', onClose }: LegalModalProp
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
               }`}
             >
-              <AlertCircle size={14} /> Affiliate Disclosure
+              <AlertCircle size={14} /> Monetization Disclosure
             </button>
             <button
               onClick={() => setActiveTab('privacy')}
@@ -90,15 +90,21 @@ export function LegalModal({ initialTab = 'affiliate', onClose }: LegalModalProp
           
           {activeTab === 'affiliate' && (
             <div className="space-y-4">
-              <h3 className="font-display text-xl font-bold text-white">FTC Affiliate Disclosure</h3>
+              <h3 className="font-display text-xl font-bold text-white">Monetization and Affiliate Disclosure</h3>
               <p>
                 StreamFlicker may participate in affiliate marketing programs, which means we may earn a commission when you use certain editorially chosen links to retailer or streaming sites.
+              </p>
+              <p className="font-semibold text-white">
+                As an Amazon Associate, StreamFlicker earns from qualifying purchases.
               </p>
               <p>
                 When configured and approved, links to services such as Amazon Prime Video, Apple TV, Hulu, Max, Shudder, or other providers may earn StreamFlicker a commission if you make a purchase or sign up for a trial. This is at no additional cost to you.
               </p>
               <p>
-                Our recommendations are strictly independent and designed to help users find where content is legally available.
+                Paid sponsor placements are labeled Sponsored. Sponsorship does not change the order of search results, filters, or editorial movie rows.
+              </p>
+              <p>
+                StreamFlicker may also display advertisements or link to an external supporter checkout. Ad providers and payment providers operate under their own terms and privacy policies. StreamFlicker does not collect payment-card details.
               </p>
             </div>
           )}
@@ -116,6 +122,10 @@ export function LegalModal({ initialTab = 'affiliate', onClose }: LegalModalProp
               <h4 className="font-bold text-white text-base">Third-Party Services</h4>
               <p>
                 We utilize third-party embeds (such as YouTube for video trailers) and APIs (The Movie Database TMDB). Interaction with these components is subject to their respective privacy policies.
+              </p>
+              <h4 className="font-bold text-white text-base">Advertising and Payments</h4>
+              <p>
+                If website advertising is enabled, the advertising provider may use cookies or similar technology for ad delivery, measurement, fraud prevention, and personalization where consent permits. Support payments are completed on the selected payment provider&apos;s website, so StreamFlicker does not receive payment-card details.
               </p>
             </div>
           )}

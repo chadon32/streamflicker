@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { Movie } from '../data/movies';
 import { MovieCard } from './MovieCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -28,15 +28,58 @@ export function MovieRow({
 }: MovieRowProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    const maximumScrollLeft = row.scrollWidth - row.clientWidth;
+    setCanScrollLeft(row.scrollLeft > 1);
+    setCanScrollRight(row.scrollLeft < maximumScrollLeft - 1);
+  }, []);
+
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+
+    updateScrollState();
+
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(row);
+    Array.from(row.children).forEach((child) => resizeObserver.observe(child));
+    window.addEventListener('resize', updateScrollState);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [movies, updateScrollState]);
 
   const scroll = (direction: 'left' | 'right') => {
-    if (rowRef.current) {
-      const { scrollLeft, clientWidth } = rowRef.current;
-      const scrollAmount = clientWidth * 0.75;
-      rowRef.current.scrollTo({
-        left: direction === 'left' ? scrollLeft - scrollAmount : scrollLeft + scrollAmount,
-        behavior: 'smooth',
-      });
+    const row = rowRef.current;
+    if (!row) return;
+
+    const scrollAmount = row.clientWidth * 0.75;
+    const maximumScrollLeft = row.scrollWidth - row.clientWidth;
+    const target = direction === 'left'
+      ? Math.max(0, row.scrollLeft - scrollAmount)
+      : Math.min(maximumScrollLeft, row.scrollLeft + scrollAmount);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    row.scrollTo({ left: target, behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.currentTarget !== event.target) return;
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      scroll('left');
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      scroll('right');
     }
   };
 
@@ -46,8 +89,8 @@ export function MovieRow({
     <section className="movie-row my-8 relative group/row" aria-labelledby={headingId}>
       
       {/* Row Header */}
-      <div className="flex items-end justify-between mb-4 px-1">
-        <div>
+      <div className="flex items-end justify-between gap-3 mb-4 px-1">
+        <div className="min-w-0">
           <h2 id={headingId} className="font-display font-black text-xl sm:text-2xl text-white tracking-tight flex items-center gap-2">
             {icon}
             {title}
@@ -56,10 +99,11 @@ export function MovieRow({
         </div>
 
         {/* Scroll Buttons */}
-        <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover/row:opacity-100 focus-within:opacity-100 transition-opacity">
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             onClick={() => scroll('left')}
-            className="p-2 rounded-full bg-zinc-900/80 hover:bg-rose-600 text-white border border-zinc-800 backdrop-blur-md transition-all shadow-md"
+            disabled={!canScrollLeft}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
             title="Scroll Left"
             aria-label={`Scroll ${title} left`}
           >
@@ -67,7 +111,8 @@ export function MovieRow({
           </button>
           <button
             onClick={() => scroll('right')}
-            className="p-2 rounded-full bg-zinc-900/80 hover:bg-rose-600 text-white border border-zinc-800 backdrop-blur-md transition-all shadow-md"
+            disabled={!canScrollRight}
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
             title="Scroll Right"
             aria-label={`Scroll ${title} right`}
           >
@@ -81,6 +126,8 @@ export function MovieRow({
         ref={rowRef}
         tabIndex={0}
         aria-label={`${title} horizontal movie list`}
+        onScroll={updateScrollState}
+        onKeyDown={handleKeyDown}
         className="flex items-stretch gap-5 overflow-x-auto scrollbar-none pb-4 pt-1 snap-x snap-mandatory"
       >
         {movies.map((movie) => (

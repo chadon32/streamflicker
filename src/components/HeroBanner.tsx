@@ -1,8 +1,7 @@
 import type { Movie } from '../data/movies';
-import { Play, Star, Plus, Check, Sparkles, ExternalLink } from 'lucide-react';
-import { getReadableTextColor } from '../lib/color';
+import { Play, Star, Plus, Check, Sparkles } from 'lucide-react';
 import { getMicroTagLabel } from '../services/catalogClassification';
-import { recordAffiliateClick } from '../services/affiliateAnalytics';
+import { AvailabilityLinks } from './AvailabilityLinks';
 
 interface HeroBannerProps {
   movie: Movie;
@@ -103,26 +102,7 @@ export function HeroBanner({
             {isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist'}
           </button>
 
-          {/* Streaming badges */}
-          <div className="hidden lg:flex items-center gap-2 ml-auto bg-zinc-900/70 border border-zinc-800/80 p-2 rounded-2xl backdrop-blur-md">
-            <span className="text-xs font-semibold text-zinc-400 px-2">Check availability:</span>
-            {movie.streamingPlatforms.map((sp) => (
-              <a
-                key={sp.id}
-                href={sp.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
-                title={`Open ${sp.name} in an external service. Availability can change.`}
-                aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105 shadow-sm"
-                style={{ backgroundColor: sp.color, color: getReadableTextColor(sp.color) }}
-              >
-                {sp.name} <ExternalLink size={11} />
-              </a>
-            ))}
-            <span className="text-[10px] text-zinc-500 px-2">Some links may earn a commission.</span>
-          </div>
+          <AvailabilityLinks movie={movie} variant="hero" />
         </div>
 
       </div>

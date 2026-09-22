@@ -2,9 +2,12 @@ import { useState } from 'react';
 import type { Movie } from '../data/movies';
 import { X, Bookmark, Check, Copy, Play, Trash2 } from 'lucide-react';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
+import { AvailabilityLinks } from './AvailabilityLinks';
 
 interface WatchlistModalProps {
   watchlist: Movie[];
+  legacyWatchlistCount: number;
+  onImportLegacyWatchlist: () => void;
   onClose: () => void;
   onWatchTrailer: (movie: Movie) => void;
   onRemove: (movie: Movie) => void;
@@ -12,6 +15,8 @@ interface WatchlistModalProps {
 
 export function WatchlistModal({
   watchlist,
+  legacyWatchlistCount,
+  onImportLegacyWatchlist,
   onClose,
   onWatchTrailer,
   onRemove,
@@ -75,6 +80,20 @@ export function WatchlistModal({
           <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-[11px] leading-relaxed text-zinc-500">
             Your saved movies stay in this browser. Account sync is not enabled yet, so export or share a title before switching devices.
           </p>
+          {legacyWatchlistCount > 0 && (
+            <div className="space-y-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
+              <p className="text-[11px] leading-relaxed text-amber-100">
+                An older watchlist with {legacyWatchlistCount} movie{legacyWatchlistCount === 1 ? '' : 's'} was found on this device. Its original owner cannot be determined.
+              </p>
+              <button
+                type="button"
+                onClick={onImportLegacyWatchlist}
+                className="min-h-10 rounded-lg border border-amber-400/40 px-3 py-2 text-xs font-bold text-amber-100 hover:bg-amber-500/10"
+              >
+                Import older saved movies here
+              </button>
+            </div>
+          )}
           {copyStatus === 'error' && (
             <p role="alert" className="text-xs text-rose-300">Clipboard access failed. Open a title and use its share link instead.</p>
           )}
@@ -106,13 +125,7 @@ export function WatchlistModal({
                   <div className="text-xs text-zinc-400 font-medium mb-1">
                     {movie.year} • {movie.genre.join(', ')}
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {movie.streamingPlatforms.map((sp) => (
-                      <span key={sp.id} className="text-[9px] font-bold text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded">
-                        {sp.name}
-                      </span>
-                    ))}
-                  </div>
+                  <AvailabilityLinks movie={movie} variant="watchlist" />
                 </div>
 
                 <div className="flex items-center gap-2">

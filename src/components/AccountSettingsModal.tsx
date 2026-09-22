@@ -7,9 +7,17 @@ interface AccountSettingsModalProps {
   user: User;
   onClose: () => void;
   onDeleteAccount: () => Promise<void>;
+  legacyWatchlistCount: number;
+  onImportLegacyWatchlist: () => void;
 }
 
-export function AccountSettingsModal({ user, onClose, onDeleteAccount }: AccountSettingsModalProps) {
+export function AccountSettingsModal({
+  user,
+  onClose,
+  onDeleteAccount,
+  legacyWatchlistCount,
+  onImportLegacyWatchlist,
+}: AccountSettingsModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [confirmation, setConfirmation] = useState('');
@@ -77,8 +85,22 @@ export function AccountSettingsModal({ user, onClose, onDeleteAccount }: Account
                 {user.email ?? 'Authenticated StreamFlicker account'}
               </p>
               <p className="text-xs leading-relaxed text-zinc-500">
-                Your watchlist and preferences are stored on this device and are not synced to this account.
+                Your watchlist is stored in a separate device namespace for this account. Signing out clears it from the current view.
               </p>
+              {legacyWatchlistCount > 0 && (
+                <div className="space-y-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                  <p className="text-xs leading-relaxed text-amber-100">
+                    An older watchlist with {legacyWatchlistCount} saved movie{legacyWatchlistCount === 1 ? '' : 's'} was found on this device. Its original owner cannot be determined; importing it merges those movies into this account.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onImportLegacyWatchlist}
+                    className="min-h-10 rounded-lg border border-amber-400/40 px-3 py-2 text-xs font-bold text-amber-100 hover:bg-amber-500/10"
+                  >
+                    Import saved movies to this account
+                  </button>
+                </div>
+              )}
             </section>
 
             <section className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4" aria-labelledby="delete-account-heading">

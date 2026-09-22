@@ -30,3 +30,4 @@ dist-ssr
 *.sw?
 
 .vercel
+supabase/.temp/

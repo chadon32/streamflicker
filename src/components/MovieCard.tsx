@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { Movie } from '../data/movies';
 import { Play, Star, Plus, Check, Share2, Film, Bell } from 'lucide-react';
-import { getReadableTextColor } from '../lib/color';
 import { getAudienceLabel, getContentWarnings } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
-import { recordAffiliateClick } from '../services/affiliateAnalytics';
+import { AvailabilityLinks } from './AvailabilityLinks';
+import { getTMDBImageSrcSet } from '../services/images';
 
 interface MovieCardProps {
   movie: Movie;
@@ -37,6 +37,8 @@ export function MovieCard({
         {!imgError ? (
           <img
             src={movie.posterUrl}
+            srcSet={getTMDBImageSrcSet(movie.posterUrl, [185, 342, 500])}
+            sizes="(max-width: 640px) 240px, 260px"
             alt={`${movie.title} poster`}
             width="500"
             height="750"
@@ -120,23 +122,7 @@ export function MovieCard({
         </div>
 
         <div className="pt-2.5 border-t border-zinc-800/60 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-            {movie.streamingPlatforms.map((sp, idx) => (
-              <a
-                key={`${sp.id}-${idx}`}
-                href={sp.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
-                title={`Open ${sp.name} in an external service. Availability can change.`}
-                aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
-                className="inline-flex min-h-7 min-w-7 items-center justify-center rounded px-1.5 py-0.5 text-[9px] font-bold shadow-sm transition-transform hover:scale-105 shrink-0"
-                style={{ backgroundColor: sp.color, color: getReadableTextColor(sp.color) }}
-              >
-                {sp.logo}
-              </a>
-            ))}
-          </div>
+          <AvailabilityLinks movie={movie} />
 
           <div className="flex items-center gap-1 shrink-0">
             {onSetAlert && (
@@ -185,9 +171,6 @@ export function MovieCard({
             </button>
           </div>
         </div>
-        <p className="mt-1 text-[9px] leading-relaxed text-zinc-600">
-          Some service links may earn StreamFlicker a commission at no extra cost.
-        </p>
       </div>
     </div>
   );

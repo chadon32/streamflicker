@@ -1,4 +1,4 @@
-import { Search, Bookmark, Settings, ShieldCheck, Menu, X, Star, LogIn, User, LogOut } from 'lucide-react';
+import { Search, Bookmark, Settings, ShieldCheck, Menu, X, Star, LogIn, User, LogOut, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import type { Movie } from '../data/catalog';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -11,6 +11,7 @@ interface NavbarProps {
   onSelectSuggestion: (movie: Movie) => void;
   watchlistCount: number;
   onOpenWatchlist: () => void;
+  onOpenMovieNight: () => void;
   onOpenSettings: () => void;
   onOpenAccountSettings: () => void;
   onOpenLegal: () => void;
@@ -18,6 +19,7 @@ interface NavbarProps {
   user: SupabaseUser | null;
   onOpenAuth: () => void;
   onSignOut: () => void;
+  authEnabled: boolean;
 }
 
 export function Navbar({
@@ -27,6 +29,7 @@ export function Navbar({
   onSelectSuggestion,
   watchlistCount,
   onOpenWatchlist,
+  onOpenMovieNight,
   onOpenSettings,
   onOpenAccountSettings,
   onOpenLegal,
@@ -34,6 +37,7 @@ export function Navbar({
   user,
   onOpenAuth,
   onSignOut,
+  authEnabled,
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -228,6 +232,14 @@ export function Navbar({
           {/* Desktop Actions */}
           <div className="hidden xl:flex items-center gap-3">
             <button
+              onClick={onOpenMovieNight}
+              aria-label="Open movie night planner"
+              className="flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-sm font-bold text-amber-100 transition-all hover:border-amber-300/60 hover:bg-amber-500/20"
+            >
+              <Sparkles size={17} className="text-amber-300" />
+              <span>Movie Night</span>
+            </button>
+            <button
               onClick={onOpenWatchlist}
               aria-label={`Open Watchlist${watchlistCount > 0 ? `, ${watchlistCount} saved ${watchlistCount === 1 ? 'movie' : 'movies'}` : ''}`}
               className="relative flex items-center gap-2 bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 px-4 py-2.5 rounded-full text-sm font-medium transition-all shadow-sm group"
@@ -259,9 +271,9 @@ export function Navbar({
               <ShieldCheck size={18} />
             </button>
             
-            {/* Auth Button */}
-            <div className="h-6 w-px bg-zinc-800 mx-1"></div>
-            {user ? (
+            {/* Auth Button (website only; native builds use guest mode so no broken account path is exposed) */}
+            {authEnabled && <div className="h-6 w-px bg-zinc-800 mx-1"></div>}
+            {authEnabled && user ? (
               <div className="relative group">
                 <button
                   className="flex items-center gap-2 bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 px-3 py-2 rounded-full text-sm font-medium transition-all shadow-sm"
@@ -300,7 +312,7 @@ export function Navbar({
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : authEnabled ? (
               <button
                 onClick={onOpenAuth}
                 className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-full text-sm font-bold transition-all shadow-md shadow-rose-600/20"
@@ -308,7 +320,7 @@ export function Navbar({
                 <LogIn size={16} />
                 <span>Sign In</span>
               </button>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -328,6 +340,17 @@ export function Navbar({
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div id="mobile-navigation-menu" className="xl:hidden border-t border-zinc-800 bg-zinc-950 p-4 space-y-3">
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              onOpenMovieNight();
+            }}
+            className="w-full flex items-center gap-2 p-3 rounded-xl border border-amber-400/30 bg-amber-500/10 text-amber-100 text-sm font-bold"
+          >
+            <Sparkles size={18} className="text-amber-300" />
+            <span>Plan a movie night</span>
+          </button>
+
           <button
             onClick={() => {
               setMobileMenuOpen(false);
@@ -369,7 +392,7 @@ export function Navbar({
             <span>Trust & legal information</span>
           </button>
 
-          {user ? (
+          {authEnabled && user ? (
             <>
               <button
                 onClick={() => {
@@ -392,7 +415,7 @@ export function Navbar({
                 <span>Sign Out {user.email ? `(${user.email})` : ''}</span>
               </button>
             </>
-          ) : (
+          ) : authEnabled ? (
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -403,6 +426,8 @@ export function Navbar({
               <LogIn size={18} />
               <span>Sign In</span>
             </button>
+          ) : (
+            <p className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-center text-xs text-zinc-500">Guest mode: watchlists and movie-night plans stay on this device.</p>
           )}
         </div>
       )}

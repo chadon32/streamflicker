@@ -99,7 +99,7 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                 <Check size={14} className="text-emerald-400" /> Your streaming services
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-                Select the services you already use. Choose <strong className="font-semibold text-zinc-300">My services</strong> in Filters to see likely options first. These choices stay on this device.
+                Select the services you already use. When live regional provider data is available, choose <strong className="font-semibold text-zinc-300">My services</strong> in Filters to show verified matching options. These choices stay on this device.
               </p>
             </div>
 
