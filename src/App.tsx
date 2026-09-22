@@ -38,6 +38,9 @@ import { getPublicMonetizationConfig } from './services/monetization';
 import { getValidatedYouTubeTrailerId } from './services/trailer';
 import { mergeLiveAndLocalMovies, mergeLiveMoviePages } from './services/searchCatalog';
 import { openNativeMovieNight } from './services/native';
+import { PageSeo } from './seo/PageSeo';
+import { hasPrivateQuery, SEO_PAGES } from './seo/pages';
+import { DiscoveryExplainer } from './components/DiscoveryExplainer';
 import {
   getLegacyWatchlist,
   getWatchlistStorageKey,
@@ -60,6 +63,7 @@ const MovieNightPlanner = lazy(() => import('./components/MovieNightPlanner').th
 const AuthModal = lazy(() => import('./components/AuthModal').then(({ AuthModal }) => ({ default: AuthModal })));
 const AlertsModal = lazy(() => import('./components/AlertsModal').then(({ AlertsModal }) => ({ default: AlertsModal })));
 const BusinessPage = lazy(() => import('./components/BusinessPage').then(({ BusinessPage }) => ({ default: BusinessPage })));
+const MovieNightGuide = lazy(() => import('./components/MovieNightGuide').then(({ MovieNightGuide }) => ({ default: MovieNightGuide })));
 type LegalTab = 'terms' | 'privacy' | 'affiliate' | 'dmca';
 
 const PROVIDER_METADATA = new Map<string, (typeof STREAMING_PROVIDERS)[number]>(
@@ -91,7 +95,10 @@ export function AppContent() {
   const [authReady, setAuthReady] = useState(!authEnabled);
 
   useEffect(() => {
-    const syncPagePath = () => setPagePath(window.location.pathname);
+    const syncPagePath = () => {
+      setPagePath(window.location.pathname);
+      setSearchQueryState(new URLSearchParams(window.location.search).get('q')?.slice(0, 200) || '');
+    };
     window.addEventListener('popstate', syncPagePath);
     return () => window.removeEventListener('popstate', syncPagePath);
   }, []);
@@ -100,7 +107,20 @@ export function AppContent() {
   const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [catalogUsingFallback, setCatalogUsingFallback] = useState(false);
   const [catalogReloadToken, setCatalogReloadToken] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQueryState] = useState(() => new URLSearchParams(window.location.search).get('q')?.slice(0, 200) || '');
+  const setSearchQuery = useCallback((query: string) => {
+    const boundedQuery = query.slice(0, 200);
+    const url = new URL(window.location.href);
+    if (boundedQuery) url.searchParams.set('q', boundedQuery);
+    else url.searchParams.delete('q');
+    try {
+      window.history.replaceState(window.history.state, '', url);
+    } catch {
+      // Some browsers rate-limit history writes during rapid typing. Search
+      // must still work even if the shareable URL cannot update this time.
+    }
+    setSearchQueryState(boundedQuery);
+  }, []);
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedEra, setSelectedEra] = useState<EraFilterId>('All');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -142,6 +162,7 @@ export function AppContent() {
   const [shareMovie, setShareMovie] = useState<Movie | null>(null);
   const [showWatchlist, setShowWatchlist] = useState(false);
   const [showMovieNight, setShowMovieNight] = useState(false);
+  const plannerLinkHandled = useRef(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
@@ -286,6 +307,14 @@ export function AppContent() {
     authReady ? loadWatchlistForUser(user?.id) : [],
   );
   const [watchlistStorageKey, setWatchlistStorageKey] = useState(activeWatchlistStorageKey);
+
+  // Open a guide's planner link only after session/storage initialization,
+  // which intentionally closes dialogs when the account namespace changes.
+  useEffect(() => {
+    if (!authReady || catalogStatus !== 'ready' || watchlistStorageKey !== activeWatchlistStorageKey || plannerLinkHandled.current) return;
+    plannerLinkHandled.current = true;
+    if (!Capacitor.isNativePlatform() && new URLSearchParams(window.location.search).get('plan') === '1') setShowMovieNight(true);
+  }, [authReady, catalogStatus, watchlistStorageKey, activeWatchlistStorageKey]);
 
   useEffect(() => {
     if (!authReady) return;
@@ -640,15 +669,16 @@ export function AppContent() {
     ? `${ERA_FILTERS.find(({ id }) => id === selectedEra)?.label ?? selectedEra} Movies | StreamFlicker`
     : searchQuery
     ? `Search: "${searchQuery}" | StreamFlicker`
-    : 'StreamFlicker | Movie Trailers and Streaming Discovery';
-  const canonicalUrl = new URL(window.location.href);
-  canonicalUrl.search = '';
-  canonicalUrl.hash = '';
-  if (activeTrailerMovie) canonicalUrl.searchParams.set('movie', activeTrailerMovie.id);
+    : SEO_PAGES['/'].title;
+
+  if (pagePath === '/movie-night') {
+    return <><PageSeo path="/movie-night" /><Suspense fallback={<p className="p-8">Loading movie-night guide...</p>}><MovieNightGuide /></Suspense></>;
+  }
 
   if (pagePath === '/about' || pagePath === '/business') {
     return (
       <Suspense fallback={<div className="min-h-[100dvh] bg-[#070709]" aria-busy="true" />}>
+        <PageSeo path="/about" />
         <BusinessPage
           movies={fullCatalog.slice(0, 8)}
           sponsorInquiryUrl={publicMonetization.sponsorInquiryUrl}
@@ -661,16 +691,8 @@ export function AppContent() {
     <div className="min-h-[100dvh] bg-[#070709] text-zinc-100 flex flex-col selection:bg-rose-600 selection:text-white">
       
       {/* SEO Helmet */}
+      <PageSeo path="/" title={pageTitle} noindex={hasPrivateQuery(window.location.search)} />
       <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content="Find movies by title, theme, mood, family-friendly mode, date night, and streaming service. Watch trailers and save a portable shortlist." />
-        <meta name="robots" content="index,follow" />
-        <link rel="canonical" href={canonicalUrl.toString()} />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content="Find a movie for tonight, watch trailers, and check discovery links across major streaming services." />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={canonicalUrl.toString()} />
-        <meta name="twitter:card" content="summary_large_image" />
         {showWebMonetizationLinks && publicMonetization.ads.enabled && (
           <meta name="google-adsense-account" content={publicMonetization.ads.clientId} />
         )}
@@ -1026,6 +1048,8 @@ export function AppContent() {
           <MonetizationPanel links={publicMonetization} />
         )}
 
+        {isHomeView && <DiscoveryExplainer />}
+
       </main>
 
       {/* Footer */}
@@ -1043,6 +1067,7 @@ export function AppContent() {
             )}
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-zinc-400 font-medium">
+            <a href="/movie-night" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Movie-night guide</a>
             <a
               href="/about"
               className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"

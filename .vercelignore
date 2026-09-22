@@ -13,6 +13,8 @@ public/remotion
 public/remotion/**
 !scripts
 !scripts/generate-catalog.mjs
+!scripts/generate-seo.mjs
+!vercel.json
 !index.html
 !package.json
 !package-lock.json

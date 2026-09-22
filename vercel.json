@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/business", "destination": "/about", "permanent": true }
+  ],
+  "headers": [
+    { "source": "/", "has": [{ "type": "query", "key": "q" }], "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
+    { "source": "/", "has": [{ "type": "query", "key": "movie" }], "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
+    { "source": "/", "has": [{ "type": "query", "key": "plan" }], "headers": [{ "key": "X-Robots-Tag", "value": "noindex, follow" }] },
+    { "source": "/api/:path*", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] }
+  ]
+}

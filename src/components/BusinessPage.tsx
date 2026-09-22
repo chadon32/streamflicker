@@ -1,4 +1,3 @@
-import { Helmet } from 'react-helmet-async';
 import {
   ArrowRight,
   Check,
@@ -9,6 +8,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { Movie } from '../data/catalog';
+import { getTMDBImageSrcSet, getTMDBImageUrl } from '../services/images';
 
 interface BusinessPageProps {
   movies: Movie[];
@@ -24,30 +24,20 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
 
   return (
     <div className="min-h-[100dvh] overflow-x-hidden bg-[#070709] text-zinc-100 selection:bg-rose-600 selection:text-white">
-      <Helmet>
-        <title>About StreamFlicker | Movie Discovery Without the Scroll</title>
-        <meta
-          name="description"
-          content="Learn how StreamFlicker helps movie viewers search by mood, filter with purpose, watch trailers, and check where to continue."
-        />
-        <meta property="og:title" content="About StreamFlicker" />
-        <meta
-          property="og:description"
-          content="A calmer way to decide what to watch next."
-        />
-        <meta property="og:type" content="website" />
-      </Helmet>
+      <a href="#about-content" className="sr-only focus:not-sr-only focus:block focus:p-4 focus:text-rose-300">Skip to About StreamFlicker</a>
 
       <header className="border-b border-white/[0.08] bg-[#070709]/90 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-          <a href="/" className="flex items-center gap-3" aria-label="StreamFlicker home">
+        <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
+          <a href="/" className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="StreamFlicker home">
             <img
               src="/streamflicker-logo.svg"
+              width="40"
+              height="40"
               alt=""
               aria-hidden="true"
-              className="h-10 w-10 rounded-xl shadow-lg shadow-rose-600/25"
+              className="h-9 w-9 rounded-xl shadow-lg shadow-rose-600/25 sm:h-10 sm:w-10"
             />
-            <span className="font-display text-xl font-extrabold tracking-tight text-white sm:text-2xl">
+            <span className="font-display text-base font-extrabold tracking-tight text-white sm:text-2xl">
               Stream<span className="text-rose-500">Flicker</span>
             </span>
           </a>
@@ -61,7 +51,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
             </a>
             <a
               href="/"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-white transition-colors hover:bg-rose-500 active:scale-[0.98]"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-xs text-white transition-colors hover:bg-rose-500 active:scale-[0.98] sm:px-4 sm:text-sm"
             >
               Open the app
               <ArrowRight size={16} aria-hidden="true" />
@@ -70,7 +60,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
         </div>
       </header>
 
-      <main>
+      <main id="about-content">
         <section className="mx-auto grid min-h-[calc(100dvh-5rem)] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20 lg:px-8 lg:py-16">
           <div className="max-w-xl">
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">
@@ -101,8 +91,10 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
 
           <div className="relative min-h-[420px] overflow-hidden rounded-[2rem] border border-white/[0.1] bg-zinc-950 shadow-2xl shadow-black/30 sm:min-h-[560px]">
             <img
-              src={heroBackdrop}
-              alt="A featured movie backdrop from the StreamFlicker catalog"
+              src={getTMDBImageUrl(heroBackdrop, 780)}
+              srcSet={getTMDBImageSrcSet(heroBackdrop, [500, 780, 1280])}
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              alt=""
               width="1280"
               height="720"
               loading="eager"
@@ -203,7 +195,9 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
                   className={`overflow-hidden rounded-2xl border border-white/[0.12] bg-zinc-900 shadow-2xl ${index === 1 ? 'mb-10 sm:mb-16' : ''}`}
                 >
                   <img
-                    src={movie.posterUrl}
+                    src={getTMDBImageUrl(movie.posterUrl, 342)}
+                    srcSet={getTMDBImageSrcSet(movie.posterUrl, [185, 342, 500])}
+                    sizes="(min-width: 1024px) 18vw, 30vw"
                     alt={`${movie.title} poster`}
                     width="500"
                     height="750"
@@ -280,6 +274,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} StreamFlicker.</p>
           <div className="flex flex-wrap items-center gap-5">
+            <a className="inline-flex min-h-11 items-center text-zinc-300 hover:text-white" href="/movie-night">Movie-night guide</a>
             <a className="transition-colors hover:text-white" href="#why">Why it exists</a>
             <a className="transition-colors hover:text-white" href="#how">How it works</a>
             <a className="inline-flex items-center gap-2 font-semibold text-zinc-300 transition-colors hover:text-white" href="/">

@@ -1,5 +1,23 @@
 # StreamFlicker
 
+## Search discovery and static pages
+
+`npm run build` now also generates readable homepage HTML, script-free `/about`
+and `/movie-night` pages, a real 404 document, and `sitemap.xml`. Metadata and
+canonical page definitions live in `src/seo/pages.ts`. The homepage progressively
+replaces its static shell with the existing React app; it is not fully hydrated SSR.
+
+Run `npm run test:seo` after building to check generated metadata, schema,
+internal links, sitemap entries, asset budgets, and local HTTP routing. Use
+`npm run preview -- --host 127.0.0.1` to inspect the generated pages. Vercel
+production routing is configured in `vercel.json`; do not add a catch-all rewrite.
+Preview builds (`VERCEL_ENV=preview`) remain noindex after React mounts.
+
+The guide links into `/?plan=1` and `/?q=zombie`. App search and movie-share
+query URLs are functional, but excluded from indexing and the sitemap.
+See [the September 2026 SEO audit](docs/seo-audit-2026-09-22.md) for evidence,
+measurements, limitations, the keyword map, and the 30/60/90-day plan.
+
 StreamFlicker is a client-side movie discovery interface built with React, TypeScript, Vite, and Tailwind CSS. It combines a bundled catalog with optional TMDB search, intent-aware discovery, family-friendly and date-night filters, local watchlists and service preferences, Supabase authentication, shareable movie links, and privacy-conscious trailer loading.
 
 ## Local development
