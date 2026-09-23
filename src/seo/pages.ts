@@ -1,4 +1,7 @@
 export const SITE_ORIGIN = 'https://www.streamflicker.com';
+export const SOCIAL_IMAGE_PATH = '/streamflicker-social-preview.png';
+export const SOCIAL_IMAGE_URL = SITE_ORIGIN + SOCIAL_IMAGE_PATH;
+export const SOCIAL_IMAGE_ALT = 'StreamFlicker movie discovery on a dark cinema background';
 export const PRIVATE_QUERY_KEYS = ['q', 'movie', 'plan'] as const;
 
 export const SEO_PAGES = {
@@ -39,11 +42,13 @@ export function pageSchema(path: SeoPath) {
       {
         '@type': 'WebSite', '@id': `${SITE_ORIGIN}/#website`,
         url: `${SITE_ORIGIN}/`, name: 'StreamFlicker', inLanguage: 'en',
+        image: { '@type': 'ImageObject', url: SOCIAL_IMAGE_URL, width: 1200, height: 630, caption: SOCIAL_IMAGE_ALT },
       },
       {
         '@type': path === '/about' ? 'AboutPage' : 'WebPage',
         '@id': `${url}#webpage`, url, name: page.title, description: page.description,
         isPartOf: { '@id': `${SITE_ORIGIN}/#website` }, inLanguage: 'en',
+        image: SOCIAL_IMAGE_URL,
       },
       ...(path === '/movie-night' ? [{
         '@type': 'BreadcrumbList', itemListElement: [

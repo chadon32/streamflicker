@@ -101,6 +101,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "blade-runner-2049-2017",
     "title": "Blade Runner 2049",
+    "sourceId": "tmdb-335984",
+    "releaseDate": "2017-10-06",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2017,
     "rating": "R",
     "score": 9.9,
@@ -120,9 +124,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#Vampires",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Denis Villeneuve",
     "cast": [
-      "A-List Cast"
+      "Ryan Gosling",
+      "Harrison Ford",
+      "Ana de Armas"
     ],
     "description": "Thirty years after the events of the first film, a new blade runner, LAPD Officer K, unearths a long-buried secret that has the potential to plunge what's left of society into chaos. K's discovery leads him on a quest to find Rick Deckard, a former LAPD blade runner who has been missing for 30 years.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
@@ -191,6 +197,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "the-revenant-2015",
     "title": "The Revenant",
+    "sourceId": "tmdb-281957",
+    "releaseDate": "2015-12-25",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2015,
     "rating": "R",
     "score": 9.9,
@@ -210,9 +220,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#DarkComedy",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Alejandro González Iñárritu",
     "cast": [
-      "A-List Cast"
+      "Leonardo DiCaprio",
+      "Tom Hardy",
+      "Will Poulter"
     ],
     "description": "In the 1820s, a frontiersman, Hugh Glass, sets out on a path of vengeance against those who left him for dead after a bear mauling.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/ji3ecJphATlVgWNY0B0RVXZizdf.jpg",
@@ -272,6 +284,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "interstellar-2014",
     "title": "Interstellar",
+    "sourceId": "tmdb-157336",
+    "releaseDate": "2014-11-07",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2014,
     "rating": "R",
     "score": 9.9,
@@ -291,9 +307,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#DarkComedy",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Christopher Nolan",
     "cast": [
-      "A-List Cast"
+      "Matthew McConaughey",
+      "Anne Hathaway",
+      "Jessica Chastain"
     ],
     "description": "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
@@ -362,6 +380,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "john-wick-2014",
     "title": "John Wick",
+    "sourceId": "tmdb-245891",
+    "releaseDate": "2014-10-24",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2014,
     "rating": "R",
     "score": 9.9,
@@ -378,9 +400,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#MustWatch",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Chad Stahelski",
     "cast": [
-      "A-List Cast"
+      "Keanu Reeves",
+      "Michael Nyqvist",
+      "Alfie Allen"
     ],
     "description": "Ex-hitman John Wick comes out of retirement to track down the gangsters that took everything from him.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/wXqWR7dHncNRbxoEGybEy7QTe9h.jpg",
@@ -408,6 +432,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "gone-girl-2014",
     "title": "Gone Girl",
+    "sourceId": "tmdb-210577",
+    "releaseDate": "2014-10-03",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2014,
     "rating": "R",
     "score": 9.9,
@@ -424,9 +452,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#MindBending",
       "#MustWatch"
     ],
-    "director": "Hollywood A-List Director",
+    "director": "David Fincher",
     "cast": [
-      "A-List Cast"
+      "Ben Affleck",
+      "Rosamund Pike",
+      "Neil Patrick Harris"
     ],
     "description": "With his wife's disappearance having become the focus of an intense media circus, a man sees the spotlight turned on him when it's suspected that he may not be innocent.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/ts996lKsxvjkO2yiYG0ht4qAicO.jpg",
@@ -454,6 +484,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "inception-2010",
     "title": "Inception",
+    "sourceId": "tmdb-27205",
+    "releaseDate": "2010-07-16",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2010,
     "rating": "R",
     "score": 9.9,
@@ -473,9 +507,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#DarkComedy",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Christopher Nolan",
     "cast": [
-      "A-List Cast"
+      "Leonardo DiCaprio",
+      "Joseph Gordon-Levitt",
+      "Elliot Page"
     ],
     "description": "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
@@ -536,6 +572,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "i-am-legend-2007",
     "title": "I Am Legend",
+    "sourceId": "tmdb-6479",
+    "releaseDate": "2007-12-14",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2007,
     "rating": "R",
     "score": 9.9,
@@ -552,9 +592,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#PostApocalyptic",
       "#MustWatch"
     ],
-    "director": "A-List Director",
+    "director": "Francis Lawrence",
     "cast": [
-      "A-List Cast"
+      "Will Smith",
+      "Alice Braga",
+      "Charlie Tahan"
     ],
     "description": "Robert Neville is a scientist who was unable to stop the spread of the terrible virus that was incurable and man-made. Immune, Neville is now the last human survivor in what is left of New York City and perhaps the world. For three years, Neville has faithfully sent out daily radio messages, desperate to find any other survivors who might be out there. But he is not alone.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/iPDkaSdKk2jRLTM65UOEoKtsIZ8.jpg",
@@ -754,6 +796,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "mad-max--fury-road-2015",
     "title": "Mad Max: Fury Road",
+    "sourceId": "tmdb-76341",
+    "releaseDate": "2015-05-15",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2015,
     "rating": "R",
     "score": 9.8,
@@ -772,9 +818,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#Slasher",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "George Miller",
     "cast": [
-      "A-List Cast"
+      "Tom Hardy",
+      "Charlize Theron",
+      "Nicholas Hoult"
     ],
     "description": "An apocalyptic story set in the furthest reaches of our planet, in a stark desert landscape where humanity is broken, and most everyone is crazed fighting for the necessities of life. Within this world exist two rebels on the run who just might be able to restore order.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/ulcAi4dKpAjHwYGS08vNyx9H6I9.jpg",
@@ -802,6 +850,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "the-martian-2015",
     "title": "The Martian",
+    "sourceId": "tmdb-286217",
+    "releaseDate": "2015-10-02",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2015,
     "rating": "R",
     "score": 9.8,
@@ -819,9 +871,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#Survival",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Ridley Scott",
     "cast": [
-      "A-List Cast"
+      "Matt Damon",
+      "Jessica Chastain",
+      "Kristen Wiig"
     ],
     "description": "During a manned mission to Mars, Astronaut Mark Watney is presumed dead after a fierce storm and left behind by his crew. But Watney has survived and finds himself stranded and alone on the hostile planet. With only meager supplies, he must draw upon his ingenuity, wit and spirit to subsist and find a way to signal to Earth that he is alive.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/pjYWdykADVLTCh5g475RnI2hWIN.jpg",
@@ -849,6 +903,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "prisoners-2013",
     "title": "Prisoners",
+    "sourceId": "tmdb-146233",
+    "releaseDate": "2013-09-20",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2013,
     "rating": "R",
     "score": 9.8,
@@ -865,9 +923,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#SerialKiller",
       "#MustWatch"
     ],
-    "director": "Hollywood A-List Director",
+    "director": "Denis Villeneuve",
     "cast": [
-      "A-List Cast"
+      "Hugh Jackman",
+      "Jake Gyllenhaal",
+      "Viola Davis"
     ],
     "description": "After his six-year-old daughter is abducted, a desperate father takes justice into his own hands when he loses faith in the detective leading the investigation, setting both men on a collision course as the search descends into obsession and moral compromise.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/uhviyknTT5cEQXbn6vWIqfM4vGm.jpg",
@@ -895,6 +955,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "world-war-z-2013",
     "title": "World War Z",
+    "sourceId": "tmdb-72190",
+    "releaseDate": "2013-06-21",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2013,
     "rating": "R",
     "score": 9.8,
@@ -911,9 +975,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#PostApocalyptic",
       "#MustWatch"
     ],
-    "director": "A-List Director",
+    "director": "Marc Forster",
     "cast": [
-      "A-List Cast"
+      "Brad Pitt",
+      "Mireille Enos",
+      "Daniella Kertesz"
     ],
     "description": "Life for former United Nations investigator Gerry Lane and his family seems content. Suddenly, the world is plagued by a mysterious infection turning whole human populations into rampaging mindless zombies. After barely escaping the chaos, Lane is persuaded to go on a mission to investigate this disease. What follows is a perilous trek around the world where Lane must brave horrific dangers and long odds to find answers before human civilization falls.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/aCnVdvExw6UWSeQfr0tUH3jr4qG.jpg",
@@ -941,6 +1007,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "zombieland-2009",
     "title": "Zombieland",
+    "sourceId": "tmdb-19908",
+    "releaseDate": "2009-10-02",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2009,
     "rating": "R",
     "score": 9.8,
@@ -958,9 +1028,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#DarkComedy",
       "#MustWatch"
     ],
-    "director": "A-List Director",
+    "director": "Ruben Fleischer",
     "cast": [
-      "A-List Cast"
+      "Jesse Eisenberg",
+      "Woody Harrelson",
+      "Emma Stone"
     ],
     "description": "Columbus has made a habit of running from what scares him. Tallahassee doesn't have fears. If he did, he'd kick their ever-living ass. In a world overrun by zombies, these two are perfectly evolved survivors. But now, they're about to stare down the most terrifying prospect of all: each other.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/dUkAmAyPVqubSBNRjRqCgHggZcK.jpg",
@@ -988,6 +1060,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "28-days-later-2002",
     "title": "28 Days Later",
+    "sourceId": "tmdb-170",
+    "releaseDate": "2002-06-28",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2002,
     "rating": "R",
     "score": 9.8,
@@ -1005,9 +1081,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#Survival",
       "#MustWatch"
     ],
-    "director": "A-List Director",
+    "director": "Danny Boyle",
     "cast": [
-      "A-List Cast"
+      "Cillian Murphy",
+      "Naomie Harris",
+      "Brendan Gleeson"
     ],
     "description": "Twenty-eight days after a killer virus was accidentally unleashed from a British research facility, a small group of London survivors are caught in a desperate struggle to protect themselves from the infected. Carried by animals and humans, the virus turns those it infects into homicidal maniacs -- and it's absolutely impossible to contain.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/sQckQRt17VaWbo39GIu0TMOiszq.jpg",
@@ -1036,6 +1114,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "alien--romulus-2024",
     "title": "Alien: Romulus",
+    "sourceId": "tmdb-945961",
+    "releaseDate": "2024-08-16",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2024,
     "rating": "R",
     "score": 9.7,
@@ -1052,9 +1134,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#MustWatch",
       "#ZombieOutbreak"
     ],
-    "director": "Director",
+    "director": "Fede Álvarez",
     "cast": [
-      "Main Cast"
+      "Cailee Spaeny",
+      "David Jonsson",
+      "Archie Renaux"
     ],
     "description": "While scavenging the deep ends of a derelict space station, a group of young space colonizers come face to face with the most terrifying life form in the universe.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/b33nnKl1GSFbao4l3fZDDqsMx0F.jpg",
@@ -1082,6 +1166,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "shutter-island-2010",
     "title": "Shutter Island",
+    "sourceId": "tmdb-11324",
+    "releaseDate": "2010-02-19",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2010,
     "rating": "R",
     "score": 9.7,
@@ -1100,9 +1188,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#Survival",
       "#ZombieOutbreak"
     ],
-    "director": "A-List Director",
+    "director": "Martin Scorsese",
     "cast": [
-      "A-List Cast"
+      "Leonardo DiCaprio",
+      "Mark Ruffalo",
+      "Ben Kingsley"
     ],
     "description": "World War II soldier-turned-U.S. Marshal Teddy Daniels investigates the disappearance of a patient from a hospital for the criminally insane, but his efforts are compromised by troubling visions and a mysterious doctor.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/nrmXQ0zcZUL8jFLrakWc90IR8z9.jpg",
@@ -1177,6 +1267,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "shaun-of-the-dead-2004",
     "title": "Shaun of the Dead",
+    "sourceId": "tmdb-747",
+    "releaseDate": "2004-04-09",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2004,
     "rating": "R",
     "score": 9.7,
@@ -1194,9 +1288,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#DarkComedy",
       "#MustWatch"
     ],
-    "director": "A-List Director",
+    "director": "Edgar Wright",
     "cast": [
-      "A-List Cast"
+      "Simon Pegg",
+      "Nick Frost",
+      "Kate Ashfield"
     ],
     "description": "Shaun lives a supremely uneventful life, which revolves around his girlfriend, his mother, and, above all, his local pub. This gentle routine is threatened when the dead return to life and make strenuous attempts to snack on ordinary Londoners.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/dgXPhzNJH8HFTBjXPB177yNx6RI.jpg",
@@ -68733,6 +68829,10 @@ export const SAMPLE_MOVIES: Movie[] = [
   {
     "id": "the-dark-knight-2008",
     "title": "The Dark Knight",
+    "sourceId": "tmdb-155",
+    "releaseDate": "2008-07-18",
+    "releaseStatus": "released",
+    "ratingSource": "TMDB",
     "year": 2008,
     "rating": "R",
     "score": 7.2,
@@ -68752,9 +68852,11 @@ export const SAMPLE_MOVIES: Movie[] = [
       "#DarkComedy",
       "#AmericanBlockbuster"
     ],
-    "director": "A-List Director",
+    "director": "Christopher Nolan",
     "cast": [
-      "A-List Cast"
+      "Christian Bale",
+      "Heath Ledger",
+      "Aaron Eckhart"
     ],
     "description": "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
     "posterUrl": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",

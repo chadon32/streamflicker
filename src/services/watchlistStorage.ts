@@ -63,6 +63,7 @@ export function parseStoredWatchlist(value: string | null): Movie[] {
         Array.isArray((item as Movie).streamingPlatforms),
     ).map((movie) => ({
       ...movie,
+      recordSource: 'saved-watchlist' as const,
       streamingPlatforms: movie.availability?.status === 'verified'
         ? movie.streamingPlatforms.filter((platform) => platform.availabilityStatus === 'verified')
         : [],

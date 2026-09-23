@@ -9,6 +9,7 @@
     "generate:catalog": "node scripts/generate-catalog.mjs",
     "prebuild": "npm run generate:catalog",
     "build": "tsc -b && vite build && node scripts/generate-seo.mjs",
+    "test:catalog-generation": "node scripts/test-catalog-generation.mjs",
     "test:seo": "node scripts/test-seo.mjs",
     "lint": "oxlint",
     "test": "node scripts/generate-catalog.mjs --check && node scripts/run-tests.mjs",

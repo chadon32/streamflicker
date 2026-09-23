@@ -32,6 +32,8 @@ import {
   type MovieNightPreferences,
 } from '../services/movieNight';
 import { getTMDBImageSrcSet } from '../services/images';
+import { CATALOG_CHECKED_AT } from '../services/catalogQuality';
+import { buildMovieNightShareText } from '../services/shareText';
 
 interface MovieNightPlannerProps {
   movies: Movie[];
@@ -59,6 +61,8 @@ const LENGTH_OPTIONS: Array<{ id: MovieNightLength; label: string }> = [
 
 const PLAN_STORAGE_KEY = 'streamflicker_movie_night_plans';
 const SAVED_PLAN_LIMIT = 12;
+const MAX_RECOMMENDATIONS = 3;
+const MAX_REROLLS = 1;
 
 function getDefaultPreferences(): MovieNightPreferences {
   return { occasion: 'any', length: 'any', genre: 'All', providerId: 'any' };
@@ -128,11 +132,11 @@ export function MovieNightPlanner({
     return restoredMovieIds.flatMap((movieId) => {
       const movie = moviesById.get(movieId);
       return movie ? [movie] : [];
-    });
+    }).slice(0, MAX_RECOMMENDATIONS);
   }, [movies, restoredMovieIds]);
   const restoredUnavailableCount = restoredMovieIds?.length ? restoredMovieIds.length - (restoredMovies?.length ?? 0) : 0;
   const recommendations = useMemo(
-    () => restoredMovies ?? selectMovieNightMovies(movies, preferences, round, 3, watchlistIds),
+    () => restoredMovies ?? selectMovieNightMovies(movies, preferences, round, MAX_RECOMMENDATIONS, watchlistIds),
     [movies, preferences, restoredMovies, round, watchlistIds],
   );
   const shortlistHeading = recommendations.length === 0
@@ -159,9 +163,7 @@ export function MovieNightPlanner({
     movieIds: recommendations.map((movie) => movie.id),
   });
 
-  const planText = `My StreamFlicker movie night\n${getMovieNightSummary(preferences)}\n${recommendations
-    .map((movie, index) => `${index + 1}. ${movie.title} (${movie.year})`)
-    .join('\n')}`;
+  const planText = buildMovieNightShareText(getMovieNightSummary(preferences), recommendations);
 
   const handleSave = () => {
     if (recommendations.length === 0) return;
@@ -181,7 +183,7 @@ export function MovieNightPlanner({
     setStatus('idle');
   };
 
-  const hasAlternatives = strictCandidates.length > recommendations.length;
+  const hasAlternatives = round < MAX_REROLLS && strictCandidates.length > recommendations.length;
 
   const handlePickAgain = () => {
     setRestoredMovieIds(null);
@@ -236,7 +238,7 @@ export function MovieNightPlanner({
                 Plan a movie night
               </h2>
               <p id="movie-night-dialog-description" className="mt-1 max-w-2xl text-xs leading-relaxed text-zinc-400 sm:text-sm">
-                {providerOptions.length > 0 ? 'Four' : 'Three'} quick choices. A shortlist for tonight.
+                 Three quick choices. A shortlist for tonight.
               </p>
             </div>
           </div>
@@ -329,9 +331,10 @@ export function MovieNightPlanner({
             <section className="min-w-0" aria-live="polite" aria-label="Movie night shortlist">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">Your shortlist</p>
-                  <h3 className="mt-1 font-display text-xl font-black text-white">{shortlistHeading}</h3>
-                  <p className="mt-1 text-xs text-zinc-400">{getMovieNightSummary(preferences)}</p>
+                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">Your shortlist</p>
+                   <h3 className="mt-1 font-display text-xl font-black text-white">{shortlistHeading}</h3>
+                   <p className="mt-1 text-xs text-zinc-400">{getMovieNightSummary(preferences)}</p>
+                   <p className="mt-2 text-[10px] leading-relaxed text-zinc-500">Offline curated subset checked {CATALOG_CHECKED_AT}. Availability is a US discovery check; recheck before watching.</p>
                 </div>
                 <button type="button" onClick={handlePickAgain} disabled={!hasAlternatives} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:border-rose-400/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
                   <RefreshCw size={15} /> Pick again

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { Movie } from '../data/movies';
-import { X, Star, ExternalLink, SkipForward, Plus, Check, Film, Play, Search } from 'lucide-react';
+import { X, ExternalLink, SkipForward, Plus, Check, Film, Play, Search } from 'lucide-react';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 import { getContentWarnings } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
 import { getValidatedYouTubeTrailerId } from '../services/trailer';
+import { getAvailabilityDisclosure } from '../services/shareText';
 import { AvailabilityLinks } from './AvailabilityLinks';
 import { Capacitor } from '@capacitor/core';
 import { openExternalUrl } from '../services/native';
@@ -280,15 +281,13 @@ export function TrailerModal({
           <div className="flex flex-wrap items-center justify-between gap-4">
             
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="flex items-center gap-1 text-amber-400 font-bold bg-amber-400/10 px-3 py-1 rounded-xl border border-amber-400/20" title="Catalog score: StreamFlicker's curated match rating from 0 to 10.">
-                <Star size={15} className="fill-current text-amber-400" /> {movie.score} Catalog score
-              </span>
               <span className="px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 font-semibold text-xs">
                 {movie.rating}
               </span>
               <span className="text-zinc-400 font-medium">{movie.duration}</span>
               <span className="text-zinc-500">•</span>
               <span className="text-zinc-400 font-medium">{movie.genre.join(', ')}</span>
+              <span className="text-zinc-500 text-[10px]">{getAvailabilityDisclosure(movie)}</span>
             </div>
 
             {/* Bookmark button */}

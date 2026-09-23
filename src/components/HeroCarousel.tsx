@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { Movie } from '../data/movies';
-import { Play, Star, Plus, Check, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, Plus, Check, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getContentWarnings } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
+import { CATALOG_CHECKED_AT } from '../services/catalogQuality';
 import { AvailabilityLinks } from './AvailabilityLinks';
 import { getTMDBImageSrcSet } from '../services/images';
 
@@ -105,8 +106,8 @@ export function HeroCarousel({
 
         {/* Metadata Badges */}
         <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-zinc-300 mb-4 font-medium">
-          <span className="flex items-center gap-1 text-amber-400 font-bold bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20" title="Catalog score: StreamFlicker's curated match rating from 0 to 10.">
-            <Star size={14} className="fill-current" /> {movie.score} Catalog score
+          <span className="px-2 py-1 rounded-lg border border-emerald-400/25 bg-emerald-400/10 text-emerald-200 font-semibold">
+            Offline curated · checked {CATALOG_CHECKED_AT}
           </span>
           <span className="px-2 py-1 bg-zinc-800/80 rounded-md border border-zinc-700 text-zinc-300 font-semibold">
             {movie.rating}

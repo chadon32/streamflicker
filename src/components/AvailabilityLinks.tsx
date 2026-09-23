@@ -4,6 +4,7 @@ import {
   getVerifiedStreamingPlatforms,
   type Movie,
 } from '../data/catalog';
+import { getAvailabilityAttribution, getAvailabilityCheckedLabel, getAvailabilityDisclosure, getMovieSourceLabel } from '../services/shareText';
 
 interface AvailabilityLinksProps {
   movie: Movie;
@@ -24,6 +25,10 @@ function getStatusCopy(movie: Movie) {
   return `Search current ${region} availability`;
 }
 
+function getSourceLabel(movie: Movie) {
+  return getMovieSourceLabel(movie);
+}
+
 export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinksProps) {
   const providers = getVerifiedStreamingPlatforms(movie);
   const availabilityUrl = getAvailabilityUrl(movie);
@@ -41,6 +46,7 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
               </h4>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-zinc-500">{statusCopy}</p>
+            <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">{getAvailabilityDisclosure(movie)}</p>
           </div>
           <a
             href={availabilityUrl}
@@ -73,9 +79,7 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
           Availability changes by country and date. StreamFlicker does not guess providers from its bundled catalog; confirm the title before subscribing or paying.
         </p>
         {movie.availability?.source === 'tmdb' && (
-          <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">
-            Provider data by JustWatch. This product uses the TMDB API but is not endorsed or certified by TMDB.
-          </p>
+          <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">{getAvailabilityAttribution(movie)}</p>
         )}
       </section>
     );
@@ -83,9 +87,9 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
 
   if (variant === 'hero') {
     return (
-      <div className="hidden lg:flex items-center gap-2 ml-auto bg-zinc-900/75 border border-zinc-800/80 p-2 rounded-2xl backdrop-blur-md">
+      <div className="flex max-w-full flex-wrap items-center gap-2 bg-zinc-900/75 border border-zinc-800/80 p-2 rounded-2xl backdrop-blur-md">
         {providers.slice(0, 3).map((provider) => (
-          <span key={`${provider.id}-${provider.type}`} className="rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs font-bold text-zinc-200">
+          <span key={`${provider.id}-${provider.type}`} className="hidden rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs font-bold text-zinc-200 lg:inline-flex">
             {provider.name}
           </span>
         ))}
@@ -99,6 +103,10 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
           {providers.length > 0 ? 'View options' : 'Check availability'}
           <ExternalLink size={12} aria-hidden="true" />
         </a>
+        <span className="max-w-44 text-[9px] font-semibold leading-tight text-zinc-500" title={getAvailabilityDisclosure(movie)}>
+          <span className="block truncate">{getSourceLabel(movie)} · {(movie.availability?.region ?? 'US').toUpperCase()} · {movie.availability?.status ?? 'unknown'}</span>
+          <span className="block truncate">{getAvailabilityCheckedLabel(movie)}</span>
+        </span>
       </div>
     );
   }
@@ -108,7 +116,7 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
     : 'flex min-w-0 items-center gap-1.5';
 
   return (
-    <div className={compactClass} title={statusCopy}>
+    <div className={compactClass} title={`${statusCopy}. ${getAvailabilityDisclosure(movie)}`}>
       {providers.slice(0, variant === 'watchlist' ? 3 : 1).map((provider) => (
         <span
           key={`${provider.id}-${provider.type}`}
@@ -117,6 +125,10 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
           {provider.name}
         </span>
       ))}
+      <span className="max-w-36 text-[9px] font-semibold leading-tight text-zinc-500" aria-label={getAvailabilityDisclosure(movie)}>
+        <span className="block truncate">{getSourceLabel(movie)} · {(movie.availability?.region ?? 'US').toUpperCase()} · {movie.availability?.status ?? 'unknown'}</span>
+        <span className="block truncate">{getAvailabilityCheckedLabel(movie)}</span>
+      </span>
       <a
         href={availabilityUrl}
         target="_blank"

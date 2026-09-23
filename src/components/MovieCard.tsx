@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import type { Movie } from '../data/movies';
-import { Play, Star, Plus, Check, Share2, Film, Bell } from 'lucide-react';
+import { Play, Plus, Check, Share2, Film, Bell } from 'lucide-react';
 import { getAudienceLabel, getContentWarnings } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
+import { getAvailabilityCheckedLabel, getMovieSourceLabel } from '../services/shareText';
 import { AvailabilityLinks } from './AvailabilityLinks';
 import { getTMDBImageSrcSet } from '../services/images';
 
@@ -54,16 +55,6 @@ export function MovieCard({
           </div>
         )}
 
-        <div className="absolute top-2.5 left-2.5 z-10">
-          <span
-            className="flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-zinc-950/85 backdrop-blur-md px-2 py-0.5 rounded-md border border-amber-400/30 shadow-md"
-            aria-label={`Catalog score ${movie.score} out of 10`}
-            title="Catalog score: StreamFlicker's curated match rating from 0 to 10."
-          >
-            <Star size={11} className="fill-amber-400 text-amber-400" /> {movie.score}
-          </span>
-        </div>
-
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
@@ -102,6 +93,10 @@ export function MovieCard({
             <span aria-hidden="true">·</span>
             <span>{getAudienceLabel(movie)}</span>
           </div>
+
+          <p className="mb-2 text-[10px] leading-relaxed text-amber-200/75">
+            {getMovieSourceLabel(movie)} · {getAvailabilityCheckedLabel(movie)}
+          </p>
 
           {warnings.length > 0 && (
             <p className="text-[10px] text-amber-200/80 mb-2.5 truncate" title={warnings.join(', ')}>

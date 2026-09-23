@@ -4,6 +4,7 @@ import { X, Copy, Check, Share2, MessageSquare, Send, Globe, AlertCircle } from 
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
+import { buildMovieShareText, getAvailabilityAttribution, getAvailabilityDisclosure, getShareEligibility } from '../services/shareText';
 
 interface ShareModalProps {
   movie: Movie;
@@ -16,17 +17,20 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
   const shareUrlInputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useAccessibleDialog(onClose);
   const isNativeShare = Capacitor.isNativePlatform();
+  const shareEligibility = getShareEligibility(movie);
   const shareUrlObject = new URL(window.location.href);
   shareUrlObject.search = '';
   shareUrlObject.hash = '';
   shareUrlObject.searchParams.set('movie', movie.id);
   const shareUrl = shareUrlObject.toString();
-  const shareText = `Check out "${movie.title}" (${movie.year}) on StreamFlicker. Watch the trailer and check service availability:`;
+  const shareText = buildMovieShareText(movie, '');
+  const sharePayload = `${shareText} ${shareUrl}`;
 
   const handleCopy = async () => {
+    if (!shareEligibility.shareable) return;
     try {
       if (!navigator.clipboard) throw new Error('Clipboard access is unavailable');
-      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      await navigator.clipboard.writeText(sharePayload);
       setCopyStatus('copied');
     } catch {
       setCopyStatus('error');
@@ -36,6 +40,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
   };
 
   const handleNativeShare = async () => {
+    if (!shareEligibility.shareable) return;
     try {
       const canShare = await Share.canShare();
       if (!canShare.value) throw new Error('Native sharing is unavailable');
@@ -78,6 +83,16 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
           </button>
         </div>
 
+        {!shareEligibility.shareable ? (
+          <div className="space-y-3 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4" role="status">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">Search-only result</p>
+            <h4 className="font-display text-lg font-bold text-white">Sharing is unavailable for this record</h4>
+            <p className="text-xs leading-relaxed text-amber-100/80">{shareEligibility.reason}</p>
+            <p className="text-[10px] leading-relaxed text-zinc-400">{getAvailabilityDisclosure(movie)}</p>
+            <p className="text-[10px] leading-relaxed text-zinc-500">Open the current title or availability search to verify it before sharing.</p>
+          </div>
+        ) : (
+          <>
         {isNativeShare && (
           <div className="space-y-2">
             <button
@@ -98,12 +113,12 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
           </div>
         )}
 
-        <div className="flex items-center gap-4 p-3 bg-zinc-900/80 rounded-2xl border border-zinc-800">
-          <img src={movie.posterUrl} alt={`${movie.title} poster`} width="48" height="64" className="w-12 h-16 object-cover rounded-xl shrink-0" />
-          <div className="min-w-0">
-            <h4 className="font-bold text-white text-sm truncate">{movie.title}</h4>
-            <p className="text-xs text-zinc-400">{movie.year} • {movie.genre.join(', ')}</p>
-          </div>
+        <div className="rounded-2xl border border-rose-400/20 bg-rose-500/5 p-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-300">Text-only share card</p>
+          <h4 className="mt-2 font-display text-lg font-bold text-white">{movie.title}</h4>
+          <p className="mt-1 text-xs text-zinc-400">{movie.year} · {movie.genre.join(', ')}</p>
+          <p className="mt-3 text-[10px] leading-relaxed text-zinc-500">{getAvailabilityDisclosure(movie)}</p>
+          <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">{getAvailabilityAttribution(movie)}</p>
         </div>
 
         {/* Social Buttons */}
@@ -129,7 +144,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
           </a>
 
           <a
-            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(sharePayload)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-emerald-400 transition-colors"
@@ -181,6 +196,8 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             <AlertCircle size={14} />
             Clipboard access failed. The link is selected. Press Ctrl+C (or Cmd+C) to copy it manually.
           </p>
+        )}
+          </>
         )}
 
       </div>

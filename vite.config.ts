@@ -30,7 +30,7 @@ function publicPages(): Plugin {
         if (url.pathname !== '/' && normalized in SEO_PAGES && normalized !== url.pathname) {
           res.writeHead(308, { Location: `${normalized}${url.search}` }); res.end(); return;
         }
-        if (url.pathname === '/' && PRIVATE_QUERY_KEYS.some((key) => url.searchParams.has(key))) res.setHeader('X-Robots-Tag', 'noindex, follow');
+        if (PRIVATE_QUERY_KEYS.some((key) => url.searchParams.has(key))) res.setHeader('X-Robots-Tag', 'noindex, follow');
         if (url.pathname.startsWith('/api/')) res.setHeader('X-Robots-Tag', 'noindex');
         const isMissingPage = !url.pathname.includes('.') && !(url.pathname in SEO_PAGES) && !url.pathname.startsWith('/api/');
         if (isMissingPage || url.pathname === '/404.html') {

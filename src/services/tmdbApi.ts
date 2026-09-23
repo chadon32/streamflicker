@@ -253,7 +253,9 @@ export function formatTMDBMovie(
   const cast = [...(details?.credits?.cast ?? [])].sort((left, right) => (left.order ?? 999) - (right.order ?? 999))
     .slice(0, 5).map(({ name }) => name).filter((name): name is string => Boolean(name));
   return {
-    id: `tmdb-${item.id}`, title: source.title || source.original_title || 'Untitled Movie', year,
+    id: `tmdb-${item.id}`, recordSource: 'tmdb-live', title: source.title || source.original_title || 'Untitled Movie', year,
+    sourceId: `tmdb-${item.id}`,
+    ...(source.release_date ? { releaseDate: source.release_date } : {}),
     rating: details ? getCertification(details, region) : (source.adult ? 'Adult' : 'Not rated'), score,
     matchPercentage: Math.max(0, Math.min(100, Math.round(score * 10))), duration: formatRuntime(details?.runtime),
     genre: genres, tags: [], director, cast, description: source.overview || 'No synopsis available for this title.',

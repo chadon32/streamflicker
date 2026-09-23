@@ -1,4 +1,4 @@
-import { Search, Bookmark, Settings, ShieldCheck, Menu, X, Star, LogIn, User, LogOut, Sparkles } from 'lucide-react';
+import { Search, Bookmark, Settings, ShieldCheck, Menu, X, LogIn, User, LogOut, Sparkles } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import type { Movie } from '../data/catalog';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -214,9 +214,6 @@ export function Navbar({
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-bold text-sm text-zinc-100 group-hover:text-rose-400 truncate">
                           {movie.title}
-                        </span>
-                        <span className="text-[10px] font-bold text-amber-400 flex items-center gap-0.5 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
-                          <Star size={10} className="fill-amber-400" /> {movie.score}
                         </span>
                       </div>
                       <div className="text-xs text-zinc-400 font-medium truncate mt-0.5">

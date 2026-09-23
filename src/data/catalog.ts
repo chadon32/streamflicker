@@ -23,6 +23,16 @@ export interface MovieAvailability {
 
 export interface Movie {
   id: string;
+  /** Stable provider identity captured in the source catalog when available. */
+  sourceId?: string;
+  /** ISO calendar date captured from the source catalog when available. */
+  releaseDate?: string;
+  /** Provider release state captured in the source catalog when available. */
+  releaseStatus?: 'released' | 'planned' | 'in-production' | 'canceled' | 'unknown';
+  /** Certification provenance for records with curated evidence. */
+  ratingSource?: 'TMDB' | 'MPAA' | 'BBFC' | 'unknown';
+  /** Runtime record origin used to keep fallback/watchlist data out of sharing. */
+  recordSource?: 'tmdb-live' | 'bundled-validated' | 'saved-watchlist' | 'watchlist-fallback';
   title: string;
   year: number;
   rating: string;

@@ -38,6 +38,7 @@ import { getPublicMonetizationConfig } from './services/monetization';
 import { getValidatedYouTubeTrailerId } from './services/trailer';
 import { mergeLiveAndLocalMovies, mergeLiveMoviePages } from './services/searchCatalog';
 import { openNativeMovieNight } from './services/native';
+import { getValidatedCatalog, getValidatedCatalogMetadata } from './services/catalogQuality';
 import { PageSeo } from './seo/PageSeo';
 import { hasPrivateQuery, SEO_PAGES } from './seo/pages';
 import { DiscoveryExplainer } from './components/DiscoveryExplainer';
@@ -75,16 +76,22 @@ function normalizeVisibleText(value: string) {
 }
 
 function sortCatalogQuality(movies: Movie[]): Movie[] {
-  return [...movies].sort((left, right) =>
-    right.score - left.score || right.year - left.year || left.title.localeCompare(right.title));
+  return [...movies].sort((left, right) => {
+    const leftRank = getValidatedCatalogMetadata(left.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = getValidatedCatalogMetadata(right.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
+    return leftRank - rightRank || right.year - left.year || left.title.localeCompare(right.title);
+  });
 }
 
 function sortDateNightQuality(movies: Movie[]): Movie[] {
-  return [...movies].sort((left, right) =>
-    getDateNightPriority(right) - getDateNightPriority(left)
-    || right.score - left.score
-    || right.year - left.year
-    || left.title.localeCompare(right.title));
+  return [...movies].sort((left, right) => {
+    const leftRank = getValidatedCatalogMetadata(left.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = getValidatedCatalogMetadata(right.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
+    return getDateNightPriority(right) - getDateNightPriority(left)
+      || leftRank - rightRank
+      || right.year - left.year
+      || left.title.localeCompare(right.title);
+  });
 }
 
 export function AppContent() {
@@ -193,7 +200,7 @@ export function AppContent() {
         // A previously saved Watchlist is a useful local fallback while the catalog chunk is retried.
         const fallback = parseStoredWatchlist(localStorage.getItem(activeWatchlistStorageKeyRef.current));
         if (fallback.length > 0) {
-          setCatalog(fallback);
+          setCatalog(fallback.map((movie) => ({ ...movie, recordSource: 'watchlist-fallback' as const })));
           setCatalogUsingFallback(true);
           setCatalogStatus('ready');
         } else {
@@ -465,9 +472,10 @@ export function AppContent() {
         ]
       : [];
 
-    return normalizeMovieClassification({
-      ...movie,
-      title: normalizeVisibleText(movie.title),
+      return normalizeMovieClassification({
+        ...movie,
+        recordSource: 'tmdb-live' as const,
+        title: normalizeVisibleText(movie.title),
       description: normalizeVisibleText(movie.description),
       director: normalizeVisibleText(movie.director),
       cast: movie.cast.map(normalizeVisibleText),
@@ -495,6 +503,13 @@ export function AppContent() {
   // Bundled movies are preclassified and compacted during the build. Only
   // live TMDB records need the runtime normalization and provider pass.
   const canonicalCatalog = catalog;
+  // A Watchlist fallback remains available for local search/display recovery,
+  // but it is never eligible for trusted featured, business, or planner
+  // surfaces even if a row happens to match a curated id and metadata.
+  const validatedCatalog = useMemo(
+    () => catalogUsingFallback ? [] : getValidatedCatalog(canonicalCatalog),
+    [canonicalCatalog, catalogUsingFallback],
+  );
 
   // Combined canonical catalog with optional live search results.
   const fullCatalog = useMemo(() => {
@@ -557,25 +572,25 @@ export function AppContent() {
     return filteredMovies;
   }, [filteredMovies, searchQuery]);
 
-  // Recent high-scoring titles from the local catalog.
+  // Recent titles from the offline-curated subset.
   const recentCatalogHighlights = useMemo(() => {
-    return sortCatalogQuality(canonicalCatalog.filter((m) => m.year >= 2022 && m.score >= 9.0)).slice(0, 10);
-  }, [canonicalCatalog]);
+    return sortCatalogQuality(validatedCatalog).slice(0, 10);
+  }, [validatedCatalog]);
 
   // Four purposeful rails keep the landing page quick to scan and avoid
   // rendering a long stack of near-duplicate genre rows before someone knows
   // what they want to watch. Genre and theme controls remain one tap away.
   // These rows are only shown on the unfiltered homepage. A text query or
   // arriving live result must not rebuild four hidden rows on every keystroke.
-  const familyMovieNight = useMemo(() => sortCatalogQuality(canonicalCatalog.filter(isFamilyFriendly)).slice(0, 10), [canonicalCatalog]);
-  const dateNightPicks = useMemo(() => sortDateNightQuality(canonicalCatalog.filter(isDateNightFriendly)).slice(0, 10), [canonicalCatalog]);
-  const quickWatchPicks = useMemo(() => sortCatalogQuality(canonicalCatalog.filter(isQuickWatch)).slice(0, 10), [canonicalCatalog]);
+  const familyMovieNight = useMemo(() => sortCatalogQuality(validatedCatalog.filter(isFamilyFriendly)).slice(0, 10), [validatedCatalog]);
+  const dateNightPicks = useMemo(() => sortDateNightQuality(validatedCatalog.filter(isDateNightFriendly)).slice(0, 10), [validatedCatalog]);
+  const quickWatchPicks = useMemo(() => sortCatalogQuality(validatedCatalog.filter(isQuickWatch)).slice(0, 10), [validatedCatalog]);
 
   // Spotlight Hero Movies
   const spotlightMovies = useMemo(() => {
-    const featured = canonicalCatalog.filter((m) => m.featured || m.trending);
-    return featured.length > 0 ? featured : canonicalCatalog.length > 0 ? [canonicalCatalog[0]] : [];
-  }, [canonicalCatalog]);
+    const featured = validatedCatalog.filter((m) => m.featured || m.trending);
+    return featured.length > 0 ? featured : validatedCatalog.slice(0, 1);
+  }, [validatedCatalog]);
 
   const modalHistoryEntryRef = useRef(false);
 
@@ -672,15 +687,15 @@ export function AppContent() {
     : SEO_PAGES['/'].title;
 
   if (pagePath === '/movie-night') {
-    return <><PageSeo path="/movie-night" /><Suspense fallback={<p className="p-8">Loading movie-night guide...</p>}><MovieNightGuide /></Suspense></>;
+    return <><PageSeo path="/movie-night" noindex={hasPrivateQuery(window.location.search)} /><Suspense fallback={<p className="p-8">Loading movie-night guide...</p>}><MovieNightGuide /></Suspense></>;
   }
 
   if (pagePath === '/about' || pagePath === '/business') {
     return (
       <Suspense fallback={<div className="min-h-[100dvh] bg-[#070709]" aria-busy="true" />}>
-        <PageSeo path="/about" />
+        <PageSeo path="/about" noindex={hasPrivateQuery(window.location.search)} />
         <BusinessPage
-          movies={fullCatalog.slice(0, 8)}
+          movies={validatedCatalog.slice(0, 8)}
           sponsorInquiryUrl={publicMonetization.sponsorInquiryUrl}
         />
       </Suspense>
@@ -777,15 +792,20 @@ export function AppContent() {
           <section aria-label="Quick discovery" className="mb-5">
             {isHomeView && (
               <div className="flex flex-col gap-4 py-3 sm:py-5 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">What are we watching tonight?</h1>
-                  <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400">Find a film, preview the trailer, and check where to watch.</p>
-                </div>
-                <button type="button" onClick={handleOpenMovieNight} className="inline-flex min-h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-500">
-                  <Sparkles size={18} aria-hidden="true" /> Help me pick <ArrowRight size={16} aria-hidden="true" />
-                </button>
-              </div>
-            )}
+                 <div>
+                   <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">What are we watching tonight?</h1>
+                   <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400">Decide in five minutes with three validated picks, then preview a trailer and check where to watch.</p>
+                 </div>
+                 <button type="button" onClick={handleOpenMovieNight} className="inline-flex min-h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-500">
+                   <Sparkles size={18} aria-hidden="true" /> Decide in five minutes <ArrowRight size={16} aria-hidden="true" />
+                 </button>
+               </div>
+             )}
+             {isHomeView && (
+               <p className="max-w-3xl rounded-xl border border-emerald-400/20 bg-emerald-500/5 px-3 py-2 text-[11px] leading-relaxed text-emerald-100/75">
+                 Featured rows and the planner use a small offline-curated subset checked 2026-09-23. Browse and search can include bundled discovery records; verify their details and current availability before watching.
+               </p>
+             )}
             <div className="flex flex-wrap gap-2 pt-3" aria-label="Ways to discover movies">
               <button type="button" onClick={() => startDiscovery('all')} className="discovery-shortcut">
                 <LayoutGrid size={15} aria-hidden="true" /> Browse all <span className="text-zinc-400">{canonicalCatalog.length.toLocaleString()}</span>
@@ -844,7 +864,7 @@ export function AppContent() {
           <div className="space-y-4 mb-12">
             <MovieRow
               title="Top picks right now"
-              subtitle="High-scoring recent titles for a fast first choice"
+              subtitle="Recent curated titles for a fast first choice"
               icon={<Award className="text-rose-400" size={24} />}
               movies={recentCatalogHighlights}
               onWatchTrailer={openTrailer}
@@ -1129,7 +1149,7 @@ export function AppContent() {
 
         {showMovieNight && catalogStatus === 'ready' && (
           <MovieNightPlanner
-            movies={fullCatalog}
+            movies={validatedCatalog}
             watchlist={watchlist}
             onClose={() => setShowMovieNight(false)}
             onWatchTrailer={(movie) => {
