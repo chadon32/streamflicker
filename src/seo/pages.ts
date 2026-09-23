@@ -1,4 +1,4 @@
-export const SITE_ORIGIN = 'https://www.streamflicker.com';
+export const SITE_ORIGIN = 'https://streamflicker.com';
 export const SOCIAL_IMAGE_PATH = '/streamflicker-social-preview.png';
 export const SOCIAL_IMAGE_URL = SITE_ORIGIN + SOCIAL_IMAGE_PATH;
 export const SOCIAL_IMAGE_ALT = 'StreamFlicker movie discovery on a dark cinema background';

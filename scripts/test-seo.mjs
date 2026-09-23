@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { preview } from 'vite';
 
-const origin = 'https://www.streamflicker.com';
+const origin = 'https://streamflicker.com';
 const socialImageUrl = `${origin}/streamflicker-social-preview.png`;
 const routes = ['/', '/about', '/movie-night'];
 const documents = new Map();
@@ -62,7 +62,7 @@ assert.match(documents.get('/movie-night'), /href="\/\?q=zombie"/);
 const sitemap = await readFile('dist/sitemap.xml', 'utf8');
 assert.deepEqual([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]), routes.map((route) => origin + route));
 assert.doesNotMatch(sitemap, /<lastmod>|<loc>[^<]*\?|localhost|vercel\.app/);
-assert.match(await readFile('dist/robots.txt', 'utf8'), /Sitemap: https:\/\/www\.streamflicker\.com\/sitemap\.xml/);
+assert.match(await readFile('dist/robots.txt', 'utf8'), /Sitemap: https:\/\/streamflicker\.com\/sitemap\.xml/);
 assert.match(await readFile('dist/404.html', 'utf8'), /content="noindex,follow"/);
 const socialImage = await readFile('dist/streamflicker-social-preview.png');
 assert.equal(socialImage.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', 'social preview must be a PNG');
