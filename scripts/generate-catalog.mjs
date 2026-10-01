@@ -56,7 +56,7 @@ function visibleText(value) {
   return value.replace(/[\u2013\u2014]/g, '-');
 }
 
-const source = await readFile(sourcePath, 'utf8');
+const source = (await readFile(sourcePath, 'utf8')).replace(/\r\n/g, '\n');
 const catalogMatch = source.match(
   /export const SAMPLE_MOVIES: Movie\[] = (\[[\s\S]*?\]);\s*export const movies/,
 );
@@ -336,12 +336,12 @@ ${nativeRows}
 `;
 
 if (checkOnly) {
-  const currentOutput = await readFile(outputPath, 'utf8').catch(() => '');
+  const currentOutput = (await readFile(outputPath, 'utf8').catch(() => '')).replace(/\r\n/g, '\n');
   if (currentOutput !== output) {
     throw new Error('src/data/generatedMovies.ts is stale. Run npm run generate:catalog.');
   }
   if (shouldGenerateNative) {
-    const currentNativeOutput = await readFile(nativeOutputPath, 'utf8').catch(() => '');
+    const currentNativeOutput = (await readFile(nativeOutputPath, 'utf8').catch(() => '')).replace(/\r\n/g, '\n');
     if (currentNativeOutput !== nativeOutput) {
       throw new Error('ios/App/App/NativeValidatedCatalog.swift is stale. Run npm run generate:catalog.');
     }
