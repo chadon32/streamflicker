@@ -1,0 +1,49 @@
+name: CI
+
+# Runs the same checks you run locally, on every push. A push to a branch with an open pull
+# request shows up on that pull request too, so there is no separate pull_request trigger.
+on:
+  push:
+  workflow_dispatch:
+  # Weekly as well, so the catalog's TMDB facts turn this red as they approach TMDB's six-month caching limit
+  # even when nobody has pushed. Refresh them with: npm run enrich:catalog -- --refresh
+  schedule:
+    - cron: '23 6 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # Service, search and catalog integrity checks, the generated-catalog freshness check, and the
+      # UI guards (text size, contrast, privacy copy, removed features).
+      - name: Test
+        run: npm test
+
+      # Type-checks, builds the site, and generates the static pages.
+      - name: Build
+        run: npm run build
+
+      # Metadata, schema, internal links, sitemap, asset budgets and routing for the built pages.
+      - name: SEO checks
+        run: npm run test:seo
