@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   UsersRound,
 } from 'lucide-react';
+import { TMDB_NOTICE } from '../services/attribution';
 
 /**
  * A static, route-friendly guide for the practical question behind Movie Night.
@@ -44,7 +45,7 @@ export function MovieNightGuide() {
             </a>
             <a
               href="/"
-              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-white transition-colors hover:bg-rose-500 active:scale-[0.98] sm:px-4"
+              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-white transition-colors hover:bg-rose-700 active:scale-[0.98] sm:px-4"
             >
               Open the app
               <ArrowRight size={16} aria-hidden="true" />
@@ -56,11 +57,11 @@ export function MovieNightGuide() {
       <main id="guide-content" aria-labelledby="movie-night-guide-heading">
         <section className="mx-auto max-w-7xl px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pb-24 lg:pt-24">
           <nav className="mb-8" aria-label="Breadcrumb">
-            <ol className="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
+            <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-3">
               <li>
                 <a className="transition-colors hover:text-white" href="/">Movie discovery</a>
               </li>
-              <li aria-hidden="true" className="text-zinc-700">/</li>
+              <li aria-hidden="true" className="text-ink-3">/</li>
               <li aria-current="page" className="text-zinc-300">Movie-night guide</li>
             </ol>
           </nav>
@@ -80,9 +81,9 @@ export function MovieNightGuide() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
                 href="/?plan=1"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-950/40 transition-colors hover:bg-rose-500 active:scale-[0.98]"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-950/40 transition-colors hover:bg-rose-700 active:scale-[0.98]"
               >
-                Help me pick a movie
+                Plan a movie night
                 <ArrowRight size={17} aria-hidden="true" />
               </a>
               <a
@@ -236,14 +237,14 @@ export function MovieNightGuide() {
                 What if I only know the kind of night?
                 <span aria-hidden="true" className="text-rose-300 transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">Open Help me pick a movie and choose Family night, Date night, Friends night, or Just me. Add a runtime and genre only if they matter.</p>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">Open the movie night planner and choose Family night, Date night, Friends night, or Just me. Add a runtime and genre only if they matter.</p>
             </details>
             <details className="group border-b border-white/[0.08] py-5">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 font-display text-lg font-bold text-white marker:hidden">
-                Does the family filter guarantee a safe choice?
+                Does the PG-13 and under filter guarantee a safe choice?
                 <span aria-hidden="true" className="text-rose-300 transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">No. Family mode filters out some higher-risk titles, but it cannot guarantee suitability for every child. Review the rating and title details for your group.</p>
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">No. It keeps titles with a confirmed PG-13 or lower rating and drops some higher-risk themes, but it can't guarantee a movie suits every child. Review the rating and details for your group.</p>
             </details>
             <details className="group border-b border-white/[0.08] py-5">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-6 font-display text-lg font-bold text-white marker:hidden">
@@ -264,10 +265,17 @@ export function MovieNightGuide() {
       </main>
 
       <footer className="border-t border-white/[0.08] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>StreamFlicker. Movie discovery for the moment before play.</p>
-          <div className="flex flex-wrap items-center gap-5">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-ink-3 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-xl">
+            <p>StreamFlicker. Movie discovery for the moment before play.</p>
+            <p className="mt-2 text-xs leading-relaxed">{TMDB_NOTICE}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5">
             <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/about">About StreamFlicker</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/privacy">Privacy</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/terms">Terms</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/contact">Contact</a>
+
             <a className="inline-flex min-h-11 items-center gap-2 font-semibold text-zinc-300 transition-colors hover:text-white" href="/">
               Open movie discovery
               <ArrowRight size={15} aria-hidden="true" />

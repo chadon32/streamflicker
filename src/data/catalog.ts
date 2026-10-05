@@ -31,8 +31,15 @@ export interface Movie {
   releaseStatus?: 'released' | 'planned' | 'in-production' | 'canceled' | 'unknown';
   /** Certification provenance for records with curated evidence. */
   ratingSource?: 'TMDB' | 'MPAA' | 'BBFC' | 'unknown';
-  /** Runtime record origin used to keep fallback/watchlist data out of sharing. */
-  recordSource?: 'tmdb-live' | 'bundled-validated' | 'saved-watchlist' | 'watchlist-fallback';
+  /**
+   * Runtime record origin used to keep fallback/watchlist data out of sharing. `tmdb-checked` marks a bundled title
+   * whose rating and runtime were matched to TMDB with proof; unlike `bundled-validated` it is never a recommendation.
+   */
+  recordSource?: 'tmdb-live' | 'tmdb-checked' | 'bundled-validated' | 'saved-watchlist' | 'watchlist-fallback';
+  /** TMDB vote count, present for checked titles; used only to order browsing by how well known a title is. */
+  voteCount?: number;
+  /** True when `youtubeTrailerId` is TMDB's official trailer for this title rather than the bundled catalog's own id. */
+  trailerVerified?: boolean;
   title: string;
   year: number;
   rating: string;

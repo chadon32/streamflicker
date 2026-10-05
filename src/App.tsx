@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { STREAMING_PROVIDERS, type Movie } from './data/catalog';
+import { BROWSABLE_RECORD_COUNT, HOME_MOVIES, SHORTCUT_COUNTS } from './data/homeCatalog';
 import { searchTMDB } from './services/tmdbApi';
 import { smartSearchMovies } from './services/smartSearch';
 import {
@@ -38,7 +39,13 @@ import { getPublicMonetizationConfig } from './services/monetization';
 import { getValidatedYouTubeTrailerId } from './services/trailer';
 import { mergeLiveAndLocalMovies, mergeLiveMoviePages } from './services/searchCatalog';
 import { openNativeMovieNight } from './services/native';
-import { getValidatedCatalog, getValidatedCatalogMetadata } from './services/catalogQuality';
+import { CATALOG_CHECKED_AT, getValidatedCatalog, getValidatedCatalogMetadata } from './services/catalogQuality';
+import { SORT_OPTIONS, countBrowsable, isKnownUnreleased, sortMovies, type SortMode } from './services/browseOrder';
+import { getSpotlightMovies } from './services/spotlight';
+import { formatCheckedDate } from './services/shareText';
+import { TMDB_NOTICE } from './services/attribution';
+import { useAuthSession } from './hooks/useAuthSession';
+import { useBrowserCatalog } from './hooks/useBrowserCatalog';
 import { PageSeo } from './seo/PageSeo';
 import { hasPrivateQuery, SEO_PAGES } from './seo/pages';
 import { DiscoveryExplainer } from './components/DiscoveryExplainer';
@@ -52,41 +59,40 @@ import {
   saveWatchlistForUser,
 } from './services/watchlistStorage';
 import type { TMDBPagination, TMDBExpandedCollection } from './services/tmdbApi';
-import type { User } from '@supabase/supabase-js';
 
 const TrailerModal = lazy(() => import('./components/TrailerModal').then(({ TrailerModal }) => ({ default: TrailerModal })));
 const ShareModal = lazy(() => import('./components/ShareModal').then(({ ShareModal }) => ({ default: ShareModal })));
 const SettingsModal = lazy(() => import('./components/SettingsModal').then(({ SettingsModal }) => ({ default: SettingsModal })));
 const AccountSettingsModal = lazy(() => import('./components/AccountSettingsModal').then(({ AccountSettingsModal }) => ({ default: AccountSettingsModal })));
-const LegalModal = lazy(() => import('./components/LegalModal').then(({ LegalModal }) => ({ default: LegalModal })));
 const WatchlistModal = lazy(() => import('./components/WatchlistModal').then(({ WatchlistModal }) => ({ default: WatchlistModal })));
 const MovieNightPlanner = lazy(() => import('./components/MovieNightPlanner').then(({ MovieNightPlanner }) => ({ default: MovieNightPlanner })));
 const AuthModal = lazy(() => import('./components/AuthModal').then(({ AuthModal }) => ({ default: AuthModal })));
-const AlertsModal = lazy(() => import('./components/AlertsModal').then(({ AlertsModal }) => ({ default: AlertsModal })));
 const BusinessPage = lazy(() => import('./components/BusinessPage').then(({ BusinessPage }) => ({ default: BusinessPage })));
 const MovieNightGuide = lazy(() => import('./components/MovieNightGuide').then(({ MovieNightGuide }) => ({ default: MovieNightGuide })));
-type LegalTab = 'terms' | 'privacy' | 'affiliate' | 'dmca';
+const PrivacyPage = lazy(() => import('./components/LegalPages').then(({ PrivacyPage }) => ({ default: PrivacyPage })));
+const TermsPage = lazy(() => import('./components/LegalPages').then(({ TermsPage }) => ({ default: TermsPage })));
+const ContactPage = lazy(() => import('./components/LegalPages').then(({ ContactPage }) => ({ default: ContactPage })));
+
+/** A shortcut that opens a handful of results reads as broken, so it is not offered. */
+const MIN_SHORTCUT_RESULTS = 12;
+
+/** A stable empty list for the planner's catalog until the full catalog has loaded (a fresh [] would defeat its memoization). */
+const NO_TITLES: Movie[] = [];
 
 const PROVIDER_METADATA = new Map<string, (typeof STREAMING_PROVIDERS)[number]>(
   STREAMING_PROVIDERS.map((provider) => [provider.id, provider]),
 );
 
-function normalizeVisibleText(value: string) {
-  return value.replace(/[\u2013\u2014]/g, '-');
-}
+const curationRankOf = (movieId: string) => getValidatedCatalogMetadata(movieId)?.curationRank;
 
-function sortCatalogQuality(movies: Movie[]): Movie[] {
-  return [...movies].sort((left, right) => {
-    const leftRank = getValidatedCatalogMetadata(left.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
-    const rightRank = getValidatedCatalogMetadata(right.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
-    return leftRank - rightRank || right.year - left.year || left.title.localeCompare(right.title);
-  });
+function normalizeVisibleText(value: string) {
+  return value.replace(/[–—]/g, '-');
 }
 
 function sortDateNightQuality(movies: Movie[]): Movie[] {
   return [...movies].sort((left, right) => {
-    const leftRank = getValidatedCatalogMetadata(left.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
-    const rightRank = getValidatedCatalogMetadata(right.id)?.curationRank ?? Number.MAX_SAFE_INTEGER;
+    const leftRank = curationRankOf(left.id) ?? Number.MAX_SAFE_INTEGER;
+    const rightRank = curationRankOf(right.id) ?? Number.MAX_SAFE_INTEGER;
     return getDateNightPriority(right) - getDateNightPriority(left)
       || leftRank - rightRank
       || right.year - left.year
@@ -99,7 +105,9 @@ export function AppContent() {
   const [publicMonetization] = useState(getPublicMonetizationConfig);
   const showWebMonetizationLinks = !Capacitor.isNativePlatform();
   const authEnabled = isSupabaseConfigured && !Capacitor.isNativePlatform();
-  const [authReady, setAuthReady] = useState(!authEnabled);
+  const { user, authReady, wantSdk } = useAuthSession(authEnabled);
+  // Accounts do not sync anything yet, so new sign-ups stay off unless the owner enables them.
+  const accountSignUpEnabled = import.meta.env.VITE_ACCOUNT_SIGNUP_ENABLED === 'true';
 
   useEffect(() => {
     const syncPagePath = () => {
@@ -110,10 +118,6 @@ export function AppContent() {
     return () => window.removeEventListener('popstate', syncPagePath);
   }, []);
 
-  const [catalog, setCatalog] = useState<Movie[]>([]);
-  const [catalogStatus, setCatalogStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [catalogUsingFallback, setCatalogUsingFallback] = useState(false);
-  const [catalogReloadToken, setCatalogReloadToken] = useState(0);
   const [searchQuery, setSearchQueryState] = useState(() => new URLSearchParams(window.location.search).get('q')?.slice(0, 200) || '');
   const setSearchQuery = useCallback((query: string) => {
     const boundedQuery = query.slice(0, 200);
@@ -135,7 +139,7 @@ export function AppContent() {
   const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>('all');
   const [occasion, setOccasion] = useState<OccasionFilter>('all');
   const [browseCatalog, setBrowseCatalog] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>('featured');
   const activeWatchlistStorageKey = authReady ? getWatchlistStorageKey(user?.id) : '';
   const activeWatchlistStorageKeyRef = useRef(activeWatchlistStorageKey);
   activeWatchlistStorageKeyRef.current = activeWatchlistStorageKey;
@@ -150,7 +154,49 @@ export function AppContent() {
     setOccasion(choice === 'date-night' || choice === 'quick-watch' ? choice : 'all');
     setBrowseCatalog(choice !== 'home');
   };
-  
+
+  const isHomeView =
+    !browseCatalog &&
+    !searchQuery &&
+    !selectedTag &&
+    selectedGenre === 'All' &&
+    selectedEra === 'All' &&
+    selectedProviders.length === 0 &&
+    discoveryMode === 'all' &&
+    occasion === 'all';
+
+  // The home page runs on the reviewed titles that ship with the app (HOME_MOVIES).
+  // The full 1,799-record catalog loads after first paint, or at once when search,
+  // browse, filters, or a shared movie link need it.
+  const [filtersOpened, setFiltersOpened] = useState(false);
+  const [movieLinkPending] = useState(() => new URLSearchParams(window.location.search).has('movie'));
+  const [showMovieNight, setShowMovieNight] = useState(false);
+  // The planner also suggests well-known titles from the full catalog, so opening it starts the load.
+  const needsFullCatalog = !isHomeView || filtersOpened || movieLinkPending || showMovieNight;
+  const { catalog: loadedCatalog, status: catalogStatus, retry: retryCatalog } = useBrowserCatalog(needsFullCatalog);
+
+  // A previously saved watchlist is a useful local fallback if the catalog cannot load.
+  const fallbackCatalog = useMemo<Movie[]>(() => {
+    if (catalogStatus !== 'error') return [];
+    try {
+      return parseStoredWatchlist(localStorage.getItem(activeWatchlistStorageKey))
+        .map((movie) => ({ ...movie, recordSource: 'watchlist-fallback' as const }));
+    } catch {
+      return [];
+    }
+  }, [catalogStatus, activeWatchlistStorageKey]);
+  const catalogUsingFallback = catalogStatus === 'error' && fallbackCatalog.length > 0;
+  const catalogComplete = loadedCatalog !== null || catalogUsingFallback;
+  // Settled means no more titles are coming: the catalog arrived, or loading failed for good.
+  const catalogSettled = catalogComplete || catalogStatus === 'error';
+  const canonicalCatalog = loadedCatalog ?? (catalogUsingFallback ? fallbackCatalog : HOME_MOVIES);
+  // "Browse all N" says how many titles the grid will list. Until the catalog arrives that is the
+  // build's snapshot; afterwards it is recounted so it can never disagree with the grid.
+  const browsableCount = useMemo(
+    () => (catalogComplete ? countBrowsable(canonicalCatalog) : BROWSABLE_RECORD_COUNT),
+    [catalogComplete, canonicalCatalog],
+  );
+
   // Live TMDB Results State
   const [tmdbResults, setTmdbResults] = useState<Movie[]>([]);
   const [isSearchingTMDB, setIsSearchingTMDB] = useState(false);
@@ -168,13 +214,10 @@ export function AppContent() {
   const [activeTrailerMovie, setActiveTrailerMovie] = useState<Movie | null>(null);
   const [shareMovie, setShareMovie] = useState<Movie | null>(null);
   const [showWatchlist, setShowWatchlist] = useState(false);
-  const [showMovieNight, setShowMovieNight] = useState(false);
   const plannerLinkHandled = useRef(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
-  const [legalTab, setLegalTab] = useState<LegalTab | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const [alertMovie, setAlertMovie] = useState<Movie | null>(null);
 
   const handleOpenMovieNight = useCallback(async () => {
     // iOS/iPadOS gets an app-owned native workflow that remains useful when
@@ -183,84 +226,6 @@ export function AppContent() {
     if (Capacitor.isNativePlatform() && await openNativeMovieNight()) return;
     setShowMovieNight(true);
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    setCatalogStatus('loading');
-    import('./data/generatedMovies')
-      .then(({ SAMPLE_MOVIES }) => {
-        if (cancelled) return;
-        setCatalog(SAMPLE_MOVIES);
-        setCatalogUsingFallback(false);
-        setCatalogStatus('ready');
-      })
-      .catch(() => {
-        if (cancelled) return;
-        // A previously saved Watchlist is a useful local fallback while the catalog chunk is retried.
-        const fallback = parseStoredWatchlist(localStorage.getItem(activeWatchlistStorageKeyRef.current));
-        if (fallback.length > 0) {
-          setCatalog(fallback.map((movie) => ({ ...movie, recordSource: 'watchlist-fallback' as const })));
-          setCatalogUsingFallback(true);
-          setCatalogStatus('ready');
-        } else {
-          setCatalogStatus('error');
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [catalogReloadToken]);
-
-  // Auth state
-  useEffect(() => {
-    // Native builds use an offline-first guest mode. This keeps the app's
-    // core planner and watchlist reliable even when an account service is
-    // unavailable, and avoids exposing a sign-up control that cannot work in
-    // a release build without a reachable Supabase project.
-    if (!authEnabled) return;
-
-    let disposed = false;
-    let subscription: { unsubscribe: () => void } | null = null;
-
-    void import('./lib/supabase').then(({ supabase }) => {
-      if (disposed) return;
-
-      // Fetch initial user after the shell has rendered. Supabase is only
-      // needed for account features, so keep its client out of the initial JS.
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (!disposed) {
-          setUser(user);
-          setAuthReady(true);
-        }
-      }).catch(() => {
-        if (!disposed) {
-          setUser(null);
-          setAuthReady(true);
-        }
-      });
-
-      // Listen for auth changes
-      const authState = supabase.auth.onAuthStateChange((event, session) => {
-        if (!disposed) {
-          setUser(session?.user ?? null);
-          if (event !== 'INITIAL_SESSION') setAuthReady(true);
-        }
-      });
-      subscription = authState.data.subscription;
-    }).catch(() => {
-      if (!disposed) {
-        setUser(null);
-        setAuthReady(true);
-      }
-    });
-
-    return () => {
-      disposed = true;
-      subscription?.unsubscribe();
-    };
-  }, [authEnabled]);
 
   // Toast Feedback State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -300,6 +265,11 @@ export function AppContent() {
     void import('./lib/supabase').then(({ supabase }) => supabase.auth.signOut());
   }, []);
 
+  const handleOpenAuth = useCallback(() => {
+    wantSdk();
+    setShowAuth(true);
+  }, [wantSdk]);
+
   useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
   }, []);
@@ -318,10 +288,10 @@ export function AppContent() {
   // Open a guide's planner link only after session/storage initialization,
   // which intentionally closes dialogs when the account namespace changes.
   useEffect(() => {
-    if (!authReady || catalogStatus !== 'ready' || watchlistStorageKey !== activeWatchlistStorageKey || plannerLinkHandled.current) return;
+    if (!authReady || watchlistStorageKey !== activeWatchlistStorageKey || plannerLinkHandled.current) return;
     plannerLinkHandled.current = true;
     if (!Capacitor.isNativePlatform() && new URLSearchParams(window.location.search).get('plan') === '1') setShowMovieNight(true);
-  }, [authReady, catalogStatus, watchlistStorageKey, activeWatchlistStorageKey]);
+  }, [authReady, watchlistStorageKey, activeWatchlistStorageKey]);
 
   useEffect(() => {
     if (!authReady) return;
@@ -335,7 +305,6 @@ export function AppContent() {
       setShowSettings(false);
       setShowAccountSettings(false);
       setShowAuth(false);
-      setAlertMovie(null);
       if (toastTimerRef.current !== null) {
         window.clearTimeout(toastTimerRef.current);
         toastTimerRef.current = null;
@@ -361,10 +330,10 @@ export function AppContent() {
     setWatchlist((prev) => {
       const exists = prev.some((m) => m.id === movie.id);
       if (exists) {
-        showToast(`Removed "${movie.title}" from Watchlist`);
+        showToast(`Removed "${movie.title}" from your watchlist`);
         return prev.filter((m) => m.id !== movie.id);
       } else {
-        showToast(`Added "${movie.title}" to Watchlist!`);
+        showToast(`Added "${movie.title}" to your watchlist`);
         return [...prev, movie];
       }
     });
@@ -500,16 +469,9 @@ export function AppContent() {
     });
   }, [affiliateConfig]);
 
-  // Bundled movies are preclassified and compacted during the build. Only
-  // live TMDB records need the runtime normalization and provider pass.
-  const canonicalCatalog = catalog;
-  // A Watchlist fallback remains available for local search/display recovery,
-  // but it is never eligible for trusted featured, business, or planner
-  // surfaces even if a row happens to match a curated id and metadata.
-  const validatedCatalog = useMemo(
-    () => catalogUsingFallback ? [] : getValidatedCatalog(canonicalCatalog),
-    [canonicalCatalog, catalogUsingFallback],
-  );
+  // The trusted surfaces (hero, rails, planner) are fed only by the reviewed titles
+  // that ship with the app, never by the full catalog, a live result, or watchlist rows.
+  const validatedCatalog = useMemo(() => getValidatedCatalog(HOME_MOVIES), []);
 
   // Combined canonical catalog with optional live search results.
   const fullCatalog = useMemo(() => {
@@ -558,39 +520,38 @@ export function AppContent() {
       .filter((movie) => matchesOccasion(movie, occasion));
 
     // smartSearchMovies already ranks active text queries by title, alias,
-    // intent, and typo relevance. Do not erase that ordering with a generic
-    // score sort after applying the remaining filters.
+    // intent, and typo relevance. Do not erase that ordering with a generic sort.
     if (searchQuery.trim()) return filtered;
-    return occasion === 'date-night' ? sortDateNightQuality(filtered) : sortCatalogQuality(filtered);
-  }, [fullCatalog, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion, searchQuery]);
+
+    // Browsing hides titles the catalog can prove are unreleased; searching for one by name still finds it.
+    const released = filtered.filter((movie) => !isKnownUnreleased(movie));
+    return occasion === 'date-night' && sortMode === 'featured'
+      ? sortDateNightQuality(released)
+      : sortMovies(released, sortMode, curationRankOf);
+  }, [fullCatalog, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion, searchQuery, sortMode]);
 
   // Suggestions must respect the same filters as the visible results. This
   // prevents a keyboard selection from opening a title that the current
   // family, date-night, quick-watch, genre, or provider filters exclude.
   const searchSuggestions = useMemo(() => {
-    if (!searchQuery.trim()) return [];
+    if (!searchQuery.trim() || !catalogComplete) return [];
     return filteredMovies;
-  }, [filteredMovies, searchQuery]);
+  }, [filteredMovies, searchQuery, catalogComplete]);
 
-  // Recent titles from the offline-curated subset.
+  // Recent titles from the reviewed subset.
   const recentCatalogHighlights = useMemo(() => {
-    return sortCatalogQuality(validatedCatalog).slice(0, 10);
+    return sortMovies(validatedCatalog, 'featured', curationRankOf).slice(0, 10);
   }, [validatedCatalog]);
 
   // Four purposeful rails keep the landing page quick to scan and avoid
   // rendering a long stack of near-duplicate genre rows before someone knows
-  // what they want to watch. Genre and theme controls remain one tap away.
-  // These rows are only shown on the unfiltered homepage. A text query or
-  // arriving live result must not rebuild four hidden rows on every keystroke.
-  const familyMovieNight = useMemo(() => sortCatalogQuality(validatedCatalog.filter(isFamilyFriendly)).slice(0, 10), [validatedCatalog]);
+  // what they want to watch. A rail with too few reviewed titles is not shown.
+  const familyMovieNight = useMemo(() => sortMovies(validatedCatalog.filter(isFamilyFriendly), 'featured', curationRankOf).slice(0, 10), [validatedCatalog]);
   const dateNightPicks = useMemo(() => sortDateNightQuality(validatedCatalog.filter(isDateNightFriendly)).slice(0, 10), [validatedCatalog]);
-  const quickWatchPicks = useMemo(() => sortCatalogQuality(validatedCatalog.filter(isQuickWatch)).slice(0, 10), [validatedCatalog]);
+  const quickWatchPicks = useMemo(() => sortMovies(validatedCatalog.filter(isQuickWatch), 'featured', curationRankOf).slice(0, 10), [validatedCatalog]);
 
-  // Spotlight Hero Movies
-  const spotlightMovies = useMemo(() => {
-    const featured = validatedCatalog.filter((m) => m.featured || m.trending);
-    return featured.length > 0 ? featured : validatedCatalog.slice(0, 1);
-  }, [validatedCatalog]);
+  // Spotlight Hero Movies (the same choice the home page's HTML preloads the image for).
+  const spotlightMovies = useMemo(() => getSpotlightMovies(validatedCatalog), [validatedCatalog]);
 
   const modalHistoryEntryRef = useRef(false);
 
@@ -620,7 +581,17 @@ export function AppContent() {
     setActiveTrailerMovie(null);
   }, []);
 
+  // Sharing from the trailer closes it first: two modal focus traps cannot be active at once.
+  const handleShareFromTrailer = useCallback((movie: Movie) => {
+    closeTrailer();
+    setShareMovie(movie);
+  }, [closeTrailer]);
+
   useEffect(() => {
+    // Wait for the account/storage reset above, which intentionally closes dialogs,
+    // so a shared /?movie= link is applied after it rather than wiped by it.
+    if (!authReady || watchlistStorageKey !== activeWatchlistStorageKey) return;
+
     const syncMovieFromUrl = () => {
       const movieId = new URL(window.location.href).searchParams.get('movie');
       if (!movieId) {
@@ -635,7 +606,7 @@ export function AppContent() {
     syncMovieFromUrl();
     window.addEventListener('popstate', syncMovieFromUrl);
     return () => window.removeEventListener('popstate', syncMovieFromUrl);
-  }, [fullCatalog]);
+  }, [fullCatalog, authReady, watchlistStorageKey, activeWatchlistStorageKey]);
 
   const handleNextTrailer = () => {
     if (!activeTrailerMovie) return;
@@ -654,21 +625,15 @@ export function AppContent() {
   // Reset display limit when filters change
   useEffect(() => {
     setDisplayLimit(30);
-  }, [searchQuery, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion]);
+  }, [searchQuery, selectedGenre, selectedEra, selectedTag, selectedProviders, discoveryMode, occasion, sortMode]);
 
   const displayedMovies = useMemo(() => {
     return filteredMovies.slice(0, displayLimit);
   }, [filteredMovies, displayLimit]);
 
-  const isHomeView =
-    !browseCatalog &&
-    !searchQuery &&
-    !selectedTag &&
-    selectedGenre === 'All' &&
-    selectedEra === 'All' &&
-    selectedProviders.length === 0 &&
-    discoveryMode === 'all' &&
-    occasion === 'all';
+  const familyLabel = 'PG-13 and under';
+  const resultsLoading = !catalogComplete && catalogStatus !== 'error';
+  const resultsFailed = catalogStatus === 'error' && !catalogUsingFallback;
 
   const pageTitle = activeTrailerMovie
     ? `${activeTrailerMovie.title} | StreamFlicker`
@@ -677,7 +642,7 @@ export function AppContent() {
     : selectedGenre !== 'All'
     ? `${selectedGenre} Movies | StreamFlicker`
     : discoveryMode === 'family'
-    ? `Family-friendly Movies | StreamFlicker`
+    ? `${familyLabel} Movies | StreamFlicker`
     : occasion !== 'all'
     ? `${occasion === 'date-night' ? 'Date Night' : 'Quick Watch'} Movies | StreamFlicker`
     : selectedEra !== 'All'
@@ -687,7 +652,19 @@ export function AppContent() {
     : SEO_PAGES['/'].title;
 
   if (pagePath === '/movie-night') {
-    return <><PageSeo path="/movie-night" noindex={hasPrivateQuery(window.location.search)} /><Suspense fallback={<p className="p-8">Loading movie-night guide...</p>}><MovieNightGuide /></Suspense></>;
+    return <><PageSeo path="/movie-night" noindex={hasPrivateQuery(window.location.search)} /><Suspense fallback={<p className="p-8">Loading the guide…</p>}><MovieNightGuide /></Suspense></>;
+  }
+
+  if (pagePath === '/privacy' || pagePath === '/terms' || pagePath === '/contact') {
+    const LegalPage = pagePath === '/privacy' ? PrivacyPage : pagePath === '/terms' ? TermsPage : ContactPage;
+    return (
+      <>
+        <PageSeo path={pagePath} noindex={hasPrivateQuery(window.location.search)} />
+        <Suspense fallback={<div className="min-h-[100dvh] bg-[#070709]" aria-busy="true" />}>
+          <LegalPage />
+        </Suspense>
+      </>
+    );
   }
 
   if (pagePath === '/about' || pagePath === '/business') {
@@ -702,9 +679,11 @@ export function AppContent() {
     );
   }
 
+  const shortcutVisible = (count: number) => count >= MIN_SHORTCUT_RESULTS;
+
   return (
     <div className="min-h-[100dvh] bg-[#070709] text-zinc-100 flex flex-col selection:bg-rose-600 selection:text-white">
-      
+
       {/* SEO Helmet */}
       <PageSeo path="/" title={pageTitle} noindex={hasPrivateQuery(window.location.search)} />
       <Helmet>
@@ -715,7 +694,7 @@ export function AppContent() {
 
       <a
         href="#main-content"
-        className="fixed left-4 top-3 z-[110] -translate-y-20 rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white transition-transform focus:translate-y-0"
+        className="fixed left-4 top-3 z-[110] -translate-y-20 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white transition-transform focus:translate-y-0"
       >
         Skip to movie discovery
       </a>
@@ -729,14 +708,10 @@ export function AppContent() {
         watchlistCount={watchlist.length}
         onOpenWatchlist={() => setShowWatchlist(true)}
         onOpenMovieNight={handleOpenMovieNight}
-        onOpenSettings={() => setShowSettings(true)}
         onOpenAccountSettings={() => setShowAccountSettings(true)}
-        onOpenLegal={() => setLegalTab('affiliate')}
         onGoHome={() => startDiscovery('home')}
         user={user}
-        onOpenAuth={() => setShowAuth(true)}
         onSignOut={handleSignOut}
-        authEnabled={authEnabled}
       />
 
       {/* Toast Notification Popup */}
@@ -744,88 +719,75 @@ export function AppContent() {
         <div
           role="status"
           aria-live="polite"
-          className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-rose-600 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl border border-rose-400/40 flex items-center gap-2"
+          className="fixed top-28 left-1/2 -translate-x-1/2 z-50 bg-rose-700 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-xl border border-rose-400/40 flex items-center gap-2"
         >
-          <Sparkles size={14} />
+          <Sparkles size={14} aria-hidden="true" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Main Page Container */}
       <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-16 flex-1 w-full">
-        {catalogUsingFallback && catalogStatus === 'ready' && (
-          <div role="status" className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-100/80">
-            The catalog could not be refreshed, so your saved Watchlist is shown as a local fallback. <button className="font-bold text-amber-300 underline" onClick={() => setCatalogReloadToken((value) => value + 1)}>Retry catalog</button>
+        {catalogUsingFallback && (
+          <div role="status" className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-100/90">
+            The catalog could not be refreshed, so your saved watchlist is shown as a local fallback. <button className="min-h-11 font-bold text-amber-300 underline" onClick={retryCatalog}>Retry catalog</button>
           </div>
         )}
-        {catalogStatus === 'loading' && (
-          <section
-            role="status"
-            aria-live="polite"
-            className="my-6 h-[500px] sm:h-[560px] rounded-3xl border border-zinc-800 bg-zinc-950 overflow-hidden"
-          >
-            <span className="sr-only">Loading the movie catalog</span>
-            <div className="h-full p-6 sm:p-10 flex flex-col justify-end gap-4">
-              <div className="skeleton-loader h-6 w-32 rounded-lg" />
-              <div className="skeleton-loader h-14 w-3/4 max-w-lg rounded-xl" />
-              <div className="skeleton-loader h-5 w-full max-w-2xl rounded-lg" />
-              <div className="skeleton-loader h-12 w-44 rounded-xl" />
-            </div>
-          </section>
-        )}
 
-        {catalogStatus === 'error' && (
-          <section role="alert" className="glass-panel my-8 rounded-2xl p-8 text-center">
-            <Film size={36} className="mx-auto mb-3 text-rose-400" />
-            <h1 className="font-display text-2xl font-bold text-white">The catalog could not be loaded</h1>
-            <p className="mt-2 text-sm text-zinc-400">The local catalog is temporarily unavailable. Retry now; your saved Watchlist remains in this browser.</p>
-            <button
-              onClick={() => setCatalogReloadToken((value) => value + 1)}
-              className="mt-5 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white hover:bg-rose-500 active:scale-[0.98]"
-            >
-              Retry catalog
-            </button>
-          </section>
-        )}
-        
-        {catalogStatus === 'ready' && (
-          <section aria-label="Quick discovery" className="mb-5">
-            {isHomeView && (
-              <div className="flex flex-col gap-4 py-3 sm:py-5 md:flex-row md:items-center md:justify-between">
-                 <div>
-                   <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">What are we watching tonight?</h1>
-                   <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400">Decide in five minutes with three validated picks, then preview a trailer and check where to watch.</p>
-                 </div>
-                 <button type="button" onClick={handleOpenMovieNight} className="inline-flex min-h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-500">
-                   <Sparkles size={18} aria-hidden="true" /> Decide in five minutes <ArrowRight size={16} aria-hidden="true" />
-                 </button>
-               </div>
-             )}
-             {isHomeView && (
-               <p className="max-w-3xl rounded-xl border border-emerald-400/20 bg-emerald-500/5 px-3 py-2 text-[11px] leading-relaxed text-emerald-100/75">
-                 Featured rows and the planner use a small offline-curated subset checked 2026-09-23. Browse and search can include bundled discovery records; verify their details and current availability before watching.
-               </p>
-             )}
-            <div className="flex flex-wrap gap-2 pt-3" aria-label="Ways to discover movies">
-              <button type="button" onClick={() => startDiscovery('all')} className="discovery-shortcut">
-                <LayoutGrid size={15} aria-hidden="true" /> Browse all <span className="text-zinc-400">{canonicalCatalog.length.toLocaleString()}</span>
+        <section aria-label="Quick discovery" className="mb-5">
+          {isHomeView && (
+            <div className="flex flex-col gap-4 py-2 sm:py-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">What are we watching tonight?</h1>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-2">Answer three questions, get three picks, watch the trailer, then see where to stream.</p>
+              </div>
+              <button type="button" onClick={handleOpenMovieNight} className="inline-flex min-h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-700">
+                <Sparkles size={18} aria-hidden="true" /> Plan a movie night <ArrowRight size={16} aria-hidden="true" />
               </button>
-              <button type="button" onClick={() => startDiscovery('family')} aria-pressed={discoveryMode === 'family'} className="discovery-shortcut">
+            </div>
+          )}
+          {isHomeView && (
+            <details className="group max-w-3xl text-xs leading-relaxed text-ink-2">
+              <summary className="min-h-11 cursor-pointer list-none py-3 marker:hidden [&::-webkit-details-marker]:hidden">
+                Our picks are reviewed ({formatCheckedDate(CATALOG_CHECKED_AT)}).{' '}
+                <span className="whitespace-nowrap font-semibold text-rose-300 underline underline-offset-4 group-open:text-rose-200">How we choose</span>
+              </summary>
+              <p className="pb-2">
+                The featured rows and the movie night planner use a short list of titles we picked by hand, checking each runtime and rating against TMDB. Elsewhere in the catalog a title shows a runtime and rating only when we could match it to TMDB with proof; otherwise they are left off. Always confirm details, and where to watch, before you press play.
+              </p>
+            </details>
+          )}
+          <div
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 pt-2 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            role="group"
+            aria-label="Ways to discover movies"
+          >
+            <button type="button" onClick={() => startDiscovery('all')} className="discovery-shortcut shrink-0">
+              <LayoutGrid size={15} aria-hidden="true" /> Browse all <span className="text-ink-2">{browsableCount.toLocaleString()}</span>
+            </button>
+            {shortcutVisible(SHORTCUT_COUNTS.family) && (
+              <button type="button" onClick={() => startDiscovery('family')} aria-pressed={discoveryMode === 'family'} className="discovery-shortcut shrink-0">
                 <UsersRound size={15} aria-hidden="true" /> Family night
               </button>
-              <button type="button" onClick={() => startDiscovery('date-night')} aria-pressed={occasion === 'date-night'} className="discovery-shortcut">
+            )}
+            {shortcutVisible(SHORTCUT_COUNTS.dateNight) && (
+              <button type="button" onClick={() => startDiscovery('date-night')} aria-pressed={occasion === 'date-night'} className="discovery-shortcut shrink-0">
                 <Heart size={15} aria-hidden="true" /> Date night
               </button>
-              <button type="button" onClick={() => startDiscovery('quick-watch')} aria-pressed={occasion === 'quick-watch'} className="discovery-shortcut">
+            )}
+            {shortcutVisible(SHORTCUT_COUNTS.quickWatch) && (
+              <button type="button" onClick={() => startDiscovery('quick-watch')} aria-pressed={occasion === 'quick-watch'} className="discovery-shortcut shrink-0">
                 <Clock3 size={15} aria-hidden="true" /> Quick watch
               </button>
-              <button type="button" onClick={() => startDiscovery('zombies')} aria-pressed={selectedTag === '#ZombieOutbreak'} className="discovery-shortcut">Zombie movies</button>
-            </div>
-          </section>
-        )}
+            )}
+            {shortcutVisible(SHORTCUT_COUNTS.zombies) && (
+              <button type="button" onClick={() => startDiscovery('zombies')} aria-pressed={selectedTag === '#ZombieOutbreak'} className="discovery-shortcut shrink-0">Zombie movies</button>
+            )}
+          </div>
+        </section>
 
         {/* Spotlight Hero Carousel */}
-        {catalogStatus === 'ready' && isHomeView && spotlightMovies.length > 0 && (
+        {isHomeView && spotlightMovies.length > 0 && (
           <HeroCarousel
             movies={spotlightMovies}
             onWatchTrailer={openTrailer}
@@ -835,7 +797,7 @@ export function AppContent() {
         )}
 
         {/* Filter Bar */}
-        {catalogStatus === 'ready' && <FilterBar
+        <FilterBar
           selectedGenre={selectedGenre}
           setSelectedGenre={setSelectedGenre}
           selectedEra={selectedEra}
@@ -850,64 +812,57 @@ export function AppContent() {
           setDiscoveryMode={setDiscoveryMode}
           occasion={occasion}
           setOccasion={setOccasion}
-        />}
+          catalogReady={catalogComplete}
+          onOpen={() => setFiltersOpened(true)}
+        />
 
-        {catalogStatus === 'ready'
-          && isHomeView
+        {isHomeView
           && showWebMonetizationLinks
           && publicMonetization.sponsorship && (
           <SponsorSpotlight sponsorship={publicMonetization.sponsorship} />
         )}
 
         {/* Purposeful discovery rows */}
-        {catalogStatus === 'ready' && isHomeView && (
+        {isHomeView && (
           <div className="space-y-4 mb-12">
             <MovieRow
-              title="Top picks right now"
-              subtitle="Recent curated titles for a fast first choice"
-              icon={<Award className="text-rose-400" size={24} />}
+              title="Top picks"
+              subtitle="Reviewed titles for a fast first choice"
+              icon={<Award className="text-rose-400" size={24} aria-hidden="true" />}
               movies={recentCatalogHighlights}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
             />
 
             <MovieRow
               title="Family movie night"
-              subtitle="Age-conscious picks with higher-risk themes filtered out"
-              icon={<UsersRound className="text-emerald-400" size={24} />}
+              subtitle="PG-13 and under, with higher-risk themes filtered out"
+              icon={<UsersRound className="text-emerald-400" size={24} aria-hidden="true" />}
               movies={familyMovieNight}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
             />
 
             <MovieRow
               title="Date-night picks"
               subtitle="Romance and relationship-driven, conversation-friendly movies"
-              icon={<Heart className="text-rose-400" size={24} />}
+              icon={<Heart className="text-rose-400" size={24} aria-hidden="true" />}
               movies={dateNightPicks}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
             />
 
             <MovieRow
               title="Quick watches"
-              subtitle="Movies around 110 minutes or less when time is short"
-              icon={<Clock3 className="text-amber-400" size={24} />}
+              subtitle="Under 110 minutes, for when time is short"
+              icon={<Clock3 className="text-amber-400" size={24} aria-hidden="true" />}
               movies={quickWatchPicks}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
-              onShare={(m) => setShareMovie(m)}
-              onSetAlert={(m) => setAlertMovie(m)}
             />
 
             {showWebMonetizationLinks
@@ -923,65 +878,67 @@ export function AppContent() {
         )}
 
         {/* Full Movie Catalog Grid (Shown when searching or applying filters) */}
-        {catalogStatus === 'ready' && !isHomeView && (
+        {!isHomeView && (
           <>
-            <div className="flex items-center justify-between my-6">
-              <div>
+            <div className="my-6 flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
                 <h1 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight break-words">
                   <Clapperboard className="mr-2 inline-block text-rose-500" size={26} aria-hidden="true" />
                   {selectedTag
-                    ? `${getMicroTagLabel(selectedTag)} Movies`
+                    ? `${getMicroTagLabel(selectedTag)} movies`
                     : selectedGenre !== 'All'
-                    ? `${selectedGenre} Movies`
+                    ? `${selectedGenre} movies`
                     : discoveryMode === 'family'
-                    ? 'Family-friendly Movies'
+                    ? `${familyLabel} movies`
                     : occasion === 'date-night'
-                    ? 'Date-night Movies'
+                    ? 'Date-night movies'
                     : occasion === 'quick-watch'
-                    ? 'Quick-watch Movies'
+                    ? 'Quick-watch movies'
                     : selectedProviders.length > 0
-                    ? `Streaming Movies`
+                    ? 'Streaming movies'
                     : selectedEra !== 'All'
-                    ? `${ERA_FILTERS.find(({ id }) => id === selectedEra)?.label ?? selectedEra} Movies`
+                    ? `${ERA_FILTERS.find(({ id }) => id === selectedEra)?.label ?? selectedEra} movies`
                     : searchQuery
                     ? `Results for "${searchQuery.length > 80 ? `${searchQuery.slice(0, 77)}...` : searchQuery}"`
                     : 'Browse all movies'}
                 </h1>
-                <p className="text-xs sm:text-sm text-zinc-400 mt-0.5" aria-live="polite">
-                  {isSearchingTMDB
-                    ? 'Checking optional live search results...'
-                    : `Showing ${displayedMovies.length} of ${filteredMovies.length} matching title${filteredMovies.length === 1 ? '' : 's'}`}
+                <p className="text-xs sm:text-sm text-ink-2 mt-0.5" aria-live="polite">
+                  {resultsLoading
+                    ? 'Loading the full catalog…'
+                    : isSearchingTMDB
+                    ? 'Checking optional live search results…'
+                    : `Showing ${displayedMovies.length.toLocaleString()} of ${filteredMovies.length.toLocaleString()} matching title${filteredMovies.length === 1 ? '' : 's'}`}
                 </p>
-                <p className="text-[11px] text-zinc-500 mt-2 max-w-xl">
-                  Provider names appear only when live, {(tmdbRegion ?? 'US').toUpperCase()}-specific availability data was returned. Use “Where to watch” to recheck because listings can change.
+                <p className="text-xs text-ink-3 mt-2 max-w-xl">
+                  Provider names appear only when live, {(tmdbRegion ?? 'US').toUpperCase()}-specific availability data was returned. Use &ldquo;Where to watch&rdquo; to recheck because listings can change.
                   {tmdbCheckedAt && Number.isFinite(Date.parse(tmdbCheckedAt))
                     ? ` Live data checked ${new Date(tmdbCheckedAt).toLocaleString()}.`
                     : ''}
                 </p>
                 {searchQuery && tmdbExpandedCollections.length > 0 && (
-                  <p role="status" className="mt-2 max-w-xl text-[11px] leading-relaxed text-sky-200/80">
+                  <p role="status" className="mt-2 max-w-xl text-xs leading-relaxed text-sky-200/90">
                     Including franchise titles from {tmdbExpandedCollections.map(({ name }) => name).join(', ')}. TMDB lists {tmdbExpandedCollections.reduce((total, collection) => total + (collection.partCount ?? 0), 0)} parts across these collections; direct search remains paginated.
                   </p>
                 )}
                 {searchQuery && tmdbWarnings.length > 0 && (
-                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] leading-relaxed text-amber-100/80">
+                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
                     Live catalog note: {tmdbWarnings[0]}
                     {tmdbWarnings.length > 1 ? ` (${tmdbWarnings.length - 1} more verification note${tmdbWarnings.length === 2 ? '' : 's'}.)` : ''}
                   </p>
                 )}
                 {searchQuery && liveSearchStatus === 'unavailable' && (
-                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-[11px] leading-relaxed text-amber-100/75">
-                    Expanded live catalog search is unavailable right now, so these results come from StreamFlicker&apos;s bundled discovery catalog. Current service listings open in a separate availability search.
+                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
+                    Expanded live catalog search is unavailable right now, so these results come from StreamFlicker&apos;s built-in catalog. &ldquo;Where to watch&rdquo; opens a separate availability search.
                   </p>
                 )}
                 {(getSearchReason(filteredMovies[0], searchQuery) || discoveryMode === 'family' || occasion !== 'all') && (
-                  <p className="text-[11px] text-emerald-200/75 mt-2 max-w-xl">
+                  <p className="text-xs text-emerald-200/90 mt-2 max-w-xl">
                     {getSearchReason(filteredMovies[0], searchQuery)
                       ?? (discoveryMode === 'family'
-                        ? 'Family-friendly mode filters out R-rated titles and high-risk themes.'
+                        ? 'This filter keeps titles with a confirmed PG-13 or lower rating and drops high-risk horror and thriller themes.'
                         : occasion === 'date-night'
                         ? 'Date-night mode focuses on romance and relationship-driven, conversation-friendly movies.'
-                        : 'Quick-watch mode prioritizes titles around 110 minutes or less.')}
+                        : 'Quick-watch mode keeps titles with a confirmed runtime of about 110 minutes or less.')}
                   </p>
                 )}
                 {searchQuery && tmdbPagination?.hasMore && (
@@ -997,10 +954,42 @@ export function AppContent() {
                   </button>
                 )}
               </div>
+
+              {!searchQuery.trim() && !resultsLoading && (
+                <div className="flex items-center gap-2">
+                  <label htmlFor="sort-movies" className="text-xs font-semibold text-ink-2">Sort by</label>
+                  <select
+                    id="sort-movies"
+                    value={sortMode}
+                    onChange={(event) => setSortMode(event.target.value as SortMode)}
+                    className="min-h-11 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-semibold text-zinc-200"
+                  >
+                    {SORT_OPTIONS.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
-            {/* Movies Grid */}
-            {filteredMovies.length > 0 ? (
+            {resultsFailed ? (
+              <section role="alert" className="glass-panel my-8 rounded-2xl p-8 text-center">
+                <Film size={36} className="mx-auto mb-3 text-rose-400" aria-hidden="true" />
+                <h2 className="font-display text-2xl font-bold text-white">The catalog could not be loaded</h2>
+                <p className="mt-2 text-sm text-ink-2">Check your connection and retry. Your watchlist stays in this browser.</p>
+                <button
+                  onClick={retryCatalog}
+                  className="mt-5 min-h-11 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white hover:bg-rose-700 active:scale-[0.98]"
+                >
+                  Retry catalog
+                </button>
+              </section>
+            ) : resultsLoading ? (
+              <div role="status" aria-live="polite" className="my-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6 lg:grid-cols-4 xl:grid-cols-5">
+                <span className="sr-only">Loading the full catalog</span>
+                {Array.from({ length: 10 }, (_, index) => (
+                  <div key={index} className="skeleton-loader aspect-[2/3] rounded-2xl" />
+                ))}
+              </div>
+            ) : filteredMovies.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                   {displayedMovies.map((movie) => (
@@ -1010,8 +999,6 @@ export function AppContent() {
                       onWatchTrailer={openTrailer}
                       isBookmarked={isBookmarked(movie.id)}
                       onToggleBookmark={() => toggleBookmark(movie)}
-                      onShare={(m) => setShareMovie(m)}
-                      onSetAlert={(m) => setAlertMovie(m)}
                     />
                   ))}
                 </div>
@@ -1026,36 +1013,36 @@ export function AppContent() {
                   />
                 )}
 
-                {/* Load More Button */}
+                {/* Show more */}
                 {displayLimit < filteredMovies.length && (
                   <div className="flex justify-center mt-12 mb-6">
                     <button
                       onClick={() => setDisplayLimit((prev) => prev + 30)}
-                      className="bg-zinc-900 hover:bg-zinc-800 text-white font-bold px-8 py-3.5 rounded-2xl border border-zinc-700 hover:border-zinc-500 shadow-xl transition-all flex items-center gap-2 text-sm"
+                      className="min-h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold px-8 py-3.5 rounded-2xl border border-zinc-700 hover:border-zinc-500 shadow-xl transition-all flex items-center gap-2 text-sm"
                     >
-                      <span>Load More Movies ({filteredMovies.length - displayLimit} remaining)</span>
+                      <span>Show {Math.min(30, filteredMovies.length - displayLimit)} more <span className="font-medium text-ink-2">({(filteredMovies.length - displayLimit).toLocaleString()} left)</span></span>
                     </button>
                   </div>
                 )}
               </>
             ) : (
               <div className="glass-panel rounded-3xl px-5 py-10 sm:p-12 text-center my-8 max-w-xl mx-auto border border-zinc-800">
-                <Film size={40} className="mx-auto mb-4 text-zinc-500" aria-hidden="true" />
-                <h3 className="font-display font-bold text-xl text-white mb-2">No movies match your filters</h3>
-                <p className="text-sm text-zinc-400 mb-6">
+                <Film size={40} className="mx-auto mb-4 text-ink-3" aria-hidden="true" />
+                <h2 className="font-display font-bold text-xl text-white mb-2">No movies match your filters</h2>
+                <p className="text-sm text-ink-2 mb-6">
                   {searchQuery
                     ? 'Try a shorter title or remove one of the active filters above. You can also clear everything and browse the catalog.'
                     : discoveryMode === 'family'
-                    ? 'Try Everything mode, or confirm the provider rating before choosing a family title.'
+                    ? 'Try Everything, or confirm the rating yourself before choosing a family title.'
                     : occasion === 'date-night'
-                    ? 'Try Everything mode or a broader genre to find more date-night options.'
+                    ? 'Try Everything or a broader genre to find more date-night options.'
                     : occasion === 'quick-watch'
-                    ? 'Try Everything mode if you can spend a little longer with your movie.'
+                    ? 'Try Everything if you can spend a little longer with your movie.'
                     : 'Try resetting a filter to discover more titles.'}
                 </p>
                 <button
                   onClick={() => startDiscovery('all')}
-                  className="min-h-11 bg-rose-600 hover:bg-rose-500 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
+                  className="min-h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
                 >
                   Clear filters and browse all
                 </button>
@@ -1074,52 +1061,43 @@ export function AppContent() {
 
       {/* Footer */}
       <footer className="border-t border-zinc-900 bg-[#070709] py-10 mt-auto safe-area-bottom">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-xs text-zinc-500">
-          <div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 text-center md:text-left text-xs text-ink-3">
+          <div className="max-w-xl">
             <span className="font-display font-bold text-zinc-300 text-sm block mb-1">
               StreamFlicker
             </span>
-            <p>© {new Date().getFullYear()} StreamFlicker. Movie trailers and streaming discovery.</p>
+            <p>© {new Date().getFullYear()} StreamFlicker. Movie discovery, not a streaming service.</p>
+            <p className="mt-2 flex items-start gap-2 leading-relaxed">
+              <img src="/tmdb-logo.svg" alt="TMDB" width="92" height="12" loading="lazy" decoding="async" className="mt-1 h-3 w-auto shrink-0" />
+              <span>{TMDB_NOTICE}</span>
+            </p>
             {affiliateConfig.amazonTag && (
-              <p className="mt-2 max-w-xl text-[10px] leading-relaxed text-zinc-600">
+              <p className="mt-2 leading-relaxed">
                 As an Amazon Associate, StreamFlicker earns from qualifying purchases.
               </p>
             )}
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-zinc-400 font-medium">
-            <a href="/movie-night" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Movie-night guide</a>
-            <a
-              href="/about"
-              className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors"
-            >
-              About StreamFlicker
-            </a>
-            <button
-              onClick={() => setLegalTab('terms')}
-              className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
-            >
-              Terms of Service
-            </button>
-            <button
-              onClick={() => setLegalTab('privacy')}
-              className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
-            >
-              Privacy Policy
-            </button>
-            <button
-              onClick={() => setLegalTab('affiliate')}
-              className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
-            >
-              Monetization Disclosure
-            </button>
+          <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-ink-2 font-medium">
+            <a href="/movie-night" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Movie night guide</a>
+            <a href="/about" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">About</a>
+            <a href="/privacy" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Privacy</a>
+            <a href="/terms" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Terms</a>
+            <a href="/contact" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Contact</a>
             <button
               onClick={() => setShowSettings(true)}
-              aria-label="Open footer Preferences and integrations"
               className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
             >
-              Preferences & integrations
+              My streaming services
             </button>
-          </div>
+            {authEnabled && !user && (
+              <button
+                onClick={handleOpenAuth}
+                className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
+              >
+                Sign in
+              </button>
+            )}
+          </nav>
         </div>
       </footer>
 
@@ -1132,6 +1110,7 @@ export function AppContent() {
             onNextTrailer={handleNextTrailer}
             isBookmarked={isBookmarked(activeTrailerMovie.id)}
             onToggleBookmark={toggleBookmark}
+            onShare={handleShareFromTrailer}
           />
         )}
 
@@ -1147,9 +1126,11 @@ export function AppContent() {
           />
         )}
 
-        {showMovieNight && catalogStatus === 'ready' && (
+        {showMovieNight && (
           <MovieNightPlanner
-            movies={validatedCatalog}
+            reviewedMovies={validatedCatalog}
+            catalog={catalogComplete ? canonicalCatalog : NO_TITLES}
+            catalogReady={catalogSettled}
             watchlist={watchlist}
             onClose={() => setShowMovieNight(false)}
             onWatchTrailer={(movie) => {
@@ -1158,6 +1139,10 @@ export function AppContent() {
             }}
             isBookmarked={isBookmarked}
             onToggleBookmark={toggleBookmark}
+            onBrowseAll={() => {
+              setShowMovieNight(false);
+              startDiscovery('all');
+            }}
           />
         )}
 
@@ -1169,7 +1154,7 @@ export function AppContent() {
           />
         )}
 
-        {/* Settings Modal */}
+        {/* My streaming services */}
         {showSettings && (
           <SettingsModal
             onClose={() => setShowSettings(false)}
@@ -1187,28 +1172,12 @@ export function AppContent() {
           />
         )}
 
-        {/* Legal & Compliance Modal */}
-        {legalTab && (
-          <LegalModal
-            initialTab={legalTab}
-            onClose={() => setLegalTab(null)}
-          />
-        )}
-
         {/* Auth Modal */}
         {showAuth && authEnabled && (
           <AuthModal
             onClose={() => setShowAuth(false)}
             onAuthSuccess={() => setShowAuth(false)}
-          />
-        )}
-
-        {/* Alerts Modal */}
-        {alertMovie && (
-          <AlertsModal
-            movie={alertMovie}
-            user={user}
-            onClose={() => setAlertMovie(null)}
+            allowSignUp={accountSignUpEnabled}
           />
         )}
       </Suspense>

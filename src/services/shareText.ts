@@ -67,10 +67,13 @@ export function getShareEligibility(movie: Movie): ShareEligibility {
   return { shareable: false, sourceLabel, reason: 'This bundled discovery record is search-only until its identity and curated evidence are validated.' };
 }
 
-function formatCheckedDate(value?: string): string {
+/** "checked Sep 23, 2026" for an ISO date or timestamp, or "checked date unavailable". */
+export function formatCheckedDate(value?: string): string {
   const normalized = value?.slice(0, 10);
   if (!normalized || !isValidIsoDate(normalized)) return 'checked date unavailable';
-  const parsed = Date.UTC(...normalized.split('-').map(Number) as [number, number, number]);
+  const [year, month, day] = normalized.split('-').map(Number);
+  // Date.UTC months are zero-based; the ISO string's are one-based.
+  const parsed = Date.UTC(year, month - 1, day);
   return `checked ${new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
     month: 'short',
@@ -112,30 +115,60 @@ export function getAvailabilityAttribution(movie: Movie): string {
   return 'No provider source was supplied for this record. Check current availability before watching or paying.';
 }
 
+const LIVE_DATA_CREDIT = 'Streaming data from JustWatch via TMDB.';
+
+/** The one-line pitch for a title, without its link. */
+export function getMovieShareHeadline(movie: Movie): string {
+  return `${movie.title} (${movie.year}) on StreamFlicker: trailer and where to watch`;
+}
+
+/**
+ * A message a friend would actually read in a chat. Record provenance stays in
+ * the app (the title's details), but live provider data keeps its attribution.
+ */
 export function buildMovieShareText(movie: Movie, shareUrl: string): string {
   const eligibility = getShareEligibility(movie);
   if (!eligibility.shareable) {
-    return [`Search-only result: ${movie.title} cannot be shared.`, eligibility.reason, getAvailabilityDisclosure(movie)].filter(Boolean).join(' ');
+    return [`Search-only result: ${movie.title} cannot be shared.`, eligibility.reason].filter(Boolean).join(' ');
   }
   return [
-    `Check out "${movie.title}" (${movie.year}) on StreamFlicker.`,
-    getAvailabilityDisclosure(movie),
-    getAvailabilityAttribution(movie),
-    shareUrl,
+    `${getMovieShareHeadline(movie)} ${shareUrl}`.trim(),
+    movie.availability?.source === 'tmdb' ? LIVE_DATA_CREDIT : '',
   ].filter(Boolean).join(' ');
 }
 
-export function buildMovieNightShareText(summary: string, movies: readonly Movie[]): string {
-  const shareableMovies = movies.filter((movie) => getShareEligibility(movie).shareable);
-  const skippedMovies = movies.filter((movie) => !getShareEligibility(movie).shareable);
-  const choices = shareableMovies
-    .map((movie, index) => `${index + 1}. ${movie.title} (${movie.year}) — ${getAvailabilityDisclosure(movie)}`)
-    .join('\n');
-  const attribution = shareableMovies.some((movie) => movie.availability?.source === 'tmdb')
-    ? 'Provider data by JustWatch through TMDB. Attribution does not imply commercial permission, and listings can change.'
-    : 'These are bundled discovery records without a live provider result. Check current availability before watching or paying.';
-  const skipped = skippedMovies.length > 0
-    ? `${skippedMovies.length} search-only record${skippedMovies.length === 1 ? '' : 's'} excluded from sharing.\n${skippedMovies.map((movie) => `Search-only excluded: ${movie.title} — ${getAvailabilityDisclosure(movie)}`).join('\n')}`
-    : '';
-  return [`My StreamFlicker movie night`, summary, choices || 'No validated records are available to share.', skipped, attribution].filter(Boolean).join('\n');
+const CHECKED_MARK = '(checked on TMDB)';
+
+/**
+ * A movie-night plan lists the reviewed picks and the well-known titles that were matched to TMDB ("checked"). Checked
+ * picks carry a mark and the footnote says what it means, so a plan never claims more review than its picks have. Any
+ * other bundled title is left out and counted.
+ */
+export function buildMovieNightShareText(summary: string, movies: readonly Movie[], siteUrl = ''): string {
+  const isChecked = (movie: Movie) => movie.recordSource === 'tmdb-checked';
+  const shareable = movies.filter((movie) => getShareEligibility(movie).shareable);
+  const listed = movies.filter((movie) => getShareEligibility(movie).shareable || isChecked(movie));
+  const skipped = movies.length - listed.length;
+  const lines = [
+    'My StreamFlicker movie night',
+    summary,
+    ...(listed.length > 0
+      ? listed.map((movie, index) => `${index + 1}. ${movie.title} (${movie.year})${isChecked(movie) ? ` ${CHECKED_MARK}` : ''}`)
+      : ['No picks to share yet.']),
+  ];
+  if (skipped > 0) {
+    lines.push(`${skipped} more ${skipped === 1 ? "pick isn't" : "picks aren't"} listed because ${skipped === 1 ? "it hasn't" : "they haven't"} been reviewed yet.`);
+  }
+  if (listed.length > 0) {
+    if (siteUrl) lines.push(`Trailers and where to watch: ${siteUrl}`);
+    if (!listed.some(isChecked)) {
+      lines.push(`Picks come from StreamFlicker's reviewed list (${getAvailabilityCheckedLabel(shareable[0])}). Check availability before you pay.`);
+    } else if (shareable.length > 0) {
+      lines.push(`Picks marked "checked on TMDB" were matched to TMDB but are not hand-reviewed; the others come from StreamFlicker's reviewed list (${getAvailabilityCheckedLabel(shareable[0])}). Check availability before you pay.`);
+    } else {
+      lines.push('These picks were matched to TMDB but are not hand-reviewed. Check availability before you pay.');
+    }
+    if (shareable.some((movie) => movie.availability?.source === 'tmdb')) lines.push(LIVE_DATA_CREDIT);
+  }
+  return lines.join('\n');
 }

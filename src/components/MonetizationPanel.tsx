@@ -8,11 +8,13 @@ interface MonetizationPanelProps {
 export function MonetizationPanel({ links }: MonetizationPanelProps) {
   const hasAnyLink = Boolean(links.supportUrl || links.newsletterUrl || links.sponsorInquiryUrl);
   if (!hasAnyLink) return null;
+  // With only the support link configured there is no second column, so the panel stays one column.
+  const hasSecondColumn = Boolean(links.newsletterUrl || links.sponsorInquiryUrl);
 
   return (
     <section aria-labelledby="support-streamflicker-title" className="mb-12 mt-10 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
-      <div className="grid md:grid-cols-[1.15fr_0.85fr]">
-        <div className="border-b border-zinc-800 p-6 sm:p-8 md:border-b-0 md:border-r">
+      <div className={hasSecondColumn ? 'grid md:grid-cols-[1.15fr_0.85fr]' : ''}>
+        <div className={`p-6 sm:p-8 ${hasSecondColumn ? 'border-b border-zinc-800 md:border-b-0 md:border-r' : ''}`}>
           <h2 id="support-streamflicker-title" className="font-display text-2xl font-bold tracking-tight text-white">
             Help fund better movie discovery
           </h2>
@@ -24,7 +26,7 @@ export function MonetizationPanel({ links }: MonetizationPanelProps) {
               href={links.supportUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-500 active:scale-[0.98]"
+              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
             >
               <Heart size={16} aria-hidden="true" />
               Support StreamFlicker
@@ -32,7 +34,7 @@ export function MonetizationPanel({ links }: MonetizationPanelProps) {
           )}
         </div>
 
-        <div className="divide-y divide-zinc-800">
+        {hasSecondColumn && <div className="divide-y divide-zinc-800">
           {links.newsletterUrl && (
             <a
               href={links.newsletterUrl}
@@ -45,7 +47,7 @@ export function MonetizationPanel({ links }: MonetizationPanelProps) {
               </span>
               <span>
                 <span className="block text-sm font-bold text-white">Get weekly movie picks</span>
-                <span className="mt-1 block text-xs leading-relaxed text-zinc-500">A compact shortlist for family nights, date nights, and quick watches.</span>
+                <span className="mt-1 block text-xs leading-relaxed text-ink-3">A compact shortlist for family nights, date nights, and quick watches.</span>
               </span>
             </a>
           )}
@@ -61,11 +63,11 @@ export function MonetizationPanel({ links }: MonetizationPanelProps) {
               </span>
               <span>
                 <span className="block text-sm font-bold text-white">Sponsor StreamFlicker</span>
-                <span className="mt-1 block text-xs leading-relaxed text-zinc-500">Reach movie-night planners through clearly disclosed placements.</span>
+                <span className="mt-1 block text-xs leading-relaxed text-ink-3">Reach movie-night planners through clearly disclosed placements.</span>
               </span>
             </a>
           )}
-        </div>
+        </div>}
       </div>
     </section>
   );

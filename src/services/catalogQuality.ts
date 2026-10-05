@@ -17,13 +17,22 @@ export interface ValidatedCatalogEntry {
   director: string;
   cast: string[];
   ratingSource: 'TMDB';
+  /** US certification as shown on the title's TMDB page when the entry was reviewed. */
+  certification: string;
+  /** Runtime in minutes as shown on the title's TMDB page when the entry was reviewed. */
+  runtimeMinutes: number;
   checkedAt: string;
   curationRank: number;
 }
 
 export const CATALOG_CHECKED_AT = '2026-09-23';
 export const CATALOG_REGION = 'US';
-export const CATALOG_FRESHNESS_DAYS = 365;
+/**
+ * TMDB's terms forbid caching its data for more than six months, so reviewed metadata expires after 150 days. The
+ * quality tests (and the weekly CI run) fail from day 120: re-check the reviewed titles on TMDB, then update
+ * CATALOG_CHECKED_AT.
+ */
+export const CATALOG_FRESHNESS_DAYS = 150;
 
 export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = {
   'blade-runner-2049-2017': {
@@ -34,6 +43,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Denis Villeneuve',
     cast: ['Ryan Gosling', 'Harrison Ford', 'Ana de Armas'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 164,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 1,
   },
@@ -45,6 +56,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Christopher Nolan',
     cast: ['Matthew McConaughey', 'Anne Hathaway', 'Jessica Chastain'],
     ratingSource: 'TMDB',
+    certification: 'PG-13',
+    runtimeMinutes: 169,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 2,
   },
@@ -56,6 +69,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Christopher Nolan',
     cast: ['Leonardo DiCaprio', 'Joseph Gordon-Levitt', 'Elliot Page'],
     ratingSource: 'TMDB',
+    certification: 'PG-13',
+    runtimeMinutes: 148,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 3,
   },
@@ -67,6 +82,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Chad Stahelski',
     cast: ['Keanu Reeves', 'Michael Nyqvist', 'Alfie Allen'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 101,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 4,
   },
@@ -78,6 +95,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'David Fincher',
     cast: ['Ben Affleck', 'Rosamund Pike', 'Neil Patrick Harris'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 149,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 5,
   },
@@ -89,6 +108,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Alejandro González Iñárritu',
     cast: ['Leonardo DiCaprio', 'Tom Hardy', 'Will Poulter'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 157,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 6,
   },
@@ -100,6 +121,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'George Miller',
     cast: ['Tom Hardy', 'Charlize Theron', 'Nicholas Hoult'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 121,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 7,
   },
@@ -111,6 +134,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Ridley Scott',
     cast: ['Matt Damon', 'Jessica Chastain', 'Kristen Wiig'],
     ratingSource: 'TMDB',
+    certification: 'PG-13',
+    runtimeMinutes: 141,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 8,
   },
@@ -122,6 +147,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Denis Villeneuve',
     cast: ['Hugh Jackman', 'Jake Gyllenhaal', 'Viola Davis'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 153,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 9,
   },
@@ -133,6 +160,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Marc Forster',
     cast: ['Brad Pitt', 'Mireille Enos', 'Daniella Kertesz'],
     ratingSource: 'TMDB',
+    certification: 'PG-13',
+    runtimeMinutes: 116,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 10,
   },
@@ -144,6 +173,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Ruben Fleischer',
     cast: ['Jesse Eisenberg', 'Woody Harrelson', 'Emma Stone'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 88,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 11,
   },
@@ -155,6 +186,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Danny Boyle',
     cast: ['Cillian Murphy', 'Naomie Harris', 'Brendan Gleeson'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 113,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 12,
   },
@@ -166,6 +199,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Fede Álvarez',
     cast: ['Cailee Spaeny', 'David Jonsson', 'Archie Renaux'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 119,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 13,
   },
@@ -177,6 +212,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Martin Scorsese',
     cast: ['Leonardo DiCaprio', 'Mark Ruffalo', 'Ben Kingsley'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 138,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 14,
   },
@@ -188,6 +225,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Edgar Wright',
     cast: ['Simon Pegg', 'Nick Frost', 'Kate Ashfield'],
     ratingSource: 'TMDB',
+    certification: 'R',
+    runtimeMinutes: 99,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 15,
   },
@@ -199,6 +238,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Christopher Nolan',
     cast: ['Christian Bale', 'Heath Ledger', 'Aaron Eckhart'],
     ratingSource: 'TMDB',
+    certification: 'PG-13',
+    runtimeMinutes: 152,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 16,
   },
@@ -210,6 +251,8 @@ export const VALIDATED_CATALOG_ENTRIES: Record<string, ValidatedCatalogEntry> = 
     director: 'Francis Lawrence',
     cast: ['Will Smith', 'Alice Braga', 'Charlie Tahan'],
     ratingSource: 'TMDB',
+    certification: 'PG-13',
+    runtimeMinutes: 101,
     checkedAt: CATALOG_CHECKED_AT,
     curationRank: 17,
   },
@@ -250,6 +293,14 @@ function daysBetween(later: string, earlier: string): number {
 
 function currentUtcDate(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** Minutes in a catalog runtime such as "2h 49m"; 0 when it cannot be read. */
+function parseRuntimeMinutes(duration: unknown): number {
+  if (typeof duration !== 'string') return 0;
+  const hours = Number(duration.match(/(\d+)h/)?.[1] ?? 0);
+  const minutes = Number(duration.match(/(\d+)m/)?.[1] ?? 0);
+  return hours * 60 + minutes;
 }
 
 function hasPlaceholder(value: unknown): boolean {
@@ -327,6 +378,8 @@ export function validateCatalogRecord(
   if (entry.ratingSource !== 'TMDB') reasons.push('rating provenance is missing');
   if (movie.ratingSource !== entry.ratingSource) reasons.push('source rating provenance is missing or mismatched');
   if (!VALID_RATING.test(movie.rating)) reasons.push('rating is not a recognized certification');
+  if (movie.rating !== entry.certification) reasons.push('source certification is missing or mismatched');
+  if (parseRuntimeMinutes(movie.duration) !== entry.runtimeMinutes) reasons.push('source runtime is missing or mismatched');
   if (!Number.isFinite(movie.score) || movie.score < 0 || movie.score > 10) reasons.push('legacy rank value is outside its numeric bounds');
   if (hasPlaceholder(director) || cast.length === 0 || cast.some(hasPlaceholder)) reasons.push('placeholder credit');
   if (entry.director !== director || entry.cast.length !== cast.length || entry.cast.some((name, index) => cast[index] !== name)) reasons.push('source credits are missing or mismatched');

@@ -56,14 +56,14 @@ export function WatchlistModal({
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/80">
           <div className="flex items-center gap-2">
             <Bookmark className="text-rose-500" size={20} />
-            <h2 id="watchlist-dialog-title" className="font-display font-bold text-lg text-white">Your Saved Watchlist ({watchlist.length})</h2>
+            <h2 id="watchlist-dialog-title" className="font-display font-bold text-lg text-white">Your watchlist ({watchlist.length})</h2>
           </div>
           <div className="flex items-center gap-2">
             {watchlist.length > 0 && (
               <button
                 type="button"
                 onClick={handleCopyShortlist}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:bg-zinc-800"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:bg-zinc-800"
               >
                 {copyStatus === 'copied' ? <Check size={14} /> : <Copy size={14} />}
                 {copyStatus === 'copied' ? 'Copied' : 'Copy shortlist'}
@@ -77,12 +77,12 @@ export function WatchlistModal({
 
         {/* List Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
-          <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-[11px] leading-relaxed text-zinc-500">
+          <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-xs leading-relaxed text-ink-3">
             Your saved movies stay in this browser. Account sync is not enabled yet, so export or share a title before switching devices.
           </p>
           {legacyWatchlistCount > 0 && (
             <div className="space-y-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
-              <p className="text-[11px] leading-relaxed text-amber-100">
+              <p className="text-xs leading-relaxed text-amber-100">
                 An older watchlist with {legacyWatchlistCount} movie{legacyWatchlistCount === 1 ? '' : 's'} was found on this device. Its original owner cannot be determined.
               </p>
               <button
@@ -95,16 +95,16 @@ export function WatchlistModal({
             </div>
           )}
           {copyStatus === 'error' && (
-            <p role="alert" className="text-xs text-rose-300">Clipboard access failed. Open a title and use its share link instead.</p>
+            <p role="alert" className="text-xs text-rose-300">Clipboard access failed. Open a title and share it from there instead.</p>
           )}
           {copyStatus === 'copied' && (
             <p role="status" aria-live="polite" className="text-xs text-emerald-300">Shortlist copied to the clipboard.</p>
           )}
           {watchlist.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500">
-              <Bookmark size={40} className="mx-auto mb-3 text-zinc-700 opacity-60" />
-              <p className="text-base font-semibold text-zinc-400">Your watchlist is empty</p>
-              <p className="text-xs text-zinc-600 mt-1">Bookmark movies while browsing to save them for movie night!</p>
+            <div className="text-center py-12">
+              <Bookmark size={40} className="mx-auto mb-3 text-ink-3 opacity-60" aria-hidden="true" />
+              <p className="text-base font-semibold text-zinc-300">Your watchlist is empty</p>
+              <p className="text-xs text-ink-3 mt-1">Add movies while you browse and they will be here for movie night.</p>
             </div>
           ) : (
             watchlist.map((movie) => (
@@ -121,8 +121,8 @@ export function WatchlistModal({
                 />
 
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-white text-base truncate">{movie.title}</h4>
-                  <div className="text-xs text-zinc-400 font-medium mb-1">
+                  <h3 className="font-bold text-white text-base truncate">{movie.title}</h3>
+                  <div className="text-xs text-ink-2 font-medium mb-1">
                     {movie.year} • {movie.genre.join(', ')}
                   </div>
                   <AvailabilityLinks movie={movie} variant="watchlist" />
@@ -134,18 +134,18 @@ export function WatchlistModal({
                       onClose();
                       onWatchTrailer(movie);
                     }}
-                    className="p-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-md"
-                    title="Watch Trailer"
-                    aria-label={`Watch trailer for ${movie.title}`}
+                    className="grid min-h-11 min-w-11 place-items-center rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md"
+                    title="Watch trailer"
+                    aria-label={`Watch the trailer for ${movie.title}`}
                   >
                     <Play size={16} className="fill-white" />
                   </button>
 
                   <button
                     onClick={() => onRemove(movie)}
-                    className="p-2.5 rounded-xl bg-zinc-800 hover:bg-rose-950 hover:text-rose-400 text-zinc-400"
-                    title="Remove from Watchlist"
-                    aria-label={`Remove ${movie.title} from Watchlist`}
+                    className="grid min-h-11 min-w-11 place-items-center rounded-xl bg-zinc-800 hover:bg-rose-950 hover:text-rose-400 text-zinc-400"
+                    title="Remove from watchlist"
+                    aria-label={`Remove from watchlist: ${movie.title}`}
                   >
                     <Trash2 size={16} />
                   </button>

@@ -1,5 +1,6 @@
 import type { Movie } from '../data/catalog';
 import {
+  hasVerifiedRatingAndRuntime,
   isDateNightFriendly,
   isFamilyFriendly,
 } from './discovery';
@@ -22,6 +23,42 @@ export interface MovieNightPlan {
 
 const MOVIE_NIGHT_OCCASIONS = new Set<MovieNightOccasion>(['any', 'family', 'date-night', 'friends', 'solo']);
 const MOVIE_NIGHT_LENGTHS = new Set<MovieNightLength>(['any', 'short', 'standard', 'epic']);
+
+/**
+ * TMDB votes a checked title needs before the planner may suggest it: enough that people have heard of it. Provisional:
+ * set it from the real vote distribution once the TMDB enrichment has run.
+ */
+export const PLANNER_MIN_VOTES = 1000;
+const PLANNER_MIN_DESCRIPTION_LENGTH = 80;
+/** Reviewed titles always rank above checked ones; this is larger than any score the other terms can add up to. */
+const REVIEWED_BONUS = 1000;
+/** A title that was only matched to TMDB has no editorial review behind a family claim, so it needs one of these. */
+const CHECKED_FAMILY_RATINGS = new Set(['G', 'PG', 'TV-G', 'TV-PG']);
+const YOUTUBE_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
+
+/**
+ * Whether the planner may suggest a title: every reviewed title, and a checked one (rating and runtime matched to
+ * TMDB with proof) only when it is well known, has a trailer TMDB confirmed, and has a real synopsis, genre and poster.
+ */
+export function isPlannerEligible(movie: Movie): boolean {
+  if (movie.recordSource === 'bundled-validated') return true;
+  return movie.recordSource === 'tmdb-checked'
+    && (movie.voteCount ?? 0) >= PLANNER_MIN_VOTES
+    && movie.trailerVerified === true
+    && YOUTUBE_ID_PATTERN.test(movie.youtubeTrailerId)
+    && movie.description.trim().length >= PLANNER_MIN_DESCRIPTION_LENGTH
+    && movie.genre.some((genre) => genre !== 'Other')
+    && movie.posterUrl.length > 0;
+}
+
+/** The titles the planner suggests from: every reviewed title, then the eligible checked ones. */
+export function buildPlannerPool(reviewed: Movie[], catalog: readonly Movie[]): Movie[] {
+  const reviewedIds = new Set(reviewed.map(({ id }) => id));
+  return [
+    ...reviewed,
+    ...catalog.filter((movie) => !reviewedIds.has(movie.id) && movie.recordSource === 'tmdb-checked' && isPlannerEligible(movie)),
+  ];
+}
 
 /** Validates a browser-saved plan before it reaches the planner UI. */
 export function normalizeMovieNightPlan(value: unknown): MovieNightPlan | null {
@@ -87,6 +124,8 @@ function stableHash(value: string): number {
 
 function matchesLength(movie: Movie, length: MovieNightLength): boolean {
   if (length === 'any') return true;
+  // Bundled records that were neither reviewed nor matched to TMDB carry a placeholder runtime.
+  if (!hasVerifiedRatingAndRuntime(movie)) return false;
   const minutes = parseMovieDurationMinutes(movie.duration);
   // A bounded runtime filter must not make an unverified runtime claim.
   if (minutes <= 0) return false;
@@ -96,10 +135,14 @@ function matchesLength(movie: Movie, length: MovieNightLength): boolean {
 }
 
 function matchesMovieNightOccasion(movie: Movie, occasion: MovieNightOccasion): boolean {
-  if (occasion === 'family') return isFamilyFriendly(movie);
+  if (occasion === 'family') {
+    if (!isFamilyFriendly(movie)) return false;
+    return movie.recordSource === 'bundled-validated' || CHECKED_FAMILY_RATINGS.has(movie.rating.trim().toUpperCase());
+  }
   if (occasion === 'date-night') return isDateNightFriendly(movie);
   if (occasion === 'friends') {
-    return movie.rating.trim().toUpperCase() !== 'R'
+    return hasVerifiedRatingAndRuntime(movie)
+      && movie.rating.trim().toUpperCase() !== 'R'
       && !movie.genre.includes('Documentary')
       && (movie.genre.includes('Comedy') || movie.genre.includes('Action') || movie.genre.includes('Adventure'));
   }
@@ -115,7 +158,11 @@ function matchesProvider(movie: Movie, providerId: string): boolean {
 }
 
 function preferenceScore(movie: Movie, preferences: MovieNightPreferences, preferredMovieIds?: ReadonlySet<string>): number {
-  let score = movie.score * 10 + movie.matchPercentage / 10;
+  // Reviewed titles keep their editorial score and always lead. Anything else ranks by how many people voted for it on
+  // TMDB: its legacy score is a placeholder and never counts.
+  let score = movie.recordSource === 'bundled-validated'
+    ? REVIEWED_BONUS + movie.score * 10 + movie.matchPercentage / 10
+    : Math.log10(Math.max(movie.voteCount ?? 1, 1)) * 10;
   if (preferences.genre !== 'All' && movie.genre.includes(preferences.genre)) score += 35;
   if (preferences.providerId !== 'any' && matchesProvider(movie, preferences.providerId)) score += 15;
   if (movie.trending) score += 4;
@@ -145,6 +192,32 @@ export function getMovieNightCandidates(
       return stableHash(`${preferences.occasion}:${preferences.length}:${preferences.genre}:${preferences.providerId}:${left.id}`)
         - stableHash(`${preferences.occasion}:${preferences.length}:${preferences.genre}:${preferences.providerId}:${right.id}`);
     });
+}
+
+export interface MovieNightOptionCounts {
+  occasion: Record<MovieNightOccasion, number>;
+  length: Record<MovieNightLength, number>;
+}
+
+/**
+ * How many picks each planner choice would leave, holding the other choices
+ * fixed. The planner uses this to disable a choice that would return nothing.
+ */
+export function getMovieNightOptionCounts(
+  movies: Movie[],
+  preferences: MovieNightPreferences,
+  preferredMovieIds?: ReadonlySet<string>,
+): MovieNightOptionCounts {
+  const countWith = (changes: Partial<MovieNightPreferences>) =>
+    getMovieNightCandidates(movies, { ...preferences, ...changes }, preferredMovieIds).length;
+  return {
+    occasion: Object.fromEntries(
+      [...MOVIE_NIGHT_OCCASIONS].map((occasion) => [occasion, countWith({ occasion })]),
+    ) as Record<MovieNightOccasion, number>,
+    length: Object.fromEntries(
+      [...MOVIE_NIGHT_LENGTHS].map((length) => [length, countWith({ length })]),
+    ) as Record<MovieNightLength, number>,
+  };
 }
 
 /**

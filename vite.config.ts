@@ -16,7 +16,7 @@ function publicPages(): Plugin {
         if (url.pathname === '/business') {
           res.writeHead(308, { Location: `/about${url.search}` }); res.end(); return;
         }
-        if (url.pathname === '/about' || url.pathname === '/movie-night') req.url = `/index.html${url.search}`;
+        if (url.pathname !== '/' && url.pathname in SEO_PAGES) req.url = `/index.html${url.search}`;
         next();
       });
     },
@@ -44,34 +44,35 @@ function publicPages(): Plugin {
   };
 }
 
-// The full catalog is needed immediately on first visit, but remains a separate
-// cacheable chunk. Let the HTML parser fetch it alongside the app, rather than
-// waiting for React's catalog-loading effect to discover the dynamic import.
-function preloadCatalog(): Plugin {
+// The two Latin font files are used on every page, so ask for them in the HTML instead of
+// waiting for the stylesheet to discover them. Later subsets load only when a page needs them.
+function preloadFonts(): Plugin {
   return {
-    name: 'streamflicker-preload-catalog',
+    name: 'streamflicker-preload-fonts',
     apply: 'build',
     transformIndexHtml: {
       order: 'post',
       handler(_html, context) {
-        const catalog = Object.values(context.bundle ?? {}).find((output) =>
-          output.type === 'chunk'
-          && output.facadeModuleId?.replaceAll('\\', '/').endsWith('/src/data/generatedMovies.ts'));
-        if (!catalog) throw new Error('The browser catalog chunk is missing from the production build');
-        return [{
+        const fonts = Object.values(context.bundle ?? {}).filter((output) =>
+          output.type === 'asset' && /(?:inter|outfit)-latin-wght-normal-[A-Za-z0-9_-]+[.]woff2$/.test(output.fileName));
+        if (fonts.length !== 2) throw new Error('Expected the Inter and Outfit Latin font files in the production build');
+        return fonts.map((font) => ({
           tag: 'link',
-          attrs: { rel: 'modulepreload', crossorigin: '', href: `/${catalog.fileName}` },
-          injectTo: 'head',
-        }];
+          attrs: { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: `/${font.fileName}` },
+          injectTo: 'head' as const,
+        }));
       },
     },
   };
 }
 
+// The home page ships only the reviewed titles (src/data/homeCatalog.ts); the full
+// catalog is a separate chunk that the app requests after first paint, so it is
+// deliberately not preloaded here.
 export default defineConfig({
   appType: 'mpa',
   define: {
     'import.meta.env.VITE_DEPLOY_NOINDEX': JSON.stringify(process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production' ? 'true' : 'false'),
   },
-  plugins: [react(), tailwindcss(), preloadCatalog(), publicPages()],
+  plugins: [react(), tailwindcss(), preloadFonts(), publicPages()],
 })

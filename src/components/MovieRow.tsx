@@ -3,6 +3,9 @@ import type { Movie } from '../data/movies';
 import { MovieCard } from './MovieCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+/** A rail with fewer cards than this reads as a mistake, so it is not shown. */
+const MIN_RAIL_ITEMS = 3;
+
 interface MovieRowProps {
   title: string;
   subtitle?: string;
@@ -11,8 +14,6 @@ interface MovieRowProps {
   onWatchTrailer: (movie: Movie) => void;
   isBookmarked: (id: string) => boolean;
   onToggleBookmark: (movie: Movie) => void;
-  onShare: (movie: Movie) => void;
-  onSetAlert?: (movie: Movie) => void;
 }
 
 export function MovieRow({
@@ -23,8 +24,6 @@ export function MovieRow({
   onWatchTrailer,
   isBookmarked,
   onToggleBookmark,
-  onShare,
-  onSetAlert,
 }: MovieRowProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const headingId = useId();
@@ -83,11 +82,11 @@ export function MovieRow({
     }
   };
 
-  if (movies.length === 0) return null;
+  if (movies.length < MIN_RAIL_ITEMS) return null;
 
   return (
-    <section className="movie-row my-8 relative group/row" aria-labelledby={headingId}>
-      
+    <section className="movie-row my-8 relative" aria-labelledby={headingId}>
+
       {/* Row Header */}
       <div className="flex items-end justify-between gap-3 mb-4 px-1">
         <div className="min-w-0">
@@ -95,7 +94,7 @@ export function MovieRow({
             {icon}
             {title}
           </h2>
-          {subtitle && <p className="text-xs text-zinc-400 mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-ink-2 mt-0.5">{subtitle}</p>}
         </div>
 
         {/* Scroll Buttons */}
@@ -103,8 +102,8 @@ export function MovieRow({
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
-            title="Scroll Left"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+            title="Scroll left"
             aria-label={`Scroll ${title} left`}
           >
             <ChevronLeft size={18} />
@@ -112,8 +111,8 @@ export function MovieRow({
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
-            title="Scroll Right"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+            title="Scroll right"
             aria-label={`Scroll ${title} right`}
           >
             <ChevronRight size={18} />
@@ -121,9 +120,10 @@ export function MovieRow({
         </div>
       </div>
 
-      {/* Horizontal Scroll Row */}
+      {/* Horizontal Scroll Row: a labelled region so screen readers announce what it is. */}
       <div
         ref={rowRef}
+        role="region"
         tabIndex={0}
         aria-label={`${title} horizontal movie list`}
         onScroll={updateScrollState}
@@ -137,8 +137,6 @@ export function MovieRow({
               onWatchTrailer={onWatchTrailer}
               isBookmarked={isBookmarked(movie.id)}
               onToggleBookmark={onToggleBookmark}
-              onShare={onShare}
-              onSetAlert={onSetAlert}
             />
           </div>
         ))}

@@ -1,0 +1,156 @@
+{
+  "checkedAt": "2026-09-23",
+  "region": "US",
+  "freshnessDays": 150,
+  "source": "src/data/movies.ts",
+  "recordCount": 1799,
+  "validatedCount": 17,
+  "suppressedCount": 1782,
+  "searchOnlyPolicy": "Records outside the validated subset remain discovery-searchable only and must show a provenance warning.",
+  "availabilityPolicy": "Bundled records never expose guessed providers. Live provider data must include TMDB/JustWatch attribution, region, status, and checkedAt.",
+  "knownSuppressionSignals": {
+    "outside-curated-subset": 1782,
+    "placeholder-credit": 1776,
+    "shared-trailer": 946,
+    "future-release-year": 1,
+    "invalid-source-evidence": 0
+  },
+  "validated": [
+    {
+      "id": "blade-runner-2049-2017",
+      "title": "Blade Runner 2049",
+      "year": 2017,
+      "sourceId": "tmdb-335984",
+      "releaseDate": "2017-10-06",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "interstellar-2014",
+      "title": "Interstellar",
+      "year": 2014,
+      "sourceId": "tmdb-157336",
+      "releaseDate": "2014-11-07",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "inception-2010",
+      "title": "Inception",
+      "year": 2010,
+      "sourceId": "tmdb-27205",
+      "releaseDate": "2010-07-16",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "john-wick-2014",
+      "title": "John Wick",
+      "year": 2014,
+      "sourceId": "tmdb-245891",
+      "releaseDate": "2014-10-24",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "gone-girl-2014",
+      "title": "Gone Girl",
+      "year": 2014,
+      "sourceId": "tmdb-210577",
+      "releaseDate": "2014-10-03",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "the-revenant-2015",
+      "title": "The Revenant",
+      "year": 2015,
+      "sourceId": "tmdb-281957",
+      "releaseDate": "2015-12-25",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "mad-max--fury-road-2015",
+      "title": "Mad Max: Fury Road",
+      "year": 2015,
+      "sourceId": "tmdb-76341",
+      "releaseDate": "2015-05-15",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "the-martian-2015",
+      "title": "The Martian",
+      "year": 2015,
+      "sourceId": "tmdb-286217",
+      "releaseDate": "2015-10-02",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "prisoners-2013",
+      "title": "Prisoners",
+      "year": 2013,
+      "sourceId": "tmdb-146233",
+      "releaseDate": "2013-09-20",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "world-war-z-2013",
+      "title": "World War Z",
+      "year": 2013,
+      "sourceId": "tmdb-72190",
+      "releaseDate": "2013-06-21",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "zombieland-2009",
+      "title": "Zombieland",
+      "year": 2009,
+      "sourceId": "tmdb-19908",
+      "releaseDate": "2009-10-02",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "28-days-later-2002",
+      "title": "28 Days Later",
+      "year": 2002,
+      "sourceId": "tmdb-170",
+      "releaseDate": "2002-06-28",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "alien--romulus-2024",
+      "title": "Alien: Romulus",
+      "year": 2024,
+      "sourceId": "tmdb-945961",
+      "releaseDate": "2024-08-16",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "shutter-island-2010",
+      "title": "Shutter Island",
+      "year": 2010,
+      "sourceId": "tmdb-11324",
+      "releaseDate": "2010-02-19",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "shaun-of-the-dead-2004",
+      "title": "Shaun of the Dead",
+      "year": 2004,
+      "sourceId": "tmdb-747",
+      "releaseDate": "2004-04-09",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "the-dark-knight-2008",
+      "title": "The Dark Knight",
+      "year": 2008,
+      "sourceId": "tmdb-155",
+      "releaseDate": "2008-07-18",
+      "checkedAt": "2026-09-23"
+    },
+    {
+      "id": "i-am-legend-2007",
+      "title": "I Am Legend",
+      "year": 2007,
+      "sourceId": "tmdb-6479",
+      "releaseDate": "2007-12-14",
+      "checkedAt": "2026-09-23"
+    }
+  ]
+}

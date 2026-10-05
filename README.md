@@ -2,8 +2,9 @@
 
 ## Search discovery and static pages
 
-`npm run build` now also generates readable homepage HTML, script-free `/about`
-and `/movie-night` pages, a real 404 document, and `sitemap.xml`. Metadata and
+`npm run build` now also generates readable homepage HTML, script-free `/about`,
+`/movie-night`, `/privacy`, `/terms` and `/contact` pages, a real 404 document, and
+`sitemap.xml`. Metadata and
 canonical page definitions live in `src/seo/pages.ts`. The homepage progressively
 replaces its static shell with the existing React app; it is not fully hydrated SSR.
 
@@ -56,6 +57,11 @@ Additional website revenue configuration:
 
 Website monetization surfaces are hidden in the native iOS shell until their purchase, advertising, consent, and App Store policy flows have been reviewed. Invalid or incomplete URLs, sponsor settings, and AdSense identifiers fail closed and render nothing.
 
+Legal and contact:
+
+- `VITE_CONTACT_EMAIL` is the public contact address shown on `/contact` and used by the privacy and copyright steps. It is read at build time and is never hard-coded; `npm run build` warns while it is blank, and `/contact` then says plainly that no address is published yet.
+- `VITE_ACCOUNT_SIGNUP_ENABLED` defaults to off. Accounts do not sync anything yet, so only existing accounts can sign in (from the footer). Set it to `true` only when accounts do something worth signing up for.
+
 Deploy the function before enabling account creation in a production/App Store build:
 
 ```bash
@@ -72,11 +78,15 @@ Every `VITE_*` value is embedded in browser-delivered JavaScript. Never put a se
 npm run dev      # Start the Vite development server
 npm run build    # Type-check and create a production bundle
 npm run lint     # Run Oxlint
-npm test         # Run service, search, and catalog integrity checks
+npm test         # Run service, search, catalog integrity, and UI guard checks
+npm run test:ui  # Run only the UI guards (text size, contrast, privacy copy, removed features)
 npm run perf:benchmark # Benchmark 10 representative searches against the bundled catalog
 npm run generate:catalog # Regenerate the packed, preclassified browser catalog
+npm run enrich:catalog   # Read ratings, runtimes and trailers from TMDB (needs a token; see docs/tmdb-enrichment.md)
 npm run preview  # Preview the built application
 ```
+
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, `npm test`, the production build, and `npm run test:seo` on every push. Vercel's own build does not run the tests, so to make a failing check block a deploy, require the "CI" check in the repository's branch protection rules.
 
 ## iPhone app
 
@@ -109,10 +119,12 @@ The production profile targets the StreamFlicker App Store Connect record (`6797
 
 - The provider assignments embedded in the bundled catalog are legacy discovery metadata and are intentionally not rendered or counted as availability. Cards link to a title-and-year availability search instead of claiming a guessed service.
 - Provider badges and provider filters appear only for live, regional TMDB watch-provider results marked as verified for the configured country. Provider data is supplied by JustWatch through TMDB and can still change after it is checked.
+- Rating and runtime are facts only for titles whose values came from TMDB: the 17 reviewed titles (certification and runtime checked against each title's TMDB page on 2026-10-01 and pinned in `VALIDATED_CATALOG_ENTRIES`) and live TMDB results. The other bundled records carry placeholders (about 90% share one runtime and 92% are "R"), so cards leave them off and the family and quick-watch filters ignore them. See `hasVerifiedRatingAndRuntime` in `src/services/discovery.ts`.
+- The home page runs on those 17 reviewed titles (`src/data/homeCatalog.ts`, generated with the catalog). The full catalog is a separate chunk that loads after first paint, or immediately for search, browse, filters, and shared movie links. Shortcuts that would open fewer than 12 results are not offered.
 - The 1,799 bundled titles are an offline discovery fallback, not a complete or continuously refreshed movie database. Comprehensive current title search requires the deployed server-side TMDB integration; StreamFlicker fails closed rather than inventing missing titles or provider listings.
 - Live text search expands only strongly matching TMDB collections (for example, the Harry Potter collection), deduplicates parts by TMDB ID, and exposes additional direct-result pages. Results remain bounded for reliability, so the interface never claims that one response contains every movie worldwide.
 - TMDB developer access has separate commercial-use requirements. Because StreamFlicker includes monetization, confirm the applicable TMDB terms before enabling the integration in production.
-- Alert preferences are saved in the browser only. No notification or email is sent because this repository has no notification backend.
+- Price and streaming reminders were removed: they only saved a note in the browser and never notified anyone. Reminders saved before the removal stay in browser storage and are mentioned in the privacy policy.
 - Watchlists and service preferences are stored in `localStorage`. Watchlists use separate guest and authenticated-user namespaces, and signing out or switching accounts reloads the active namespace before closing account-sensitive UI. An older global watchlist is retained in a separate migration key with unknown ownership; it is never assigned automatically and can be explicitly imported into the current guest or account namespace.
 - Trailer embeds are not loaded until the user explicitly chooses to load YouTube.
 - Search understands common viewing intents such as family, date night, and quick watch, then ranks or filters results with conservative catalog evidence.
@@ -124,6 +136,9 @@ The production profile targets the StreamFlicker App Store Connect record (`6797
 - Much of the bundled catalog contains placeholder credits and repeated trailer metadata. Known shared trailer placeholders are suppressed and replaced by a title-specific YouTube search. See `SOL_COMPLETE_WEBSITE_AUDIT.md` for the measured data-quality findings.
 
 ## Audit artifacts
+
+- [UI review fixes, October 2026](docs/ui-review-fixes-2026-10-01.md)
+- [TMDB-verified facts: how to run and refresh them](docs/tmdb-enrichment.md)
 
 - `SOL_COMPLETE_WEBSITE_AUDIT.md`
 - `SOL_FEATURE_RECOMMENDATIONS.md`

@@ -13,7 +13,7 @@ export function SponsorSpotlight({ sponsorship }: SponsorSpotlightProps) {
     >
       <div className={`grid ${sponsorship.imageUrl ? 'md:grid-cols-[minmax(0,1.5fr)_minmax(260px,0.8fr)]' : ''}`}>
         <div className="flex flex-col justify-center p-5 sm:p-7">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-300">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-rose-300">
             Sponsored by {sponsorship.name}
           </p>
           <h2 className="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">
@@ -28,7 +28,7 @@ export function SponsorSpotlight({ sponsorship }: SponsorSpotlightProps) {
             href={sponsorship.url}
             target="_blank"
             rel="sponsored noopener noreferrer"
-            className="mt-5 inline-flex min-h-11 w-fit items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-500 active:scale-[0.98]"
+            className="mt-5 inline-flex min-h-11 w-fit items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
           >
             {sponsorship.ctaLabel}
             <ExternalLink size={15} aria-hidden="true" />

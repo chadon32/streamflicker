@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { Movie } from '../data/movies';
-import { X, ExternalLink, SkipForward, Plus, Check, Film, Play, Search } from 'lucide-react';
+import { X, ExternalLink, SkipForward, Plus, Check, Film, Play, Search, Share2 } from 'lucide-react';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
-import { getContentWarnings } from '../services/discovery';
+import { getContentWarnings, hasVerifiedRatingAndRuntime } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
 import { getValidatedYouTubeTrailerId } from '../services/trailer';
-import { getAvailabilityDisclosure } from '../services/shareText';
+import { getShareEligibility } from '../services/shareText';
 import { AvailabilityLinks } from './AvailabilityLinks';
 import { Capacitor } from '@capacitor/core';
 import { openExternalUrl } from '../services/native';
@@ -16,6 +16,8 @@ interface TrailerModalProps {
   onNextTrailer: () => void;
   isBookmarked: boolean;
   onToggleBookmark: (movie: Movie) => void;
+  /** Offered only for titles that can be shared honestly (see getShareEligibility). */
+  onShare?: (movie: Movie) => void;
 }
 
 export function TrailerModal({
@@ -24,6 +26,7 @@ export function TrailerModal({
   onNextTrailer,
   isBookmarked,
   onToggleBookmark,
+  onShare,
 }: TrailerModalProps) {
   const [trailerRequested, setTrailerRequested] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
@@ -43,10 +46,13 @@ export function TrailerModal({
   const youtubeWatchUrl = hasTrailer
     ? `https://www.youtube.com/watch?v=${trailerId}`
     : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${movie.title} ${movie.year} official trailer`)}`;
-  const embedUrl = `https://www.youtube.com/embed/${trailerId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
+  // YouTube's privacy-enhanced mode: no cookies are set until the viewer presses play.
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${trailerId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
   const hasDirector = movie.director.trim().length > 0 && !/director|studio release/i.test(movie.director);
   const visibleCast = movie.cast.filter((name) => name.trim().length > 0 && !/cast/i.test(name));
   const contentWarnings = getContentWarnings(movie);
+  const showFacts = hasVerifiedRatingAndRuntime(movie);
+  const canShare = Boolean(onShare) && getShareEligibility(movie).shareable;
 
   const handleOpenTrailer = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (!isNativeApp) return;
@@ -74,30 +80,30 @@ export function TrailerModal({
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      
+
       {/* Modal Shell */}
-      <div 
+      <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="trailer-dialog-title"
-        aria-describedby="trailer-accessibility-note"
+        aria-describedby="trailer-overview"
         tabIndex={-1}
         className="glass-modal w-full max-w-5xl max-h-[92vh] rounded-3xl overflow-y-auto shadow-[0_0_50px_rgba(225,29,72,0.25)] border border-zinc-800 flex flex-col"
       >
-        
+
         {/* Modal Top Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/80 bg-zinc-950/80 sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center font-bold shadow-sm">
-              <Film size={16} />
+              <Film size={16} aria-hidden="true" />
             </div>
             <div>
               <h2 id="trailer-dialog-title" className="font-display font-bold text-base sm:text-lg text-white leading-tight">
                 {movie.title} ({movie.year})
               </h2>
-              <p className="text-xs text-zinc-400 font-medium">
-                Trailer and service links
+              <p className="text-xs text-ink-2 font-medium">
+                Trailer and where to watch
               </p>
             </div>
           </div>
@@ -109,20 +115,20 @@ export function TrailerModal({
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleOpenTrailer}
-              className="hidden sm:flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+              className="hidden min-h-11 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:bg-zinc-800 sm:flex"
             >
               <span>{hasTrailer ? 'Watch on YouTube' : 'Find trailer on YouTube'}</span>
-              <ExternalLink size={13} />
+              <ExternalLink size={13} aria-hidden="true" />
             </a>
 
             {/* Play Next Trailer Button */}
             <button
               onClick={onNextTrailer}
-              className="hidden min-[430px]:flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-600/30"
+              className="hidden min-h-11 items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/30 transition-all hover:bg-rose-700 min-[430px]:flex"
               title="Skip to the next movie trailer"
             >
-              <span>Next Trailer</span>
-              <SkipForward size={14} />
+              <span>Next trailer</span>
+              <SkipForward size={14} aria-hidden="true" />
             </button>
 
             {/* Close Button */}
@@ -149,13 +155,13 @@ export function TrailerModal({
               />
               <div className="absolute inset-0 bg-zinc-950/55" />
               <div className="relative z-10 flex max-w-md flex-col items-center gap-3 px-6 text-center">
-                <p className="text-sm font-semibold text-zinc-200">No verified trailer is attached to this catalog entry.</p>
+                <p className="text-sm font-semibold text-zinc-200">We don&apos;t have a verified trailer for this title yet.</p>
                 <a
                   href={youtubeWatchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleOpenTrailer}
-                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-500"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-700"
                 >
                   <Search size={18} aria-hidden="true" /> Find the official trailer
                   <ExternalLink size={14} aria-hidden="true" />
@@ -174,12 +180,12 @@ export function TrailerModal({
               <div className="absolute inset-0 bg-zinc-950/45" />
               <button
                 onClick={() => setTrailerRequested(true)}
-                className="relative z-10 flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-500 active:scale-[0.98]"
+                className="relative z-10 flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-700 active:scale-[0.98]"
               >
-                <Play size={19} className="fill-current" />
+                <Play size={19} className="fill-current" aria-hidden="true" />
                 Load trailer from YouTube
               </button>
-              <p className="absolute bottom-3 left-3 right-3 z-10 text-center text-[11px] text-zinc-300">
+              <p className="absolute bottom-3 left-3 right-3 z-10 text-center text-xs text-zinc-300">
                 Loads YouTube&apos;s privacy-enhanced player only after you choose to play.
               </p>
             </div>
@@ -196,7 +202,7 @@ export function TrailerModal({
               />
               <div className="relative z-10 flex flex-col items-center gap-3">
                 <div className="w-12 h-12 rounded-full border-2 border-rose-500 border-t-transparent animate-spin" />
-                <span className="text-xs font-bold text-zinc-300">Loading Official HD Trailer...</span>
+                <span className="text-xs font-bold text-zinc-300">Loading the trailer…</span>
               </div>
             </div>
           )}
@@ -215,14 +221,14 @@ export function TrailerModal({
                 <p className="text-sm font-semibold text-zinc-100">
                   {isNativeApp
                     ? 'Open the official trailer in YouTube to watch it securely.'
-                    : 'YouTube could not load this trailer in the embedded player.'}
+                    : "YouTube couldn't load this trailer in the embedded player."}
                 </p>
                 <a
                   href={youtubeWatchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleOpenTrailer}
-                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-500"
+                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-700"
                 >
                   <ExternalLink size={17} aria-hidden="true" /> Watch on YouTube
                 </a>
@@ -234,7 +240,7 @@ export function TrailerModal({
                       setVideoLoaded(false);
                       setTrailerRequested(false);
                     }}
-                    className="text-xs font-semibold text-zinc-300 underline underline-offset-4 hover:text-white"
+                    className="min-h-11 text-xs font-semibold text-zinc-300 underline underline-offset-4 hover:text-white"
                   >
                     Try loading again
                   </button>
@@ -244,7 +250,7 @@ export function TrailerModal({
           ) : (
             <iframe
               src={embedUrl}
-              title={`${movie.title} Official Trailer`}
+              title={`${movie.title} trailer`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
@@ -260,55 +266,62 @@ export function TrailerModal({
           )}
         </div>
 
-        {/* Details & Streaming Options */}
+        {/* Details: facts first, caveats last. */}
         <div className="p-6 sm:p-8 space-y-6 bg-zinc-950">
 
-          <div id="trailer-accessibility-note" className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4" role="note" aria-label="Accessibility and content notes">
-            <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-zinc-200">
-              <span>Accessibility and content notes</span>
-              {contentWarnings.map((warning) => (
-                <span key={warning} className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[10px] text-amber-200">
-                  {warning}
-                </span>
-              ))}
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-zinc-400">
-              YouTube captions are available only when the source supplies them. StreamFlicker does not have a separate transcript for this catalog entry, so the written overview below is the accessible summary.
-            </p>
-          </div>
-          
           {/* Metadata Row */}
           <div className="flex flex-wrap items-center justify-between gap-4">
-            
+
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 font-semibold text-xs">
-                {movie.rating}
-              </span>
-              <span className="text-zinc-400 font-medium">{movie.duration}</span>
-              <span className="text-zinc-500">•</span>
-              <span className="text-zinc-400 font-medium">{movie.genre.join(', ')}</span>
-              <span className="text-zinc-500 text-[10px]">{getAvailabilityDisclosure(movie)}</span>
+              {showFacts && (
+                <span className="px-2.5 py-1 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-300 font-semibold text-xs">
+                  {movie.rating}
+                </span>
+              )}
+              {showFacts && <span className="text-ink-2 font-medium">{movie.duration}</span>}
+              {showFacts && <span className="text-ink-3" aria-hidden="true">•</span>}
+              <span className="text-ink-2 font-medium">{movie.genre.join(', ')}</span>
             </div>
 
-            {/* Bookmark button */}
-            <button
-              onClick={() => onToggleBookmark(movie)}
-              aria-label={isBookmarked ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                isBookmarked
-                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
-              }`}
-            >
-              {isBookmarked ? <Check size={16} /> : <Plus size={16} />}
-              {isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist'}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {canShare && onShare && (
+                <button
+                  onClick={() => onShare(movie)}
+                  className="flex min-h-11 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-300 transition-all hover:bg-zinc-800"
+                >
+                  <Share2 size={16} aria-hidden="true" />
+                  Share
+                </button>
+              )}
+              <button
+                onClick={() => onToggleBookmark(movie)}
+                aria-label={isBookmarked ? `Remove from watchlist: ${movie.title}` : `Add to watchlist: ${movie.title}`}
+                className={`flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition-all ${
+                  isBookmarked
+                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
+                }`}
+              >
+                {isBookmarked ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+                {isBookmarked ? 'Remove from watchlist' : 'Add to watchlist'}
+              </button>
+            </div>
           </div>
+
+          {contentWarnings.length > 0 && (
+            <ul className="flex flex-wrap gap-2" aria-label="Content notes">
+              {contentWarnings.map((warning) => (
+                <li key={warning} className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
+                  {warning}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {/* Description */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Overview</h4>
-            <p className="text-zinc-200 text-sm sm:text-base leading-relaxed">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-ink-3 mb-2">Overview</h3>
+            <p id="trailer-overview" className="text-zinc-200 text-sm sm:text-base leading-relaxed">
               {movie.description}
             </p>
           </div>
@@ -317,11 +330,11 @@ export function TrailerModal({
           {(hasDirector || visibleCast.length > 0) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             {hasDirector && <div>
-              <span className="text-xs font-semibold text-zinc-500 block mb-1">Director</span>
+              <span className="text-xs font-semibold text-ink-3 block mb-1">Director</span>
               <span className="text-sm font-medium text-zinc-200">{movie.director}</span>
             </div>}
             {visibleCast.length > 0 && <div>
-              <span className="text-xs font-semibold text-zinc-500 block mb-1">Starring</span>
+              <span className="text-xs font-semibold text-ink-3 block mb-1">Starring</span>
               <span className="text-sm font-medium text-zinc-200">{visibleCast.join(', ')}</span>
             </div>}
             </div>
@@ -340,6 +353,10 @@ export function TrailerModal({
           </div>
 
           <AvailabilityLinks movie={movie} variant="detail" />
+
+          <p className="text-xs leading-relaxed text-ink-3">
+            Captions appear only when YouTube has them for this trailer. We don&apos;t have a transcript, so the overview above is the written summary.
+          </p>
 
         </div>
 

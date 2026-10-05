@@ -35,4 +35,10 @@ for (const path of [...Object.keys(SEO_PAGES), '/404']) {
 }
 const urls = Object.keys(SEO_PAGES).map((path) => `  <url><loc>${SITE_ORIGIN}${path}</loc></url>`).join('\n');
 await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
-console.log('Generated crawlable home, static About and movie-night guide, 404, and sitemap.');
+console.log('Generated crawlable home, static About, movie-night guide, privacy, terms and contact pages, 404, and sitemap.');
+// The Contact page (and the DMCA steps in the Terms) need a real address. It comes from the
+// deployment environment so a personal address can never ship by accident.
+const contactPage = await readFile('dist/contact.html', 'utf8');
+if (!contactPage.includes('mailto:')) {
+  console.warn('WARNING: VITE_CONTACT_EMAIL is not set, so /contact says no public contact address exists yet. Set it in your deployment environment before launch.');
+}

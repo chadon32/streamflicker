@@ -6,9 +6,14 @@ import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 interface AuthModalProps {
   onClose: () => void;
   onAuthSuccess: () => void;
+  /**
+   * Accounts do not sync anything yet, so new sign-ups are off unless the site owner
+   * turns them on (VITE_ACCOUNT_SIGNUP_ENABLED). Existing accounts can always sign in.
+   */
+  allowSignUp?: boolean;
 }
 
-export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
+export function AuthModal({ onClose, onAuthSuccess, allowSignUp = false }: AuthModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -126,12 +131,12 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
           </div>
           
           <h2 id="auth-dialog-title" className="text-2xl font-display font-bold text-center text-white mb-2">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
+            {isLogin ? 'Welcome back' : 'Create an account'}
           </h2>
-          <p id="auth-dialog-description" className="text-center text-zinc-400 text-sm mb-8">
+          <p id="auth-dialog-description" className="text-center text-ink-2 text-sm mb-8">
             {isLogin
-              ? 'Sign in for future account features. Your Watchlist and reminders currently stay on this device.'
-              : 'Create an account for future account features. Your local saves stay on this device.'}
+              ? 'Sign in to your account. Your watchlist and saved movie nights stay on this device either way.'
+              : "Accounts don't sync your watchlist yet. Your watchlist and saved movie nights stay on this device."}
           </p>
 
           {error && (
@@ -150,9 +155,9 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
 
           <form onSubmit={handleAuth} className="space-y-4" noValidate>
             <div>
-              <label htmlFor="auth-email" className="block text-xs font-semibold text-zinc-400 mb-1.5 ml-1 uppercase tracking-wider">Email Address</label>
+              <label htmlFor="auth-email" className="block text-xs font-semibold text-ink-2 mb-1.5 ml-1">Email address</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
                 <input
                   type="email"
                   id="auth-email"
@@ -166,7 +171,7 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
                     setFieldErrors((current) => ({ ...current, email: undefined }));
                     setError(null);
                   }}
-                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
+                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-ink-3 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
                   placeholder="you@example.com"
                 />
               </div>
@@ -174,9 +179,9 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
             </div>
 
             <div>
-              <label htmlFor="auth-password" className="block text-xs font-semibold text-zinc-400 mb-1.5 ml-1 uppercase tracking-wider">Password</label>
+              <label htmlFor="auth-password" className="block text-xs font-semibold text-ink-2 mb-1.5 ml-1">Password</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
                 <input
                   type="password"
                   id="auth-password"
@@ -191,7 +196,7 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
                     setFieldErrors((current) => ({ ...current, password: undefined }));
                     setError(null);
                   }}
-                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
+                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-ink-3 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -203,30 +208,40 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
               name="auth-submit"
               aria-label={loading ? (isLogin ? 'Signing in' : 'Creating account') : (isLogin ? 'Sign in' : 'Create account')}
               disabled={loading}
-              className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full min-h-12 bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
               ) : (
-                isLogin ? 'Sign In' : 'Create Account'
+                isLogin ? 'Sign in' : 'Create account'
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-zinc-400">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError(null);
-                setMessage(null);
-                setFieldErrors({});
-              }}
-              className="text-rose-400 hover:text-rose-300 font-semibold hover:underline"
-            >
-              {isLogin ? 'Sign Up' : 'Sign In'}
-            </button>
+          <div className="mt-6 space-y-1 text-center text-sm text-ink-2">
+            {allowSignUp && (
+              <p>
+                {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setError(null);
+                    setMessage(null);
+                    setFieldErrors({});
+                  }}
+                  className="min-h-11 text-rose-300 hover:text-rose-200 font-semibold hover:underline"
+                >
+                  {isLogin ? 'Create one' : 'Sign in'}
+                </button>
+              </p>
+            )}
+            {isLogin && (
+              <p>
+                Forgot your password?{' '}
+                <a href="/contact" className="inline-flex min-h-11 items-center text-rose-300 hover:text-rose-200 font-semibold hover:underline">Contact us</a>
+              </p>
+            )}
           </div>
         </div>
       </div>

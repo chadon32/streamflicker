@@ -19,7 +19,7 @@ export function DiscoveryExplainer() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <a
               href="/movie-night"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-500 active:scale-[0.98]"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
             >
               How to pick a movie tonight
               <ArrowRight size={16} aria-hidden="true" />
@@ -37,7 +37,7 @@ export function DiscoveryExplainer() {
         <ul className="space-y-4 text-sm text-zinc-300" aria-label="StreamFlicker discovery features">
           <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
             <Search className="mt-0.5 shrink-0 text-rose-400" size={19} aria-hidden="true" />
-            <span>Find a familiar title or start from a focused shortcut such as family night, date night, quick watch, or Zombie movies.</span>
+            <span>Find a familiar title, or start from a shortcut such as date night or a theme like zombie movies.</span>
           </li>
           <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
             <Film className="mt-0.5 shrink-0 text-rose-400" size={19} aria-hidden="true" />
@@ -49,7 +49,7 @@ export function DiscoveryExplainer() {
           </li>
           <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
             <Check className="mt-0.5 shrink-0 text-emerald-400" size={19} aria-hidden="true" />
-            <span>Family mode can narrow the field, but it cannot guarantee suitability for every child.</span>
+            <span>The PG-13 and under filter narrows the field, but it can't guarantee a movie suits every child.</span>
           </li>
         </ul>
       </div>

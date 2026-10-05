@@ -4,7 +4,7 @@ import {
   getVerifiedStreamingPlatforms,
   type Movie,
 } from '../data/catalog';
-import { getAvailabilityAttribution, getAvailabilityCheckedLabel, getAvailabilityDisclosure, getMovieSourceLabel } from '../services/shareText';
+import { getAvailabilityAttribution, getAvailabilityCheckedLabel } from '../services/shareText';
 
 interface AvailabilityLinksProps {
   movie: Movie;
@@ -14,25 +14,20 @@ interface AvailabilityLinksProps {
 function getStatusCopy(movie: Movie) {
   const region = movie.availability?.region ?? 'US';
   if (movie.availability?.status === 'verified') {
-    return `Current ${region} options from JustWatch via TMDB`;
+    return `Current ${region} options from JustWatch via TMDB, ${getAvailabilityCheckedLabel(movie)}.`;
   }
   if (movie.availability?.status === 'not-found') {
-    return `No ${region} options were returned during the latest check`;
+    return `No ${region} options were returned during the latest check.`;
   }
   if (movie.availability?.status === 'unavailable') {
-    return `Live ${region} availability could not be checked`;
+    return `Live ${region} availability could not be checked.`;
   }
-  return `Search current ${region} availability`;
-}
-
-function getSourceLabel(movie: Movie) {
-  return getMovieSourceLabel(movie);
+  return "We haven't checked streaming services for this title. Search to see where it's playing.";
 }
 
 export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinksProps) {
   const providers = getVerifiedStreamingPlatforms(movie);
   const availabilityUrl = getAvailabilityUrl(movie);
-  const statusCopy = getStatusCopy(movie);
 
   if (variant === 'detail') {
     return (
@@ -41,21 +36,20 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
           <div>
             <div className="flex items-center gap-2">
               <Tv size={18} className="text-rose-500" aria-hidden="true" />
-              <h4 id={`availability-${movie.id}`} className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 id={`availability-${movie.id}`} className="text-sm font-bold text-white">
                 Where to watch
-              </h4>
+              </h3>
             </div>
-            <p className="mt-1 text-xs leading-relaxed text-zinc-500">{statusCopy}</p>
-            <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">{getAvailabilityDisclosure(movie)}</p>
+            <p className="mt-1 text-xs leading-relaxed text-ink-3">{getStatusCopy(movie)}</p>
           </div>
           <a
             href={availabilityUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-950 transition-colors hover:bg-white"
-            aria-label={`Check current availability for ${movie.title} (opens availability details in a new tab)`}
+            aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
           >
-            Check current availability <ExternalLink size={14} aria-hidden="true" />
+            Where to watch <ExternalLink size={14} aria-hidden="true" />
           </a>
         </div>
 
@@ -67,7 +61,7 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
                 className="flex min-h-11 items-center justify-between gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-sm font-semibold text-zinc-100"
               >
                 <span>{provider.name}</span>
-                <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+                <span className="text-xs uppercase tracking-wide text-ink-3">
                   {provider.type === 'subscription' ? 'stream' : provider.type}
                 </span>
               </span>
@@ -75,11 +69,11 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
           </div>
         )}
 
-        <p className="mt-3 text-xs leading-relaxed text-zinc-500">
-          Availability changes by country and date. StreamFlicker does not guess providers from its bundled catalog; confirm the title before subscribing or paying.
+        <p className="mt-3 text-xs leading-relaxed text-ink-3">
+          Availability changes by country and date. StreamFlicker doesn&apos;t guess which service has a title, so confirm it before you subscribe or pay.
         </p>
         {movie.availability?.source === 'tmdb' && (
-          <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">{getAvailabilityAttribution(movie)}</p>
+          <p className="mt-2 text-xs leading-relaxed text-ink-3">{getAvailabilityAttribution(movie)}</p>
         )}
       </section>
     );
@@ -87,7 +81,7 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
 
   if (variant === 'hero') {
     return (
-      <div className="flex max-w-full flex-wrap items-center gap-2 bg-zinc-900/75 border border-zinc-800/80 p-2 rounded-2xl backdrop-blur-md">
+      <div className="flex max-w-full flex-wrap items-center gap-2">
         {providers.slice(0, 3).map((provider) => (
           <span key={`${provider.id}-${provider.type}`} className="hidden rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs font-bold text-zinc-200 lg:inline-flex">
             {provider.name}
@@ -97,48 +91,36 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
           href={availabilityUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-zinc-100 px-3 py-1.5 text-xs font-bold text-zinc-950 hover:bg-white"
-          aria-label={`Check current availability for ${movie.title} (opens availability details in a new tab)`}
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-white"
+          aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
         >
-          {providers.length > 0 ? 'View options' : 'Check availability'}
-          <ExternalLink size={12} aria-hidden="true" />
+          Where to watch
+          <ExternalLink size={14} aria-hidden="true" />
         </a>
-        <span className="max-w-44 text-[9px] font-semibold leading-tight text-zinc-500" title={getAvailabilityDisclosure(movie)}>
-          <span className="block truncate">{getSourceLabel(movie)} · {(movie.availability?.region ?? 'US').toUpperCase()} · {movie.availability?.status ?? 'unknown'}</span>
-          <span className="block truncate">{getAvailabilityCheckedLabel(movie)}</span>
-        </span>
       </div>
     );
   }
 
-  const compactClass = variant === 'watchlist'
-    ? 'flex flex-wrap items-center gap-1.5'
-    : 'flex min-w-0 items-center gap-1.5';
-
   return (
-    <div className={compactClass} title={`${statusCopy}. ${getAvailabilityDisclosure(movie)}`}>
+    <div className={`flex min-w-0 flex-wrap items-center gap-1.5 ${variant === 'watchlist' ? '' : 'justify-start'}`}>
       {providers.slice(0, variant === 'watchlist' ? 3 : 1).map((provider) => (
         <span
           key={`${provider.id}-${provider.type}`}
-          className="max-w-24 truncate rounded bg-zinc-800 px-2 py-1 text-[9px] font-bold text-zinc-300"
+          className="max-w-28 truncate rounded bg-zinc-800 px-2 py-1 text-xs font-bold text-zinc-300"
         >
           {provider.name}
         </span>
       ))}
-      <span className="max-w-36 text-[9px] font-semibold leading-tight text-zinc-500" aria-label={getAvailabilityDisclosure(movie)}>
-        <span className="block truncate">{getSourceLabel(movie)} · {(movie.availability?.region ?? 'US').toUpperCase()} · {movie.availability?.status ?? 'unknown'}</span>
-        <span className="block truncate">{getAvailabilityCheckedLabel(movie)}</span>
-      </span>
       <a
         href={availabilityUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[10px] font-bold text-zinc-300 hover:border-zinc-600 hover:text-white"
-        aria-label={`Check current availability for ${movie.title} (opens availability details in a new tab)`}
+        className="inline-flex min-h-11 shrink-0 items-center gap-1 text-xs font-semibold text-rose-300 hover:text-rose-200"
+        aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
       >
         <Tv size={12} aria-hidden="true" />
         {providers.length > 0 ? 'Options' : 'Where to watch'}
-        <ExternalLink size={10} aria-hidden="true" />
+        <ExternalLink size={12} aria-hidden="true" />
       </a>
     </div>
   );

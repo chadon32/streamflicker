@@ -84,7 +84,7 @@ export function AccountSettingsModal({
               <p className="break-all rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-sm text-zinc-200">
                 {user.email ?? 'Authenticated StreamFlicker account'}
               </p>
-              <p className="text-xs leading-relaxed text-zinc-500">
+              <p className="text-xs leading-relaxed text-ink-3">
                 Your watchlist is stored in a separate device namespace for this account. Signing out clears it from the current view.
               </p>
               {legacyWatchlistCount > 0 && (
@@ -152,7 +152,7 @@ export function AccountSettingsModal({
                         <button
                           type="submit"
                           disabled={!canDelete || isDeleting}
-                          className="min-h-11 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="min-h-11 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {isDeleting ? 'Deleting…' : 'Permanently delete'}
                         </button>

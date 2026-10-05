@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { Movie } from '../data/catalog';
 import { getTMDBImageSrcSet, getTMDBImageUrl } from '../services/images';
+import { TMDB_NOTICE } from '../services/attribution';
 
 interface BusinessPageProps {
   movies: Movie[];
@@ -51,7 +52,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
             </a>
             <a
               href="/"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-xs text-white transition-colors hover:bg-rose-500 active:scale-[0.98] sm:px-4 sm:text-sm"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-xs text-white transition-colors hover:bg-rose-700 active:scale-[0.98] sm:px-4 sm:text-sm"
             >
               Open the app
               <ArrowRight size={16} aria-hidden="true" />
@@ -75,7 +76,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
                 href="/"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-950/40 transition-all hover:bg-rose-500 active:scale-[0.98]"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-950/40 transition-all hover:bg-rose-700 active:scale-[0.98]"
               >
                 Start exploring
                 <ArrowRight size={17} aria-hidden="true" />
@@ -139,7 +140,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
                 <Filter className="text-rose-400" size={24} aria-hidden="true" />
                 <h3 className="mt-6 font-display text-2xl font-bold text-white">Filter with purpose</h3>
                 <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                  Narrow the catalog by era, genre, service, family-friendly mode, date night, and focused movie themes.
+                  Narrow the catalog by era, genre, service, rating, date night, and focused movie themes.
                 </p>
               </article>
               <article className="border-t border-white/[0.08] py-8 md:border-t-0 md:px-8 md:py-10 md:first:pl-0 md:last:pr-0">
@@ -167,21 +168,21 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
                 <span className="font-display text-xl font-bold text-rose-400">01</span>
                 <div>
                   <h3 className="font-semibold text-white">Tell it what you want</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-zinc-500">Use plain-language search or start with a focused collection.</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-3">Use plain-language search or start with a focused collection.</p>
                 </div>
               </li>
               <li className="flex gap-4 border-t border-white/[0.08] pt-5">
                 <span className="font-display text-xl font-bold text-rose-400">02</span>
                 <div>
                   <h3 className="font-semibold text-white">Narrow the field</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-zinc-500">Use filters that match the night, not a wall of settings.</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-3">Use filters that match the night, not a wall of settings.</p>
                 </div>
               </li>
               <li className="flex gap-4 border-t border-white/[0.08] pt-5">
                 <span className="font-display text-xl font-bold text-rose-400">03</span>
                 <div>
                   <h3 className="font-semibold text-white">Choose your next step</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-zinc-500">Open the trailer, save the title, or check where to continue.</p>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-3">Open the trailer, save the title, or check where to continue.</p>
                 </div>
               </li>
             </ol>
@@ -207,7 +208,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
                   />
                   <div className="p-3 sm:p-4">
                     <p className="truncate text-xs font-bold text-white sm:text-sm">{movie.title}</p>
-                    <p className="mt-1 text-[11px] text-zinc-500">{movie.year}</p>
+                    <p className="mt-1 text-xs text-ink-3">{movie.year}</p>
                   </div>
                 </div>
               ))
@@ -260,7 +261,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
                 href={sponsorInquiryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-500 active:scale-[0.98]"
+                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
               >
                 Start a partner conversation
                 <ArrowRight size={17} aria-hidden="true" />
@@ -271,12 +272,18 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
       </main>
 
       <footer className="border-t border-white/[0.08] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} StreamFlicker.</p>
-          <div className="flex flex-wrap items-center gap-5">
-            <a className="inline-flex min-h-11 items-center text-zinc-300 hover:text-white" href="/movie-night">Movie-night guide</a>
-            <a className="transition-colors hover:text-white" href="#why">Why it exists</a>
-            <a className="transition-colors hover:text-white" href="#how">How it works</a>
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-ink-3 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-xl">
+            <p>© {new Date().getFullYear()} StreamFlicker.</p>
+            <p className="mt-2 text-xs leading-relaxed">{TMDB_NOTICE}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-5 text-ink-2">
+            <a className="inline-flex min-h-11 items-center hover:text-white" href="/movie-night">Movie night guide</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/privacy">Privacy</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/terms">Terms</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/contact">Contact</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="#why">Why it exists</a>
+            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="#how">How it works</a>
             <a className="inline-flex items-center gap-2 font-semibold text-zinc-300 transition-colors hover:text-white" href="/">
               Open movie discovery
               <ArrowRight size={15} aria-hidden="true" />
