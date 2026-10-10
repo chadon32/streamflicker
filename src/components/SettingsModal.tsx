@@ -85,9 +85,9 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
         <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
           <div className="flex items-center gap-2">
             <Settings className="text-rose-500" size={20} />
-            <h2 id="settings-dialog-title" className="font-display font-bold text-lg text-white">Preferences & integrations</h2>
+            <h2 id="settings-dialog-title" className="font-display font-bold text-lg text-white">My streaming services</h2>
           </div>
-          <button onClick={onClose} aria-label="Close settings" className="p-2.5 min-w-11 min-h-11 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800">
+          <button onClick={onClose} aria-label="Close my streaming services" className="p-2.5 min-w-11 min-h-11 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800">
             <X size={18} />
           </button>
         </div>
@@ -95,11 +95,11 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <section className="space-y-4" aria-labelledby="streaming-services-heading">
             <div>
-              <h3 id="streaming-services-heading" className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                <Check size={14} className="text-emerald-400" /> Your streaming services
+              <h3 id="streaming-services-heading" className="eyebrow">
+                Services you already use
               </h3>
-              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-                Select the services you already use. Choose <strong className="font-semibold text-zinc-300">My services</strong> in Filters to see likely options first. These choices stay on this device.
+              <p className="mt-2 text-sm leading-relaxed text-ink-2">
+                Select the services you already use. When live regional provider data is available, choose <strong className="font-semibold text-zinc-300">My services</strong> in Filters to show verified matching options. These choices stay on this device.
               </p>
             </div>
 
@@ -116,12 +116,9 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                     );
                   }}
                   aria-pressed={myServices.includes(provider.id)}
-                  className={`min-h-10 rounded-full border px-3.5 py-2 text-xs font-bold transition-all ${
-                    myServices.includes(provider.id)
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                  }`}
+                  className="chip"
                 >
+                  {myServices.includes(provider.id) && <Check size={14} aria-hidden="true" />}
                   {provider.name}
                 </button>
               ))}
@@ -131,7 +128,7 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
           {showSiteOwnerOptions && <details className="group rounded-2xl border border-zinc-800 bg-zinc-950/35 p-4">
             <summary className="cursor-pointer list-none text-xs font-bold uppercase tracking-wider text-zinc-300 marker:hidden">
               <span className="flex items-center gap-1.5">
-                <Tag size={14} className="text-amber-400" /> Advanced site-owner options
+                <Tag size={14} className="text-ink-3" aria-hidden="true" /> Advanced site-owner options
               </span>
             </summary>
             <p className="mt-3 text-xs leading-relaxed text-zinc-400">
@@ -157,7 +154,7 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                   placeholder="e.g. 8a3f81b2c45d6e7f..."
                   autoComplete="off"
                   spellCheck="false"
-                  className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:border-rose-500"
+                  className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-2.5 text-xs text-zinc-100 placeholder:text-ink-3 outline-none focus:border-rose-500"
                 />
               </div>
 
@@ -165,19 +162,19 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                 <p className="text-xs font-bold uppercase tracking-wider text-zinc-300">Affiliate link identifiers</p>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="amazon-tag" className="mb-1 block text-[11px] font-semibold text-zinc-400">Amazon Tag</label>
+                    <label htmlFor="amazon-tag" className="mb-1 block text-xs font-semibold text-ink-2">Amazon tag</label>
                     <input id="amazon-tag" type="text" value={affiliate.amazonTag} onChange={(e) => setAffiliate({ ...affiliate, amazonTag: e.target.value })} placeholder="your-approved-amazon-tag" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
                   </div>
                   <div>
-                    <label htmlFor="apple-token" className="mb-1 block text-[11px] font-semibold text-zinc-400">Apple TV Token</label>
+                    <label htmlFor="apple-token" className="mb-1 block text-xs font-semibold text-ink-2">Apple TV token</label>
                     <input id="apple-token" type="text" value={affiliate.appleAffiliateToken} onChange={(e) => setAffiliate({ ...affiliate, appleAffiliateToken: e.target.value })} placeholder="your-approved-apple-token" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
                   </div>
                   <div>
-                    <label htmlFor="impact-sub-id" className="mb-1 block text-[11px] font-semibold text-zinc-400">Impact SubID (Hulu / Max)</label>
+                    <label htmlFor="impact-sub-id" className="mb-1 block text-xs font-semibold text-ink-2">Impact sub ID (Hulu / Max)</label>
                     <input id="impact-sub-id" type="text" value={affiliate.impactSubId} onChange={(e) => setAffiliate({ ...affiliate, impactSubId: e.target.value })} placeholder="your-approved-sub-id" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
                   </div>
                   <div>
-                    <label htmlFor="ebay-campaign-id" className="mb-1 block text-[11px] font-semibold text-zinc-400">eBay Campaign ID</label>
+                    <label htmlFor="ebay-campaign-id" className="mb-1 block text-xs font-semibold text-ink-2">eBay campaign ID</label>
                     <input id="ebay-campaign-id" type="text" value={affiliate.ebayCampId} onChange={(e) => setAffiliate({ ...affiliate, ebayCampId: e.target.value })} placeholder="your-approved-campaign-id" className="w-full min-h-10 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 outline-none focus:border-rose-500" />
                   </div>
                 </div>
@@ -193,17 +190,14 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                 setMyServices([]);
                 setAffiliate(getAffiliateConfig());
               }}
-              className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl px-2 text-xs text-zinc-400 transition-colors hover:text-white"
+              className="btn text-ink-2 hover:text-white"
             >
-              <RefreshCw size={12} /> Reset local preferences
+              <RefreshCw size={14} aria-hidden="true" /> Reset my choices
             </button>
 
-            <button
-              type="submit"
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-rose-500"
-            >
-              {savedSuccess ? <Check size={14} /> : null}
-              <span>{savedSuccess ? 'Saved!' : 'Save preferences'}</span>
+            <button type="submit" className="btn btn-primary">
+              {savedSuccess ? <Check size={15} aria-hidden="true" /> : null}
+              <span>{savedSuccess ? 'Saved' : 'Save my services'}</span>
             </button>
           </div>
         </form>

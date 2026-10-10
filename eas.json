@@ -1,0 +1,39 @@
+{
+  "cli": {
+    "version": ">=21.4.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "ios": {
+        "image": "latest",
+        "buildConfiguration": "Debug"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "image": "latest",
+        "buildConfiguration": "Release"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "ios": {
+        "image": "latest",
+        "buildConfiguration": "Release",
+        "applicationArchivePath": "ios/build/*.ipa"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6797452211",
+        "bundleIdentifier": "com.streamflicker.app"
+      }
+    }
+  }
+}

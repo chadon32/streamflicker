@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Movie } from '../data/movies';
-import { Play, Star, Plus, Check, Sparkles, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
-import { getReadableTextColor } from '../lib/color';
-import { getContentWarnings } from '../services/discovery';
+import { Play, Plus, Check, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getContentWarnings, hasVerifiedRatingAndRuntime } from '../services/discovery';
 import { getMicroTagLabel } from '../services/catalogClassification';
-import { recordAffiliateClick } from '../services/affiliateAnalytics';
+import { AvailabilityLinks } from './AvailabilityLinks';
+import { getHeroImage } from '../services/spotlight';
 
 interface HeroCarouselProps {
   movies: Movie[];
@@ -20,51 +20,71 @@ export function HeroCarousel({
   onToggleBookmark,
 }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const movieCount = movies.length;
+  const safeCurrentIndex = movieCount > 0 ? ((currentIndex % movieCount) + movieCount) % movieCount : 0;
 
-  const movie = movies[currentIndex] || movies[0];
+  useEffect(() => {
+    if (currentIndex !== safeCurrentIndex) {
+      setCurrentIndex(safeCurrentIndex);
+    }
+  }, [currentIndex, safeCurrentIndex]);
+
+  const movie = movies[safeCurrentIndex];
   if (!movie) return null;
 
-  const mobileContext = getContentWarnings(movie)[0] ?? movie.genre.slice(0, 2).join(' · ');
+  // The rating badge above already says "R", so the line only carries a warning that adds something.
+  const mobileContext = getContentWarnings(movie).find((warning) => !warning.startsWith('Rated ')) ?? movie.genre.slice(0, 2).join(' · ');
+  const showFacts = hasVerifiedRatingAndRuntime(movie);
+  const saved = isBookmarked(movie.id);
+  const heroImage = getHeroImage(movie);
 
   return (
     <section
       aria-roledescription="carousel"
       aria-label="Featured movies"
-      className="relative w-full h-[520px] sm:h-[560px] lg:h-[600px] overflow-hidden rounded-3xl border border-zinc-800/80 shadow-2xl my-6 group/hero"
+      className="relative isolate my-6 w-full overflow-hidden rounded-3xl border border-zinc-800/80 bg-zinc-950 shadow-2xl"
     >
-      
-      {/* Backdrop Image */}
-      <img
-        src={movie.backdropUrl}
-        alt={`${movie.title} backdrop`}
-        width="1280"
-        height="720"
-        loading="eager"
-        fetchPriority="high"
-        decoding="async"
-        className="absolute inset-0 w-full h-full object-cover object-center scale-105 filter brightness-75 transition-all duration-700 hover:scale-100"
-      />
 
-      {/* Dark Gradient Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/70 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/80 to-transparent w-full lg:w-3/4" />
+      {/* Backdrop: above the text on phones so the film is the first thing you see, behind it from sm up. */}
+      <div className="relative aspect-video sm:absolute sm:inset-0 sm:aspect-auto">
+        <img
+          src={heroImage.src}
+          srcSet={heroImage.srcSet}
+          sizes={heroImage.sizes}
+          alt=""
+          width="1280"
+          height="720"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        {/* Phones: only the bottom edge fades into the text block. */}
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent sm:hidden" />
+        {/* sm and up: the text sits bottom-left, so darken just that side and the floor. */}
+        <div className="absolute inset-0 hidden bg-gradient-to-t from-zinc-950 via-zinc-950/25 to-transparent sm:block" />
+        <div className="absolute inset-y-0 left-0 hidden w-full bg-gradient-to-r from-zinc-950/90 via-zinc-950/45 to-transparent sm:block lg:w-3/4" />
+      </div>
 
-      {/* Left/Right Carousel Controls */}
-      {movies.length > 1 && (
-        <div className="absolute inset-x-3 sm:inset-x-4 top-4 sm:top-1/2 translate-y-0 sm:-translate-y-1/2 flex items-center justify-between pointer-events-none z-20">
+      {/* Carousel Controls */}
+      {movieCount > 1 && (
+        <div className="absolute right-3 top-3 z-20 flex items-center gap-2 sm:right-4 sm:top-4">
+          <span className="rounded-full border border-zinc-700 bg-zinc-950/75 px-3 py-2 text-xs font-semibold tabular-nums text-zinc-100 backdrop-blur-md" aria-live="polite" aria-atomic="true">
+            <span className="sr-only">{movie.title}, featured movie </span>{safeCurrentIndex + 1} / {movieCount}
+          </span>
           <button
-            onClick={() => setCurrentIndex((prev) => (prev - 1 + movies.length) % movies.length)}
-            className="pointer-events-auto p-2.5 min-w-11 min-h-11 rounded-full bg-zinc-950/75 hover:bg-rose-600 text-white backdrop-blur-md border border-zinc-700 transition-all opacity-100 sm:opacity-0 sm:group-hover/hero:opacity-100 sm:focus-visible:opacity-100"
-            title="Previous Spotlight Movie"
-            aria-label="Previous Spotlight Movie"
+            onClick={() => setCurrentIndex((prev) => (prev - 1 + movieCount) % movieCount)}
+            className="icon-btn backdrop-blur-md"
+            title="Previous featured movie"
+            aria-label="Previous featured movie"
           >
             <ChevronLeft size={22} />
           </button>
           <button
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % movies.length)}
-            className="pointer-events-auto p-2.5 min-w-11 min-h-11 rounded-full bg-zinc-950/75 hover:bg-rose-600 text-white backdrop-blur-md border border-zinc-700 transition-all opacity-100 sm:opacity-0 sm:group-hover/hero:opacity-100 sm:focus-visible:opacity-100"
-            title="Next Spotlight Movie"
-            aria-label="Next Spotlight Movie"
+            onClick={() => setCurrentIndex((prev) => (prev + 1) % movieCount)}
+            className="icon-btn backdrop-blur-md"
+            title="Next featured movie"
+            aria-label="Next featured movie"
           >
             <ChevronRight size={22} />
           </button>
@@ -72,96 +92,75 @@ export function HeroCarousel({
       )}
 
       {/* Content Container */}
-      <div className="relative h-full max-w-7xl mx-auto px-6 sm:px-10 flex flex-col justify-end pb-7 sm:pb-12 z-10">
-        
+      <div
+        role="group"
+        aria-roledescription="slide"
+        aria-label={`${movie.title}, slide ${safeCurrentIndex + 1} of ${movieCount}`}
+        className="relative z-10 mx-auto flex max-w-7xl flex-col px-5 pb-6 pt-1 sm:min-h-[460px] sm:justify-end sm:px-10 sm:pb-12 sm:pt-28 lg:min-h-[500px]"
+      >
+
         {/* Featured Tag */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-400 text-xs font-semibold uppercase tracking-wider mb-3 backdrop-blur-md w-fit">
-          <Sparkles size={13} />
+        <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-rose-500/40 bg-rose-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-rose-300 backdrop-blur-md">
+          <Sparkles size={13} aria-hidden="true" />
           Featured movie
         </div>
 
         {/* Title */}
-        <h1 className="font-display text-2xl min-[375px]:text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.05] mb-3 drop-shadow-md max-w-3xl">
+        <h2 className="mb-3 max-w-3xl font-display text-2xl font-black leading-[1.05] tracking-tight text-white drop-shadow-md min-[375px]:text-3xl sm:text-5xl lg:text-6xl">
           {movie.title}
-        </h1>
+        </h2>
 
-        {/* Metadata Badges */}
-        <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-zinc-300 mb-4 font-medium">
-          <span className="flex items-center gap-1 text-amber-400 font-bold bg-amber-400/10 px-2.5 py-1 rounded-lg border border-amber-400/20" title="Catalog score: StreamFlicker's curated match rating from 0 to 10.">
-            <Star size={14} className="fill-current" /> {movie.score} Catalog score
-          </span>
-          <span className="px-2 py-1 bg-zinc-800/80 rounded-md border border-zinc-700 text-zinc-300 font-semibold">
-            {movie.rating}
-          </span>
+        {/* Metadata */}
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-xs font-medium text-zinc-300 sm:text-sm">
+          {showFacts && (
+            <span className="rounded-md border border-zinc-700 bg-zinc-800/80 px-2 py-1 font-semibold text-zinc-300">
+              {movie.rating}
+            </span>
+          )}
           <span>{movie.year}</span>
-          <span>•</span>
-          <span>{movie.duration}</span>
+          {showFacts && (
+            <>
+              <span aria-hidden="true">•</span>
+              <span>{movie.duration}</span>
+            </>
+          )}
         </div>
 
-        <p className="sm:hidden mb-4 text-xs font-medium text-zinc-300">
+        <p className="mb-4 text-sm font-medium text-zinc-300 sm:hidden">
           {mobileContext}
         </p>
 
         {/* Description */}
-        <p className="hidden sm:block text-zinc-300 text-sm sm:text-base max-w-2xl line-clamp-2 mb-5 leading-relaxed">
+        <p className="mb-5 hidden max-w-2xl text-sm leading-relaxed text-zinc-300 sm:line-clamp-2 sm:text-base">
           {movie.description}
         </p>
 
         {/* Tags */}
-        <div className="hidden sm:flex flex-wrap gap-2 mb-6">
+        <div className="mb-6 hidden flex-wrap gap-2 sm:flex">
           {movie.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="text-xs font-medium text-zinc-300 bg-zinc-900/90 px-3 py-1 rounded-full border border-zinc-800"
-            >
+            <span key={tag} className="tag">
               {getMicroTagLabel(tag)}
             </span>
           ))}
         </div>
 
-        {/* Actions & Streaming Provider Links */}
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4">
-          <button
-            onClick={() => onWatchTrailer(movie)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold px-7 py-3.5 rounded-2xl text-base shadow-xl shadow-rose-600/40 hover:shadow-rose-600/60 hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            <Play size={20} className="fill-white" />
-            Watch Trailer
+        {/* Actions: one primary, two matching secondaries; full width and stacked on phones. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <button onClick={() => onWatchTrailer(movie)} className="btn btn-primary btn-lg w-full px-7 sm:w-auto">
+            <Play size={20} className="fill-white" aria-hidden="true" />
+            Watch trailer
           </button>
 
           <button
             onClick={() => onToggleBookmark(movie)}
-            aria-label={isBookmarked(movie.id) ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
-            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-semibold border backdrop-blur-md transition-all ${
-              isBookmarked(movie.id)
-                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                : 'bg-zinc-900/80 border-zinc-800 text-zinc-200 hover:bg-zinc-800'
-            }`}
+            aria-label={saved ? `Remove from watchlist: ${movie.title}` : `Add to watchlist: ${movie.title}`}
+            className={`btn btn-secondary btn-lg w-full sm:w-auto ${saved ? 'btn-saved' : ''}`}
           >
-            {isBookmarked(movie.id) ? <Check size={18} /> : <Plus size={18} />}
-            {isBookmarked(movie.id) ? 'Remove from Watchlist' : 'Add to Watchlist'}
+            {saved ? <Check size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+            {saved ? 'Remove from watchlist' : 'Add to watchlist'}
           </button>
 
-          {/* Streaming badges */}
-          <div className="hidden lg:flex items-center gap-2 ml-auto bg-zinc-900/70 border border-zinc-800/80 p-2 rounded-2xl backdrop-blur-md">
-            <span className="text-xs font-semibold text-zinc-400 px-2">Check availability:</span>
-            {movie.streamingPlatforms.map((sp) => (
-              <a
-                key={sp.id}
-                href={sp.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
-                title={`Open ${sp.name} in an external service. Availability can change.`}
-                aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105 shadow-sm"
-                style={{ backgroundColor: sp.color, color: getReadableTextColor(sp.color) }}
-              >
-                {sp.name} <ExternalLink size={11} />
-              </a>
-            ))}
-            <span className="text-[10px] text-zinc-500 px-2">Some links may earn a commission.</span>
-          </div>
+          <AvailabilityLinks movie={movie} variant="hero" />
         </div>
 
       </div>

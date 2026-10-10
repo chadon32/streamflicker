@@ -1,194 +1,91 @@
 import { useState } from 'react';
 import type { Movie } from '../data/movies';
-import { Play, Star, Plus, Check, Share2, Film, Bell } from 'lucide-react';
-import { getReadableTextColor } from '../lib/color';
-import { getAudienceLabel, getContentWarnings } from '../services/discovery';
-import { getMicroTagLabel } from '../services/catalogClassification';
-import { recordAffiliateClick } from '../services/affiliateAnalytics';
+import { getAvailabilityUrl } from '../data/catalog';
+import { hasVerifiedRatingAndRuntime } from '../services/discovery';
+import { getTMDBImageSrcSet } from '../services/images';
+import { Check, ExternalLink, Film, Plus } from 'lucide-react';
 
 interface MovieCardProps {
   movie: Movie;
   onWatchTrailer: (movie: Movie) => void;
   isBookmarked: boolean;
   onToggleBookmark: (movie: Movie) => void;
-  onShare: (movie: Movie) => void;
-  onSetAlert?: (movie: Movie) => void;
 }
 
-export function MovieCard({
-  movie,
-  onWatchTrailer,
-  isBookmarked,
-  onToggleBookmark,
-  onShare,
-  onSetAlert,
-}: MovieCardProps) {
+/**
+ * Poster first. The whole card opens the trailer (one tab stop through the
+ * stretched title button); the bookmark sits on the poster and "Where to watch"
+ * stays one tap away. Runtime only appears for titles whose runtime is real.
+ */
+export function MovieCard({ movie, onWatchTrailer, isBookmarked, onToggleBookmark }: MovieCardProps) {
   const [imgError, setImgError] = useState(false);
-  const warnings = getContentWarnings(movie);
+  const meta = [movie.year, hasVerifiedRatingAndRuntime(movie) ? movie.duration : null, movie.genre[0]]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <div className="movie-card-container group glass-card rounded-2xl overflow-hidden flex flex-col justify-between border border-zinc-800/80 bg-zinc-900/60 shadow-xl relative">
-      <button
-        type="button"
-        className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950 cursor-pointer select-none"
-        onClick={() => onWatchTrailer(movie)}
-        aria-label={`Watch the trailer for ${movie.title}`}
-      >
+    <article className="movie-card-container group relative flex h-full flex-col overflow-hidden rounded-2xl bg-zinc-900 ring-1 ring-white/10 hover:ring-rose-400/50">
+      <div className="relative aspect-[2/3] bg-zinc-950">
         {!imgError ? (
           <img
             src={movie.posterUrl}
-            alt={`${movie.title} poster`}
+            srcSet={getTMDBImageSrcSet(movie.posterUrl, [185, 342, 500])}
+            sizes="(min-width: 1280px) 224px, (min-width: 640px) 25vw, 45vw"
+            alt=""
             width="500"
             height="750"
             loading="lazy"
             decoding="async"
             onError={() => setImgError(true)}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="size-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-zinc-900 text-zinc-600">
-            <Film size={40} className="mb-2 text-rose-500 opacity-60" />
-            <span className="font-bold text-xs text-zinc-400">{movie.title}</span>
-          </div>
-        )}
-
-        <div className="absolute top-2.5 left-2.5 z-10">
-          <span
-            className="flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-zinc-950/85 backdrop-blur-md px-2 py-0.5 rounded-md border border-amber-400/30 shadow-md"
-            aria-label={`Catalog score ${movie.score} out of 10`}
-            title="Catalog score: StreamFlicker's curated match rating from 0 to 10."
-          >
-            <Star size={11} className="fill-amber-400 text-amber-400" /> {movie.score}
-          </span>
-        </div>
-
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
-          <div className="transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3">
-            <div className="bg-rose-600 text-white rounded-full p-3 shadow-lg" aria-hidden="true">
-              <Play fill="currentColor" size={20} />
-            </div>
-          </div>
-          <p className="text-center text-xs font-semibold text-zinc-300 mt-4 tracking-wider uppercase">
-            Play trailer
-          </p>
-        </div>
-      </button>
-
-      <div className="p-3.5 flex-1 flex flex-col justify-between bg-gradient-to-b from-zinc-900/40 to-zinc-950/90">
-        <div>
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h3 className="font-display font-bold text-base text-zinc-100 group-hover:text-rose-400 transition-colors line-clamp-1 tracking-tight">
-              <button type="button" onClick={() => onWatchTrailer(movie)} className="text-left hover:underline">
-                {movie.title}
-              </button>
-            </h3>
-            <span className="text-[11px] font-semibold text-zinc-500 shrink-0 mt-0.5">
-              {movie.year}
+          <div className="grid size-full place-items-center p-4 text-center text-sm font-semibold text-zinc-300">
+            <span>
+              <Film className="mx-auto mb-2 text-rose-400" size={32} aria-hidden="true" />
+              {movie.title}
             </span>
           </div>
-
-          <div className="text-[11px] text-zinc-400 font-medium mb-1 truncate">
-            {movie.genre.join(' · ')}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-zinc-500 mb-2.5">
-            <span className="font-semibold text-zinc-300">{movie.rating}</span>
-            <span aria-hidden="true">·</span>
-            <span>{movie.duration}</span>
-            <span aria-hidden="true">·</span>
-            <span>{getAudienceLabel(movie)}</span>
-          </div>
-
-          {warnings.length > 0 && (
-            <p className="text-[10px] text-amber-200/80 mb-2.5 truncate" title={warnings.join(', ')}>
-              {warnings[0]}
-            </p>
-          )}
-
-          <div className="flex flex-wrap gap-1 mb-3">
-            {movie.tags.slice(0, 2).map((tag) => (
-              <span
-                key={tag}
-                className="text-[10px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded"
-              >
-                {getMicroTagLabel(tag)}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="pt-2.5 border-t border-zinc-800/60 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-            {movie.streamingPlatforms.map((sp, idx) => (
-              <a
-                key={`${sp.id}-${idx}`}
-                href={sp.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => recordAffiliateClick({ providerId: sp.id, movieId: movie.id })}
-                title={`Open ${sp.name} in an external service. Availability can change.`}
-                aria-label={`Check ${movie.title} on ${sp.name} (opens an external service; availability can change)`}
-                className="inline-flex min-h-7 min-w-7 items-center justify-center rounded px-1.5 py-0.5 text-[9px] font-bold shadow-sm transition-transform hover:scale-105 shrink-0"
-                style={{ backgroundColor: sp.color, color: getReadableTextColor(sp.color) }}
-              >
-                {sp.logo}
-              </a>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1 shrink-0">
-            {onSetAlert && (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onSetAlert(movie);
-                }}
-                title="Save a local reminder"
-                aria-label={`Save a local reminder for ${movie.title}`}
-                className="inline-flex min-w-9 min-h-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-amber-400 transition-colors hover:bg-zinc-800 hover:text-amber-300"
-              >
-                <Bell size={13} />
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onShare(movie);
-              }}
-              title="Share movie"
-              aria-label={`Share ${movie.title}`}
-              className="inline-flex min-w-9 min-h-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-            >
-              <Share2 size={13} />
-            </button>
-
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleBookmark(movie);
-              }}
-              title={isBookmarked ? 'Remove from Watchlist' : 'Add to Watchlist'}
-              aria-label={isBookmarked ? `Remove ${movie.title} from Watchlist` : `Add ${movie.title} to Watchlist`}
-              className={`inline-flex min-w-9 min-h-9 items-center justify-center rounded-lg border transition-all ${
-                isBookmarked
-                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800'
-              }`}
-            >
-              {isBookmarked ? <Check size={13} /> : <Plus size={13} />}
-            </button>
-          </div>
-        </div>
-        <p className="mt-1 text-[9px] leading-relaxed text-zinc-600">
-          Some service links may earn StreamFlicker a commission at no extra cost.
-        </p>
+        )}
+        {/* A 44px target around a 36px disc, so the control covers less of the poster. */}
+        <button
+          type="button"
+          onClick={() => onToggleBookmark(movie)}
+          aria-label={isBookmarked ? `Remove from watchlist: ${movie.title}` : `Add to watchlist: ${movie.title}`}
+          className="group/save absolute right-1 top-1 z-10 grid size-11 place-items-center"
+        >
+          <span className={`grid size-9 place-items-center rounded-full text-white ring-1 backdrop-blur-sm transition-colors ${
+            isBookmarked ? 'bg-emerald-700 ring-emerald-400/40 group-hover/save:bg-emerald-800' : 'bg-zinc-950/70 ring-white/15 group-hover/save:bg-zinc-950'
+          }`}
+          >
+            {isBookmarked ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+          </span>
+        </button>
       </div>
-    </div>
+
+      <div className="flex flex-1 flex-col p-3">
+        <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-zinc-50">
+          {/* Stretched button: the whole card opens the trailer with one tab stop. */}
+          <button
+            type="button"
+            onClick={() => onWatchTrailer(movie)}
+            aria-haspopup="dialog"
+            className="text-left after:absolute after:inset-0"
+          >
+            {movie.title}
+          </button>
+        </h3>
+        <p className="mt-1 text-xs text-ink-2">{meta}</p>
+        <a
+          href={getAvailabilityUrl(movie)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
+          className="relative z-10 mt-auto inline-flex min-h-11 w-fit items-center gap-1.5 pt-1 text-sm font-semibold text-rose-300 hover:text-rose-200"
+        >
+          Where to watch <ExternalLink size={14} aria-hidden="true" />
+        </a>
+      </div>
+    </article>
   );
 }

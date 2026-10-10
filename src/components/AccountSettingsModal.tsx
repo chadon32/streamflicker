@@ -7,9 +7,17 @@ interface AccountSettingsModalProps {
   user: User;
   onClose: () => void;
   onDeleteAccount: () => Promise<void>;
+  legacyWatchlistCount: number;
+  onImportLegacyWatchlist: () => void;
 }
 
-export function AccountSettingsModal({ user, onClose, onDeleteAccount }: AccountSettingsModalProps) {
+export function AccountSettingsModal({
+  user,
+  onClose,
+  onDeleteAccount,
+  legacyWatchlistCount,
+  onImportLegacyWatchlist,
+}: AccountSettingsModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [confirmation, setConfirmation] = useState('');
@@ -68,17 +76,31 @@ export function AccountSettingsModal({ user, onClose, onDeleteAccount }: Account
         <>
             <section className="space-y-3" aria-labelledby="account-identity-heading">
               <div className="flex items-center gap-2">
-                <Shield className="text-emerald-400" size={17} />
-                <h3 id="account-identity-heading" className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                <Shield className="text-rose-400" size={17} aria-hidden="true" />
+                <h3 id="account-identity-heading" className="eyebrow">
                   Signed-in account
                 </h3>
               </div>
               <p className="break-all rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-sm text-zinc-200">
                 {user.email ?? 'Authenticated StreamFlicker account'}
               </p>
-              <p className="text-xs leading-relaxed text-zinc-500">
-                Your watchlist and preferences are stored on this device and are not synced to this account.
+              <p className="text-xs leading-relaxed text-ink-3">
+                Your watchlist is stored in a separate device namespace for this account. Signing out clears it from the current view.
               </p>
+              {legacyWatchlistCount > 0 && (
+                <div className="notice notice-warn space-y-2">
+                  <p>
+                    An older watchlist with {legacyWatchlistCount} saved movie{legacyWatchlistCount === 1 ? '' : 's'} was found on this device. Its original owner cannot be determined; importing it merges those movies into this account.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onImportLegacyWatchlist}
+                    className="btn btn-secondary"
+                  >
+                    Import saved movies to this account
+                  </button>
+                </div>
+              )}
             </section>
 
             <section className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4" aria-labelledby="delete-account-heading">
@@ -130,7 +152,7 @@ export function AccountSettingsModal({ user, onClose, onDeleteAccount }: Account
                         <button
                           type="submit"
                           disabled={!canDelete || isDeleting}
-                          className="min-h-11 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="btn btn-primary"
                         >
                           {isDeleting ? 'Deleting…' : 'Permanently delete'}
                         </button>

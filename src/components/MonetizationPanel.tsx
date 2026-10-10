@@ -1,0 +1,74 @@
+import { Heart, Mail, Megaphone } from 'lucide-react';
+import type { PublicMonetizationLinks } from '../services/monetization';
+
+interface MonetizationPanelProps {
+  links: PublicMonetizationLinks;
+}
+
+export function MonetizationPanel({ links }: MonetizationPanelProps) {
+  const hasAnyLink = Boolean(links.supportUrl || links.newsletterUrl || links.sponsorInquiryUrl);
+  if (!hasAnyLink) return null;
+  // With only the support link configured there is no second column, so the panel stays one column.
+  const hasSecondColumn = Boolean(links.newsletterUrl || links.sponsorInquiryUrl);
+
+  return (
+    <section aria-labelledby="support-streamflicker-title" className="mb-12 mt-10 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950">
+      <div className={hasSecondColumn ? 'grid md:grid-cols-[1.15fr_0.85fr]' : ''}>
+        <div className={`p-6 sm:p-8 ${hasSecondColumn ? 'border-b border-zinc-800 md:border-b-0 md:border-r' : ''}`}>
+          <h2 id="support-streamflicker-title" className="font-display text-2xl font-bold tracking-tight text-white">
+            Help fund better movie discovery
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-400">
+            Support catalog improvements, focused filters, and faster ways to pick tonight&apos;s movie.
+          </p>
+          {links.supportUrl && (
+            <a
+              href={links.supportUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary mt-5"
+            >
+              <Heart size={16} aria-hidden="true" />
+              Support StreamFlicker
+            </a>
+          )}
+        </div>
+
+        {hasSecondColumn && <div className="divide-y divide-zinc-800">
+          {links.newsletterUrl && (
+            <a
+              href={links.newsletterUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-24 items-center gap-4 p-5 text-left transition-colors hover:bg-zinc-900 active:bg-zinc-800"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-rose-300">
+                <Mail size={18} aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-white">Get weekly movie picks</span>
+                <span className="mt-1 block text-xs leading-relaxed text-ink-3">A compact shortlist for family nights, date nights, and quick watches.</span>
+              </span>
+            </a>
+          )}
+          {links.sponsorInquiryUrl && (
+            <a
+              href={links.sponsorInquiryUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-24 items-center gap-4 p-5 text-left transition-colors hover:bg-zinc-900 active:bg-zinc-800"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-rose-300">
+                <Megaphone size={18} aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-white">Sponsor StreamFlicker</span>
+                <span className="mt-1 block text-xs leading-relaxed text-ink-3">Reach movie-night planners through clearly disclosed placements.</span>
+              </span>
+            </a>
+          )}
+        </div>}
+      </div>
+    </section>
+  );
+}

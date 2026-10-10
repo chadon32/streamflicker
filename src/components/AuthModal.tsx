@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { isSupabaseConfigured, supabase } from '../lib/supabase';
 import { X, Mail, Lock, Film, AlertCircle } from 'lucide-react';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
 
 interface AuthModalProps {
   onClose: () => void;
   onAuthSuccess: () => void;
+  /**
+   * Accounts do not sync anything yet, so new sign-ups are off unless the site owner
+   * turns them on (VITE_ACCOUNT_SIGNUP_ENABLED). Existing accounts can always sign in.
+   */
+  allowSignUp?: boolean;
 }
 
-export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
+export function AuthModal({ onClose, onAuthSuccess, allowSignUp = false }: AuthModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -39,6 +44,12 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
       return;
     }
 
+    if (!isSupabaseConfigured) {
+      setError('Accounts are temporarily unavailable in this build. You can still browse movies and save a watchlist on this device.');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
@@ -48,19 +59,41 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
         if (error) throw error;
         onAuthSuccess();
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
           password,
         });
         if (error) throw error;
-        setMessage('Check your email for the confirmation link.');
+        if (data.session) {
+          onAuthSuccess();
+        } else {
+          setMessage('Account created. Check your email for the confirmation link before signing in.');
+        }
       }
-    } catch {
-      setError(
-        isLogin
-          ? 'Unable to sign in with those credentials.'
-          : 'Unable to create the account. Check the form and try again.',
-      );
+    } catch (authError) {
+      const errorCode = authError && typeof authError === 'object' && 'code' in authError
+        ? String(authError.code)
+        : '';
+      const errorStatus = authError && typeof authError === 'object' && 'status' in authError
+        ? Number(authError.status)
+        : 0;
+      const errorMessage = authError instanceof Error ? authError.message.toLowerCase() : '';
+
+      if (!isLogin && (errorCode === 'user_already_exists' || /already registered|already exists/.test(errorMessage))) {
+        setError('An account with this email already exists. Try signing in instead.');
+      } else if (isLogin && (errorCode === 'invalid_credentials' || /invalid login credentials/.test(errorMessage))) {
+        setError('That email or password is not correct.');
+      } else if (errorCode === 'weak_password' || /password.*(weak|strength)/.test(errorMessage)) {
+        setError('Choose a stronger password and try again.');
+      } else if (errorStatus === 429 || /rate limit|too many requests/.test(errorMessage)) {
+        setError('Too many attempts. Wait a moment and try again.');
+      } else if (/network|fetch|failed to fetch|offline|timeout/.test(errorMessage)) {
+        setError('We could not reach account services. Check your connection and try again.');
+      } else {
+        setError(isLogin
+          ? 'Unable to sign in right now. Check your details and try again.'
+          : 'Unable to create the account right now. Check your details and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -98,12 +131,12 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
           </div>
           
           <h2 id="auth-dialog-title" className="text-2xl font-display font-bold text-center text-white mb-2">
-            {isLogin ? 'Welcome Back' : 'Create Account'}
+            {isLogin ? 'Welcome back' : 'Create an account'}
           </h2>
-          <p id="auth-dialog-description" className="text-center text-zinc-400 text-sm mb-8">
+          <p id="auth-dialog-description" className="text-center text-ink-2 text-sm mb-8">
             {isLogin
-              ? 'Sign in for future account features. Your Watchlist and reminders currently stay on this device.'
-              : 'Create an account for future account features. Your local saves stay on this device.'}
+              ? 'Sign in to your account. Your watchlist and saved movie nights stay on this device either way.'
+              : "Accounts don't sync your watchlist yet. Your watchlist and saved movie nights stay on this device."}
           </p>
 
           {error && (
@@ -122,9 +155,9 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
 
           <form onSubmit={handleAuth} className="space-y-4" noValidate>
             <div>
-              <label htmlFor="auth-email" className="block text-xs font-semibold text-zinc-400 mb-1.5 ml-1 uppercase tracking-wider">Email Address</label>
+              <label htmlFor="auth-email" className="block text-xs font-semibold text-ink-2 mb-1.5 ml-1">Email address</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
                 <input
                   type="email"
                   id="auth-email"
@@ -138,7 +171,7 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
                     setFieldErrors((current) => ({ ...current, email: undefined }));
                     setError(null);
                   }}
-                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
+                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-ink-3 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
                   placeholder="you@example.com"
                 />
               </div>
@@ -146,9 +179,9 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
             </div>
 
             <div>
-              <label htmlFor="auth-password" className="block text-xs font-semibold text-zinc-400 mb-1.5 ml-1 uppercase tracking-wider">Password</label>
+              <label htmlFor="auth-password" className="block text-xs font-semibold text-ink-2 mb-1.5 ml-1">Password</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
                 <input
                   type="password"
                   id="auth-password"
@@ -163,7 +196,7 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
                     setFieldErrors((current) => ({ ...current, password: undefined }));
                     setError(null);
                   }}
-                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
+                  className="w-full bg-zinc-900/80 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-ink-3 focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -175,30 +208,40 @@ export function AuthModal({ onClose, onAuthSuccess }: AuthModalProps) {
               name="auth-submit"
               aria-label={loading ? (isLogin ? 'Signing in' : 'Creating account') : (isLogin ? 'Sign in' : 'Create account')}
               disabled={loading}
-              className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-rose-600/20 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="btn btn-primary btn-lg mt-2 w-full"
             >
               {loading ? (
                 <div className="w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
               ) : (
-                isLogin ? 'Sign In' : 'Create Account'
+                isLogin ? 'Sign in' : 'Create account'
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-zinc-400">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError(null);
-                setMessage(null);
-                setFieldErrors({});
-              }}
-              className="text-rose-400 hover:text-rose-300 font-semibold hover:underline"
-            >
-              {isLogin ? 'Sign Up' : 'Sign In'}
-            </button>
+          <div className="mt-6 space-y-1 text-center text-sm text-ink-2">
+            {allowSignUp && (
+              <p>
+                {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setError(null);
+                    setMessage(null);
+                    setFieldErrors({});
+                  }}
+                  className="min-h-11 text-rose-300 hover:text-rose-200 font-semibold hover:underline"
+                >
+                  {isLogin ? 'Create one' : 'Sign in'}
+                </button>
+              </p>
+            )}
+            {isLogin && (
+              <p>
+                Forgot your password?{' '}
+                <a href="/contact" className="inline-flex min-h-11 items-center text-rose-300 hover:text-rose-200 font-semibold hover:underline">Contact us</a>
+              </p>
+            )}
           </div>
         </div>
       </div>

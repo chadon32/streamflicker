@@ -148,7 +148,7 @@ const EDITORIAL_CLASSIFICATION_OVERRIDES: Record<string, EditorialClassification
   'avengers doomsday|2026': {
     genres: ['Action', 'Sci-Fi'],
   },
-  'spider-man 4|2026': {
+  'spider-man brand new day|2026': {
     genres: ['Action', 'Sci-Fi'],
   },
   'the mandalorian grogu|2026': {
@@ -634,12 +634,19 @@ export interface CatalogFilters {
   providerIds?: string[];
 }
 
+function getVerifiedProviderIds(movie: Movie): string[] {
+  if (movie.availability?.status !== 'verified') return [];
+  return movie.streamingPlatforms
+    .filter((platform) => platform.availabilityStatus === 'verified')
+    .map(({ id }) => id);
+}
+
 export function applyCatalogFilters(movies: Movie[], filters: CatalogFilters) {
   return movies.filter((movie) => {
     if (!matchesEra(movie.year, filters.era)) return false;
     if (filters.genre !== 'All' && !movie.genre.includes(filters.genre)) return false;
     if (filters.tag && !movie.tags.includes(filters.tag)) return false;
-    if (filters.providerIds && !movie.streamingPlatforms.some(({ id }) => filters.providerIds?.includes(id))) {
+    if (filters.providerIds && !getVerifiedProviderIds(movie).some((id) => filters.providerIds?.includes(id))) {
       return false;
     }
     return true;
@@ -663,7 +670,7 @@ export function getCatalogFilterCounts(movies: Movie[]): CatalogFilterCounts {
   for (const movie of movies) {
     for (const genre of movie.genre) counts.genres[genre] = (counts.genres[genre] ?? 0) + 1;
     for (const tag of movie.tags) counts.tags[tag] = (counts.tags[tag] ?? 0) + 1;
-    for (const provider of new Set(movie.streamingPlatforms.map(({ id }) => id))) {
+    for (const provider of new Set(getVerifiedProviderIds(movie))) {
       counts.providers[provider] = (counts.providers[provider] ?? 0) + 1;
     }
   }

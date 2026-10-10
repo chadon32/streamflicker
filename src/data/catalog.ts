@@ -3,13 +3,43 @@ export interface StreamingPlatform {
   name: string;
   logo: string;
   color: string;
-  type: 'subscription' | 'rent' | 'free';
+  type: 'subscription' | 'rent' | 'buy' | 'free';
   price?: string;
   affiliateUrl: string;
+  availabilityStatus?: 'verified' | 'discovery';
+  source?: 'tmdb';
+  region?: string;
+  checkedAt?: string;
+  tmdbProviderId?: number;
+}
+
+export interface MovieAvailability {
+  status: 'verified' | 'not-found' | 'unavailable' | 'discovery';
+  source: 'tmdb' | 'bundled';
+  region?: string;
+  checkedAt?: string;
+  link?: string;
 }
 
 export interface Movie {
   id: string;
+  /** Stable provider identity captured in the source catalog when available. */
+  sourceId?: string;
+  /** ISO calendar date captured from the source catalog when available. */
+  releaseDate?: string;
+  /** Provider release state captured in the source catalog when available. */
+  releaseStatus?: 'released' | 'planned' | 'in-production' | 'canceled' | 'unknown';
+  /** Certification provenance for records with curated evidence. */
+  ratingSource?: 'TMDB' | 'MPAA' | 'BBFC' | 'unknown';
+  /**
+   * Runtime record origin used to keep fallback/watchlist data out of sharing. `tmdb-checked` marks a bundled title
+   * whose rating and runtime were matched to TMDB with proof; unlike `bundled-validated` it is never a recommendation.
+   */
+  recordSource?: 'tmdb-live' | 'tmdb-checked' | 'bundled-validated' | 'saved-watchlist' | 'watchlist-fallback';
+  /** TMDB vote count, present for checked titles; used only to order browsing by how well known a title is. */
+  voteCount?: number;
+  /** True when `youtubeTrailerId` is TMDB's official trailer for this title rather than the bundled catalog's own id. */
+  trailerVerified?: boolean;
   title: string;
   year: number;
   rating: string;
@@ -25,8 +55,35 @@ export interface Movie {
   backdropUrl: string;
   youtubeTrailerId: string;
   streamingPlatforms: StreamingPlatform[];
+  availability?: MovieAvailability;
+  /** TMDB franchise context, present for live collection-expanded results. */
+  collectionId?: number;
+  collectionName?: string;
+  collectionPartPosition?: number;
+  collectionPartCount?: number;
+  searchAliases?: string[];
   featured?: boolean;
   trending?: boolean;
+}
+
+export function getVerifiedStreamingPlatforms(movie: Movie): StreamingPlatform[] {
+  if (movie.availability?.status !== 'verified') return [];
+  return movie.streamingPlatforms.filter((platform) => platform.availabilityStatus === 'verified');
+}
+
+export function getAvailabilityUrl(movie: Movie): string {
+  if (movie.availability?.link) {
+    try {
+      const parsed = new URL(movie.availability.link);
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return parsed.toString();
+    } catch {
+      // Fall through to the public title search below.
+    }
+  }
+
+  const region = movie.availability?.region?.toUpperCase() ?? 'US';
+  const justWatchLocale = region === 'GB' ? 'uk' : region.toLowerCase();
+  return `https://www.justwatch.com/${justWatchLocale}/search?q=${encodeURIComponent(`${movie.title} ${movie.year}`)}`;
 }
 
 export const STREAMING_PROVIDERS = [

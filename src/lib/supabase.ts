@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import { isSupabaseConfigured, supabaseAnonKey, supabaseUrl } from './supabaseConfig';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export { isSupabaseConfigured } from './supabaseConfig';
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!isSupabaseConfigured) {
   console.warn('Supabase URL and Anon Key are missing. Check your .env file.');
 }
 

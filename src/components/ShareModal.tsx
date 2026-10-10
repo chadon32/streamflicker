@@ -4,6 +4,7 @@ import { X, Copy, Check, Share2, MessageSquare, Send, Globe, AlertCircle } from 
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { useAccessibleDialog } from '../hooks/useAccessibleDialog';
+import { buildMovieShareText, getMovieShareHeadline, getShareEligibility } from '../services/shareText';
 
 interface ShareModalProps {
   movie: Movie;
@@ -16,17 +17,20 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
   const shareUrlInputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useAccessibleDialog(onClose);
   const isNativeShare = Capacitor.isNativePlatform();
+  const shareEligibility = getShareEligibility(movie);
   const shareUrlObject = new URL(window.location.href);
   shareUrlObject.search = '';
   shareUrlObject.hash = '';
   shareUrlObject.searchParams.set('movie', movie.id);
   const shareUrl = shareUrlObject.toString();
-  const shareText = `Check out "${movie.title}" (${movie.year}) on StreamFlicker. Watch the trailer and check service availability:`;
+  const headline = getMovieShareHeadline(movie);
+  const shareText = buildMovieShareText(movie, shareUrl);
 
   const handleCopy = async () => {
+    if (!shareEligibility.shareable) return;
     try {
       if (!navigator.clipboard) throw new Error('Clipboard access is unavailable');
-      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
+      await navigator.clipboard.writeText(shareText);
       setCopyStatus('copied');
     } catch {
       setCopyStatus('error');
@@ -36,12 +40,13 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
   };
 
   const handleNativeShare = async () => {
+    if (!shareEligibility.shareable) return;
     try {
       const canShare = await Share.canShare();
       if (!canShare.value) throw new Error('Native sharing is unavailable');
       await Share.share({
         title: `${movie.title} on StreamFlicker`,
-        text: shareText,
+        text: headline,
         url: shareUrl,
         dialogTitle: 'Share movie',
       });
@@ -60,7 +65,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div 
+      <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
@@ -70,25 +75,32 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
       >
         <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
           <div className="flex items-center gap-2">
-            <Share2 className="text-rose-500" size={20} />
-            <h2 id="share-dialog-title" className="font-display font-bold text-lg text-white">Share Movie</h2>
+            <Share2 className="text-rose-500" size={20} aria-hidden="true" />
+            <h2 id="share-dialog-title" className="font-display font-bold text-lg text-white">Share movie</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Close share dialog" className="p-2.5 min-w-11 min-h-11 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800">
             <X size={18} />
           </button>
         </div>
 
+        {!shareEligibility.shareable ? (
+          <div className="space-y-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4" role="status">
+            <h3 className="font-display text-lg font-bold text-white">This title can&apos;t be shared yet</h3>
+            <p className="text-sm leading-relaxed text-amber-100/90">{shareEligibility.reason}</p>
+          </div>
+        ) : (
+          <>
         {isNativeShare && (
           <div className="space-y-2">
             <button
               type="button"
               onClick={handleNativeShare}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-rose-600/25 transition-colors hover:bg-rose-500"
+              className="btn btn-primary btn-lg w-full"
             >
-              <Share2 size={18} />
+              <Share2 size={18} aria-hidden="true" />
               Share with iPhone
             </button>
-            <p className="text-center text-[11px] text-zinc-500">Use the native share sheet for Messages, AirDrop, Mail, and more.</p>
+            <p className="text-center text-xs text-ink-3">Use the native share sheet for Messages, AirDrop, Mail, and more.</p>
             {nativeShareStatus === 'shared' && (
               <p role="status" aria-live="polite" className="text-center text-xs text-emerald-300">The iOS share sheet finished.</p>
             )}
@@ -98,54 +110,52 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
           </div>
         )}
 
-        <div className="flex items-center gap-4 p-3 bg-zinc-900/80 rounded-2xl border border-zinc-800">
-          <img src={movie.posterUrl} alt={`${movie.title} poster`} width="48" height="64" className="w-12 h-16 object-cover rounded-xl shrink-0" />
-          <div className="min-w-0">
-            <h4 className="font-bold text-white text-sm truncate">{movie.title}</h4>
-            <p className="text-xs text-zinc-400">{movie.year} • {movie.genre.join(', ')}</p>
-          </div>
+        {/* The message exactly as it will be sent: text only, no artwork. */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+          <h3 className="eyebrow">What you&apos;ll share</h3>
+          <p className="mt-2 break-words text-sm leading-relaxed text-zinc-200">{shareText}</p>
         </div>
 
         {/* Social Buttons */}
         <div className="grid grid-cols-4 gap-3">
           <a
-            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(headline)}&url=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sky-400 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
-            <Globe size={20} />
-            <span className="text-[10px] font-bold text-zinc-300">X / Twitter</span>
+            <Globe size={20} aria-hidden="true" />
+            <span className="text-xs font-bold text-zinc-300">X</span>
           </a>
 
           <a
             href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-blue-500 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
-            <Globe size={20} />
-            <span className="text-[10px] font-bold text-zinc-300">Facebook</span>
+            <Globe size={20} aria-hidden="true" />
+            <span className="text-xs font-bold text-zinc-300">Facebook</span>
           </a>
 
           <a
-            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-emerald-400 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
-            <MessageSquare size={20} />
-            <span className="text-[10px] font-bold text-zinc-300">WhatsApp</span>
+            <MessageSquare size={20} aria-hidden="true" />
+            <span className="text-xs font-bold text-zinc-300">WhatsApp</span>
           </a>
 
           <a
-            href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareText)}`}
+            href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(headline)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-orange-500 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
-            <Send size={20} />
-            <span className="text-[10px] font-bold text-zinc-300">Reddit</span>
+            <Send size={20} aria-hidden="true" />
+            <span className="text-xs font-bold text-zinc-300">Reddit</span>
           </a>
         </div>
 
@@ -157,30 +167,32 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             readOnly
             value={shareUrl}
             aria-label="Shareable movie link"
-            className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-400 outline-none"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-300"
           />
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shrink-0"
+            className="btn btn-primary shrink-0"
           >
-            {copyStatus === 'copied' ? <Check size={14} /> : <Copy size={14} />}
-            <span>{copyStatus === 'copied' ? 'Copied!' : 'Copy Link'}</span>
+            {copyStatus === 'copied' ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+            <span>{copyStatus === 'copied' ? 'Copied' : 'Copy message'}</span>
           </button>
         </div>
 
         {copyStatus === 'copied' && (
           <p role="status" aria-live="polite" className="flex items-center gap-2 text-xs text-emerald-300">
-            <Check size={14} />
-            Link copied to your clipboard.
+            <Check size={14} aria-hidden="true" />
+            Message copied to your clipboard.
           </p>
         )}
 
         {copyStatus === 'error' && (
           <p role="alert" aria-live="assertive" className="flex items-center gap-2 text-xs text-rose-300">
-            <AlertCircle size={14} />
+            <AlertCircle size={14} aria-hidden="true" />
             Clipboard access failed. The link is selected. Press Ctrl+C (or Cmd+C) to copy it manually.
           </p>
+        )}
+          </>
         )}
 
       </div>

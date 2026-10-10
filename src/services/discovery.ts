@@ -11,8 +11,8 @@ export const DISCOVERY_MODE_OPTIONS = [
   },
   {
     id: 'family' as const,
-    label: 'Family-friendly',
-    description: 'PG-13 and below with high-risk themes excluded.',
+    label: 'PG-13 and under',
+    description: 'A confirmed PG-13 or lower rating, with high-risk themes excluded.',
   },
 ] as const;
 
@@ -56,7 +56,22 @@ function parseDurationMinutes(duration: string) {
   return hours * 60 + minutes;
 }
 
+/**
+ * Rating and runtime are only facts for records whose values came from TMDB:
+ * reviewed bundled titles (checked against each title's TMDB page), bundled titles
+ * matched to TMDB with proof ("checked"), and live TMDB results. The rest of the
+ * bundled catalog fills them with placeholders (about 90% share one runtime and 92%
+ * are "R"), so nothing may be filtered or labelled from them.
+ */
+export function hasVerifiedRatingAndRuntime(movie: Movie): boolean {
+  return movie.recordSource === 'bundled-validated'
+    || movie.recordSource === 'tmdb-checked'
+    || movie.recordSource === 'tmdb-live';
+}
+
 export function isFamilyFriendly(movie: Movie) {
+  // A family-safety claim needs a real certification, not a placeholder.
+  if (!hasVerifiedRatingAndRuntime(movie)) return false;
   const rating = movie.rating.trim().toUpperCase();
   const explicitlyFamilyRated = rating === 'NOT RATED' && movie.genre.includes('Family');
   if (!FAMILY_RATINGS.has(rating) && !explicitlyFamilyRated) return false;
@@ -68,7 +83,8 @@ export function isFamilyFriendly(movie: Movie) {
 }
 
 export function isDateNightFriendly(movie: Movie) {
-  if (movie.rating.trim().toUpperCase() === 'R') return false;
+  // Date night rests on genre and synopsis; a rating only excludes a title when it is real.
+  if (hasVerifiedRatingAndRuntime(movie) && movie.rating.trim().toUpperCase() === 'R') return false;
   if (movie.genre.includes('Horror') || movie.genre.includes('Documentary') || movie.tags.some((tag) => HIGH_RISK_TAGS.has(tag))) return false;
   if (UNSAFE_TITLE_TERMS.test(movie.title) || UNSAFE_DESCRIPTION_TERMS.test(movie.description)) return false;
 
@@ -99,6 +115,7 @@ export function getDateNightPriority(movie: Movie) {
 }
 
 export function isQuickWatch(movie: Movie) {
+  if (!hasVerifiedRatingAndRuntime(movie)) return false;
   const minutes = parseDurationMinutes(movie.duration);
   return minutes > 0 && minutes <= 110;
 }
@@ -121,15 +138,9 @@ export function getSearchIntent(query: string): 'family' | 'date-night' | 'quick
   return null;
 }
 
-export function getAudienceLabel(movie: Movie) {
-  if (isFamilyFriendly(movie)) return 'Family-friendly';
-  if (movie.rating.trim().toUpperCase() === 'R') return 'Adults';
-  return 'Teen+ / check rating';
-}
-
 export function getContentWarnings(movie: Movie) {
   const warnings: string[] = [];
-  if (movie.rating.trim().toUpperCase() === 'R') warnings.push('Rated R');
+  if (hasVerifiedRatingAndRuntime(movie) && movie.rating.trim().toUpperCase() === 'R') warnings.push('Rated R');
   if (movie.genre.includes('Horror') || movie.tags.some((tag) => HIGH_RISK_TAGS.has(tag))) warnings.push('Horror or intense themes');
   if (movie.genre.includes('Thriller') || movie.tags.includes('#SerialKiller')) warnings.push('Suspense and danger');
   return warnings;
@@ -138,7 +149,7 @@ export function getContentWarnings(movie: Movie) {
 export function getSearchReason(movie: Movie | undefined, query: string) {
   if (!movie) return null;
   const intent = getSearchIntent(query);
-  if (intent === 'family' && isFamilyFriendly(movie)) return 'Family-friendly match';
+  if (intent === 'family' && isFamilyFriendly(movie)) return 'PG-13 and under match';
   if (intent === 'date-night' && isDateNightFriendly(movie)) return 'Date-night match';
   if (intent === 'quick-watch' && isQuickWatch(movie)) return 'Quick-watch match';
   return null;

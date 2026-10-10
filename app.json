@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "StreamFlicker",
+    "slug": "streamflicker",
+    "version": "1.0.0",
+    "icon": "./ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png",
+    "ios": {
+      "bundleIdentifier": "com.streamflicker.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "owner": "chadon32",
+    "platforms": [
+      "ios",
+      "web"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6d392698-4fdc-417b-a9ec-e5b0c003efaa"
+      }
+    }
+  }
+}

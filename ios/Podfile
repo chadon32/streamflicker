@@ -1,0 +1,9 @@
+platform :ios, '15.0'
+
+# Capacitor 8 uses Swift Package Manager for its native runtime and plugins.
+# This empty Podfile keeps EAS's standard iOS dependency phase compatible
+# without duplicating those Swift Package dependencies through CocoaPods.
+project 'StreamFlicker.xcodeproj'
+
+target 'App' do
+end
