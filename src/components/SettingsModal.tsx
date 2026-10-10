@@ -95,10 +95,10 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <section className="space-y-4" aria-labelledby="streaming-services-heading">
             <div>
-              <h3 id="streaming-services-heading" className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                <Check size={14} className="text-emerald-400" aria-hidden="true" /> Services you already use
+              <h3 id="streaming-services-heading" className="eyebrow">
+                Services you already use
               </h3>
-              <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+              <p className="mt-2 text-sm leading-relaxed text-ink-2">
                 Select the services you already use. When live regional provider data is available, choose <strong className="font-semibold text-zinc-300">My services</strong> in Filters to show verified matching options. These choices stay on this device.
               </p>
             </div>
@@ -116,12 +116,9 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                     );
                   }}
                   aria-pressed={myServices.includes(provider.id)}
-                  className={`min-h-11 rounded-full border px-3.5 py-2 text-xs font-bold transition-all ${
-                    myServices.includes(provider.id)
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                  }`}
+                  className="chip"
                 >
+                  {myServices.includes(provider.id) && <Check size={14} aria-hidden="true" />}
                   {provider.name}
                 </button>
               ))}
@@ -131,7 +128,7 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
           {showSiteOwnerOptions && <details className="group rounded-2xl border border-zinc-800 bg-zinc-950/35 p-4">
             <summary className="cursor-pointer list-none text-xs font-bold uppercase tracking-wider text-zinc-300 marker:hidden">
               <span className="flex items-center gap-1.5">
-                <Tag size={14} className="text-amber-400" /> Advanced site-owner options
+                <Tag size={14} className="text-ink-3" aria-hidden="true" /> Advanced site-owner options
               </span>
             </summary>
             <p className="mt-3 text-xs leading-relaxed text-zinc-400">
@@ -193,16 +190,13 @@ export function SettingsModal({ onClose, onSave }: SettingsModalProps) {
                 setMyServices([]);
                 setAffiliate(getAffiliateConfig());
               }}
-              className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl px-2 text-xs text-ink-2 transition-colors hover:text-white"
+              className="btn text-ink-2 hover:text-white"
             >
-              <RefreshCw size={12} aria-hidden="true" /> Reset my choices
+              <RefreshCw size={14} aria-hidden="true" /> Reset my choices
             </button>
 
-            <button
-              type="submit"
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md transition-all hover:bg-rose-700"
-            >
-              {savedSuccess ? <Check size={14} /> : null}
+            <button type="submit" className="btn btn-primary">
+              {savedSuccess ? <Check size={15} aria-hidden="true" /> : null}
               <span>{savedSuccess ? 'Saved' : 'Save my services'}</span>
             </button>
           </div>

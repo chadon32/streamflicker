@@ -90,6 +90,29 @@ const PATTERN_RULES = [
     flagged: ['animate-scale-up', 'custom-scrollbar'],
     allowed: ['animate-pulse', 'scrollbar-width'],
   },
+  {
+    // October 10 polish: rose is the only accent. Emerald means saved or done, amber means careful;
+    // sky, blue, orange and friends had crept in as decoration and made every dialog a different colour.
+    pattern: /\b(?:text|bg|border|ring|from|via|to|shadow|outline|fill|stroke)-(?:sky|blue|cyan|teal|indigo|violet|purple|fuchsia|orange|lime|green|yellow)-[0-9]/g,
+    message: 'Use rose for accents (emerald only for saved or done, amber only for warnings)',
+    flagged: ['text-sky-400', 'bg-sky-500/10', 'border-blue-400/30', 'text-orange-400', 'hover:bg-green-600'],
+    allowed: ['text-rose-400', 'bg-emerald-500/15', 'border-amber-500/20', 'text-ink-2', 'bg-zinc-900'],
+  },
+  {
+    // Primary buttons come from .btn-primary in src/index.css: one height, one radius, one hover. A hand-rolled
+    // rose button is how six slightly different primaries appeared. (Decorative rose tiles use rose-700.)
+    pattern: /(?<!selection:)\bbg-rose-600\b(?![/-])/g,
+    message: 'Use className="btn btn-primary" instead of a hand-styled rose button',
+    flagged: ['rounded-xl bg-rose-600 px-4', 'bg-rose-600 hover:bg-rose-700'],
+    allowed: ['btn btn-primary', 'bg-rose-600/20', 'selection:bg-rose-600 selection:text-white', 'bg-rose-700'],
+  },
+  {
+    // The white "Where to watch" button competed with the real primary action next to it.
+    pattern: /\bbg-zinc-100\b(?![/-])/g,
+    message: 'No white buttons: use btn-secondary (or btn-primary for the main action)',
+    flagged: ['rounded-xl bg-zinc-100 px-4 text-zinc-950', 'bg-zinc-100 text-zinc-950'],
+    allowed: ['bg-zinc-100/10', 'text-zinc-100', 'bg-zinc-900'],
+  },
 ];
 
 for (const { pattern, message, flagged, allowed } of PATTERN_RULES) {
@@ -141,16 +164,33 @@ const card = readFileSync(join(sourceRoot, 'components', 'MovieCard.tsx'), 'utf8
 assert.equal((card.match(/onWatchTrailer\(movie\)/g) ?? []).length, 1, 'A card has exactly one control that opens the trailer');
 assert.match(card, /after:absolute after:inset-0/, 'The card is one stretched link');
 
-// Trust and legal: real pages and the TMDB notice.
+// Trust and legal: real pages and the TMDB notice, from one shared footer on every page.
 const app = readFileSync(join(sourceRoot, 'App.tsx'), 'utf8');
-for (const href of ['/privacy', '/terms', '/contact']) assert.match(app, new RegExp(`href="${href}"`), `The footer must link ${href}`);
-assert.match(app, /TMDB_NOTICE/, 'The footer must carry the TMDB notice');
+const chrome = readFileSync(join(sourceRoot, 'components', 'SiteChrome.tsx'), 'utf8');
+for (const href of ['/privacy', '/terms', '/contact']) assert.match(chrome, new RegExp(`href="${href}"`), `The footer must link ${href}`);
+assert.match(chrome, /\{TMDB_NOTICE\}/, 'The footer must carry the TMDB notice');
 // TMDB's terms require their logo with the notice, less prominent than StreamFlicker's own (which is 40px tall).
 assert.ok(existsSync(join('public', 'tmdb-logo.svg')), "TMDB's official logo must ship in public/");
-for (const [name, source] of [['App footer', app], ['legal pages', readFileSync(join(sourceRoot, 'components', 'LegalPages.tsx'), 'utf8')]]) {
-  const logo = source.match(/<img[^>]*src="\/tmdb-logo\.svg"[^>]*>/)?.[0];
-  assert.ok(logo, `The ${name} must show TMDB's logo beside the notice`);
-  assert.match(logo, /height="12"/, `The ${name} TMDB logo stays small (12px), below StreamFlicker's own`);
+const logo = chrome.match(/<img[^>]*src="\/tmdb-logo\.svg"[^>]*>/)?.[0];
+assert.ok(logo, "The footer must show TMDB's logo beside the notice");
+assert.match(logo, /height="12"/, "The TMDB logo stays small (12px), below StreamFlicker's own");
+// About and the guide used to carry their own footers, without the logo; every page now renders the shared one.
+for (const [name, source] of [
+  ['App', app],
+  ['About', readFileSync(join(sourceRoot, 'components', 'BusinessPage.tsx'), 'utf8')],
+  ['movie-night guide', readFileSync(join(sourceRoot, 'components', 'MovieNightGuide.tsx'), 'utf8')],
+  ['legal pages', readFileSync(join(sourceRoot, 'components', 'LegalPages.tsx'), 'utf8')],
+]) {
+  assert.match(source, /<SiteFooter\b/, `The ${name} must render the shared SiteFooter`);
+  assert.doesNotMatch(source, /<footer\b/, `The ${name} must not build its own footer`);
+}
+for (const name of ['BusinessPage', 'MovieNightGuide', 'LegalPages']) {
+  assert.match(readFileSync(join(sourceRoot, 'components', `${name}.tsx`), 'utf8'), /<SiteHeader\b/, `${name} must render the shared SiteHeader`);
+}
+
+// The shared controls exist, so components have something to reuse instead of restyling buttons by hand.
+for (const selector of ['.btn', '.btn-primary', '.btn-secondary', '.btn-saved', '.icon-btn', '.chip', '.chip-count', '.tag', '.eyebrow', '.notice', '.notice-warn']) {
+  assert.match(css, new RegExp(`\\${selector}\\s*[{,:]`), `src/index.css must define ${selector}`);
 }
 
 // The planner may suggest well-known titles that were matched to TMDB, always labeled. The lazy planner builds its own

@@ -26,7 +26,7 @@ export function MonetizationPanel({ links }: MonetizationPanelProps) {
               href={links.supportUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
+              className="btn btn-primary mt-5"
             >
               <Heart size={16} aria-hidden="true" />
               Support StreamFlicker

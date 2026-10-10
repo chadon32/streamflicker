@@ -11,6 +11,8 @@ interface WatchlistModalProps {
   onClose: () => void;
   onWatchTrailer: (movie: Movie) => void;
   onRemove: (movie: Movie) => void;
+  /** The empty state's way forward: close the dialog and open the catalog. */
+  onBrowse?: () => void;
 }
 
 export function WatchlistModal({
@@ -20,6 +22,7 @@ export function WatchlistModal({
   onClose,
   onWatchTrailer,
   onRemove,
+  onBrowse,
 }: WatchlistModalProps) {
   const dialogRef = useAccessibleDialog(onClose);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
@@ -60,11 +63,7 @@ export function WatchlistModal({
           </div>
           <div className="flex items-center gap-2">
             {watchlist.length > 0 && (
-              <button
-                type="button"
-                onClick={handleCopyShortlist}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:bg-zinc-800"
-              >
+              <button type="button" onClick={handleCopyShortlist} className="btn btn-secondary">
                 {copyStatus === 'copied' ? <Check size={14} /> : <Copy size={14} />}
                 {copyStatus === 'copied' ? 'Copied' : 'Copy shortlist'}
               </button>
@@ -77,19 +76,15 @@ export function WatchlistModal({
 
         {/* List Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
-          <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-xs leading-relaxed text-ink-3">
-            Your saved movies stay in this browser. Account sync is not enabled yet, so export or share a title before switching devices.
+          <p className="notice">
+            Your saved movies stay in this browser. Account sync is not enabled yet, so copy your shortlist or share a title before switching devices.
           </p>
           {legacyWatchlistCount > 0 && (
-            <div className="space-y-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
-              <p className="text-xs leading-relaxed text-amber-100">
+            <div className="notice notice-warn space-y-2">
+              <p>
                 An older watchlist with {legacyWatchlistCount} movie{legacyWatchlistCount === 1 ? '' : 's'} was found on this device. Its original owner cannot be determined.
               </p>
-              <button
-                type="button"
-                onClick={onImportLegacyWatchlist}
-                className="min-h-10 rounded-lg border border-amber-400/40 px-3 py-2 text-xs font-bold text-amber-100 hover:bg-amber-500/10"
-              >
+              <button type="button" onClick={onImportLegacyWatchlist} className="btn btn-secondary">
                 Import older saved movies here
               </button>
             </div>
@@ -101,10 +96,15 @@ export function WatchlistModal({
             <p role="status" aria-live="polite" className="text-xs text-emerald-300">Shortlist copied to the clipboard.</p>
           )}
           {watchlist.length === 0 ? (
-            <div className="text-center py-12">
-              <Bookmark size={40} className="mx-auto mb-3 text-ink-3 opacity-60" aria-hidden="true" />
-              <p className="text-base font-semibold text-zinc-300">Your watchlist is empty</p>
-              <p className="text-xs text-ink-3 mt-1">Add movies while you browse and they will be here for movie night.</p>
+            <div className="py-10 text-center">
+              <Bookmark size={40} className="mx-auto mb-3 text-ink-3" aria-hidden="true" />
+              <p className="font-display text-lg font-bold text-white">Your watchlist is empty</p>
+              <p className="mt-1 text-sm text-ink-2">Add movies while you browse and they will be here for movie night.</p>
+              {onBrowse && (
+                <button type="button" onClick={onBrowse} className="btn btn-primary mt-5">
+                  Browse movies
+                </button>
+              )}
             </div>
           ) : (
             watchlist.map((movie) => (
@@ -134,7 +134,7 @@ export function WatchlistModal({
                       onClose();
                       onWatchTrailer(movie);
                     }}
-                    className="grid min-h-11 min-w-11 place-items-center rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md"
+                    className="btn btn-primary size-11 p-0"
                     title="Watch trailer"
                     aria-label={`Watch the trailer for ${movie.title}`}
                   >
@@ -143,7 +143,7 @@ export function WatchlistModal({
 
                   <button
                     onClick={() => onRemove(movie)}
-                    className="grid min-h-11 min-w-11 place-items-center rounded-xl bg-zinc-800 hover:bg-rose-950 hover:text-rose-400 text-zinc-400"
+                    className="btn btn-secondary size-11 p-0"
                     title="Remove from watchlist"
                     aria-label={`Remove from watchlist: ${movie.title}`}
                   >

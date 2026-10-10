@@ -47,20 +47,24 @@ export function MovieCard({ movie, onWatchTrailer, isBookmarked, onToggleBookmar
             </span>
           </div>
         )}
+        {/* A 44px target around a 36px disc, so the control covers less of the poster. */}
         <button
           type="button"
           onClick={() => onToggleBookmark(movie)}
           aria-label={isBookmarked ? `Remove from watchlist: ${movie.title}` : `Add to watchlist: ${movie.title}`}
-          className={`absolute right-2 top-2 z-10 grid size-11 place-items-center rounded-full text-white backdrop-blur-sm ${
-            isBookmarked ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-zinc-950/75 hover:bg-zinc-950'
-          }`}
+          className="group/save absolute right-1 top-1 z-10 grid size-11 place-items-center"
         >
-          {isBookmarked ? <Check size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+          <span className={`grid size-9 place-items-center rounded-full text-white ring-1 backdrop-blur-sm transition-colors ${
+            isBookmarked ? 'bg-emerald-700 ring-emerald-400/40 group-hover/save:bg-emerald-800' : 'bg-zinc-950/70 ring-white/15 group-hover/save:bg-zinc-950'
+          }`}
+          >
+            {isBookmarked ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
+          </span>
         </button>
       </div>
 
       <div className="flex flex-1 flex-col p-3">
-        <h3 className="line-clamp-2 font-display text-[15px] font-bold leading-5 text-zinc-50">
+        <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-zinc-50">
           {/* Stretched button: the whole card opens the trailer with one tab stop. */}
           <button
             type="button"
@@ -77,9 +81,9 @@ export function MovieCard({ movie, onWatchTrailer, isBookmarked, onToggleBookmar
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
-          className="relative z-10 mt-auto inline-flex min-h-11 items-center gap-1 pt-1 text-xs font-semibold text-rose-300 hover:text-rose-200"
+          className="relative z-10 mt-auto inline-flex min-h-11 w-fit items-center gap-1.5 pt-1 text-sm font-semibold text-rose-300 hover:text-rose-200"
         >
-          Where to watch <ExternalLink size={12} aria-hidden="true" />
+          Where to watch <ExternalLink size={14} aria-hidden="true" />
         </a>
       </div>
     </article>

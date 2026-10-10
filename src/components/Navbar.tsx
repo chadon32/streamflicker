@@ -189,7 +189,7 @@ export function Navbar({
                 aria-activedescendant={listOpen && activeSuggestionIndex >= 0 ? `movie-suggestion-${visibleSuggestions[activeSuggestionIndex]?.id}` : undefined}
                 maxLength={120}
                 autoComplete="off"
-                className="w-full min-h-11 bg-zinc-900/90 border border-zinc-800 focus:border-rose-500/80 rounded-full pl-11 pr-11 py-2.5 text-sm text-zinc-100 transition-colors"
+                className="w-full min-h-11 bg-zinc-900/90 border border-zinc-800 focus:border-rose-500/80 rounded-xl pl-11 pr-11 py-2.5 text-sm text-zinc-100 transition-colors"
               />
               {searchQuery && (
                 <button
@@ -258,22 +258,15 @@ export function Navbar({
 
           {/* Desktop actions (from lg: the bar fits, and Movie night stays one click away) */}
           <div className="hidden lg:flex items-center gap-3">
-            <button
-              onClick={onOpenMovieNight}
-              className="flex min-h-11 items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-sm font-bold text-amber-100 transition-all hover:border-amber-300/60 hover:bg-amber-500/20"
-            >
-              <Sparkles size={17} className="text-amber-300" aria-hidden="true" />
+            <button onClick={onOpenMovieNight} className="btn btn-secondary">
+              <Sparkles size={17} className="text-rose-400" aria-hidden="true" />
               <span>Movie night</span>
             </button>
-            <button
-              onClick={onOpenWatchlist}
-              aria-label={watchlistLabel}
-              className="relative flex min-h-11 items-center gap-2 bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 px-4 py-2.5 rounded-full text-sm font-medium transition-all shadow-sm group"
-            >
-              <Bookmark size={17} className="text-rose-400 group-hover:scale-110 transition-transform" aria-hidden="true" />
+            <button onClick={onOpenWatchlist} aria-label={watchlistLabel} className="btn btn-secondary">
+              <Bookmark size={17} className="text-rose-400" aria-hidden="true" />
               <span>Watchlist</span>
               {watchlistCount > 0 && (
-                <span className="bg-rose-700 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-md">
+                <span className="rounded-full bg-rose-700 px-2 py-0.5 text-xs font-bold text-white">
                   {watchlistCount}
                 </span>
               )}
@@ -350,9 +343,9 @@ export function Navbar({
               setMobileMenuOpen(false);
               onOpenMovieNight();
             }}
-            className="w-full min-h-12 flex items-center gap-2 p-3 rounded-xl border border-amber-400/30 bg-amber-500/10 text-amber-100 text-sm font-bold"
+            className="btn btn-secondary btn-lg w-full justify-start"
           >
-            <Sparkles size={18} className="text-amber-300" aria-hidden="true" />
+            <Sparkles size={18} className="text-rose-400" aria-hidden="true" />
             <span>Plan a movie night</span>
           </button>
 
@@ -362,7 +355,7 @@ export function Navbar({
               onOpenWatchlist();
             }}
             aria-label={watchlistLabel}
-            className="w-full min-h-12 flex items-center justify-between p-3 rounded-xl bg-zinc-900 text-zinc-200 text-sm font-medium"
+            className="btn btn-secondary btn-lg w-full justify-between"
           >
             <div className="flex items-center gap-2">
               <Bookmark size={18} className="text-rose-400" aria-hidden="true" />
@@ -382,9 +375,9 @@ export function Navbar({
                   setMobileMenuOpen(false);
                   onOpenAccountSettings();
                 }}
-                className="w-full min-h-12 flex items-center gap-2 p-3 rounded-xl bg-zinc-900 text-zinc-200 text-sm font-medium"
+                className="btn btn-secondary btn-lg w-full justify-start"
               >
-                <User size={18} className="text-emerald-400" aria-hidden="true" />
+                <User size={18} className="text-rose-400" aria-hidden="true" />
                 <span>Account settings</span>
               </button>
               <button
@@ -392,9 +385,9 @@ export function Navbar({
                   setMobileMenuOpen(false);
                   onSignOut();
                 }}
-                className="w-full min-h-12 flex items-center gap-2 p-3 rounded-xl bg-zinc-900 text-zinc-200 text-sm font-medium"
+                className="btn btn-secondary btn-lg w-full justify-start whitespace-normal text-left"
               >
-                <LogOut size={18} className="text-rose-400" aria-hidden="true" />
+                <LogOut size={18} className="shrink-0 text-rose-400" aria-hidden="true" />
                 <span>Sign out {user.email ? `(${user.email})` : ''}</span>
               </button>
             </>

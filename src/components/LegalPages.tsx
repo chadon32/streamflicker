@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { ArrowRight } from 'lucide-react';
 import { TMDB_NOTICE } from '../services/attribution';
+import { SiteFooter, SiteHeader } from './SiteChrome';
 import { getContactEmail } from '../services/contact';
 import { getMeasurementStatement } from '../services/privacyCopy';
 
@@ -21,27 +21,7 @@ function LegalPageShell({ heading, intro, children }: { heading: string; intro: 
       >
         Skip to content
       </a>
-      <header className="border-b border-white/[0.08] bg-[#070709]/90">
-        <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
-          <a href="/" className="flex min-w-0 items-center gap-3" aria-label="StreamFlicker home">
-            <img src="/streamflicker-logo.svg" alt="" aria-hidden="true" width={40} height={40} className="h-10 w-10 shrink-0 rounded-xl shadow-lg shadow-rose-600/25" />
-            <span className="whitespace-nowrap font-display text-lg font-extrabold tracking-tight text-white sm:text-2xl">
-              Stream<span className="text-rose-500">Flicker</span>
-            </span>
-          </a>
-          <nav className="flex shrink-0 items-center gap-3 text-sm font-semibold text-ink-2 sm:gap-6" aria-label="Site">
-            <a className="hidden transition-colors hover:text-white sm:inline" href="/about">About</a>
-            <a className="hidden transition-colors hover:text-white sm:inline" href="/movie-night">Movie night guide</a>
-            <a
-              href="/"
-              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-white transition-colors hover:bg-rose-700 active:scale-[0.98] sm:px-4"
-            >
-              Open the app
-              <ArrowRight size={16} aria-hidden="true" />
-            </a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main id="legal-content" className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-20">
         <h1 className="font-display text-4xl font-black leading-tight tracking-[-0.03em] text-white sm:text-5xl">{heading}</h1>
@@ -49,24 +29,7 @@ function LegalPageShell({ heading, intro, children }: { heading: string; intro: 
         <div className="mt-12 space-y-10">{children}</div>
       </main>
 
-      <footer className="border-t border-white/[0.08] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-xs text-ink-3 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-xl">
-            <p>© {new Date().getFullYear()} StreamFlicker. Movie discovery, not a streaming service.</p>
-            <p className="mt-2 flex items-start gap-2 leading-relaxed">
-              <img src="/tmdb-logo.svg" alt="TMDB" width="92" height="12" loading="lazy" decoding="async" className="mt-1 h-3 w-auto shrink-0" />
-              <span>{TMDB_NOTICE}</span>
-            </p>
-          </div>
-          <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-6 text-sm text-ink-2">
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/about">About</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/movie-night">Movie night guide</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/privacy">Privacy</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/terms">Terms</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/contact">Contact</a>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

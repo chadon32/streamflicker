@@ -94,28 +94,28 @@ export function MovieRow({
             {icon}
             {title}
           </h2>
-          {subtitle && <p className="text-xs text-ink-2 mt-0.5">{subtitle}</p>}
+          {subtitle && <p className="mt-1 text-sm text-ink-2">{subtitle}</p>}
         </div>
 
-        {/* Scroll Buttons */}
-        <div className="flex shrink-0 items-center gap-1.5">
+        {/* Scroll Buttons: a pointer convenience; on touch screens the row itself scrolls. */}
+        <div className="hidden shrink-0 items-center gap-1.5 sm:flex">
           <button
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+            className="icon-btn"
             title="Scroll left"
             aria-label={`Scroll ${title} left`}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={18} aria-hidden="true" />
           </button>
           <button
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-800 bg-zinc-900/80 text-white shadow-md backdrop-blur-md transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+            className="icon-btn"
             title="Scroll right"
             aria-label={`Scroll ${title} right`}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={18} aria-hidden="true" />
           </button>
         </div>
       </div>

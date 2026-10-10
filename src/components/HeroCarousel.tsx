@@ -74,7 +74,7 @@ export function HeroCarousel({
           </span>
           <button
             onClick={() => setCurrentIndex((prev) => (prev - 1 + movieCount) % movieCount)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950/75 text-white backdrop-blur-md transition-colors hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+            className="icon-btn backdrop-blur-md"
             title="Previous featured movie"
             aria-label="Previous featured movie"
           >
@@ -82,7 +82,7 @@ export function HeroCarousel({
           </button>
           <button
             onClick={() => setCurrentIndex((prev) => (prev + 1) % movieCount)}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950/75 text-white backdrop-blur-md transition-colors hover:bg-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-300"
+            className="icon-btn backdrop-blur-md"
             title="Next featured movie"
             aria-label="Next featured movie"
           >
@@ -126,7 +126,7 @@ export function HeroCarousel({
           )}
         </div>
 
-        <p className="mb-4 text-xs font-medium text-zinc-300 sm:hidden">
+        <p className="mb-4 text-sm font-medium text-zinc-300 sm:hidden">
           {mobileContext}
         </p>
 
@@ -138,21 +138,15 @@ export function HeroCarousel({
         {/* Tags */}
         <div className="mb-6 hidden flex-wrap gap-2 sm:flex">
           {movie.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-zinc-800 bg-zinc-900/90 px-3 py-1 text-xs font-medium text-zinc-300"
-            >
+            <span key={tag} className="tag">
               {getMicroTagLabel(tag)}
             </span>
           ))}
         </div>
 
-        {/* Actions & where to watch */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-          <button
-            onClick={() => onWatchTrailer(movie)}
-            className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-rose-600 px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-rose-950/40 transition-colors duration-200 hover:bg-rose-700 motion-reduce:transition-none sm:w-auto"
-          >
+        {/* Actions: one primary, two matching secondaries; full width and stacked on phones. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <button onClick={() => onWatchTrailer(movie)} className="btn btn-primary btn-lg w-full px-7 sm:w-auto">
             <Play size={20} className="fill-white" aria-hidden="true" />
             Watch trailer
           </button>
@@ -160,11 +154,7 @@ export function HeroCarousel({
           <button
             onClick={() => onToggleBookmark(movie)}
             aria-label={saved ? `Remove from watchlist: ${movie.title}` : `Add to watchlist: ${movie.title}`}
-            className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border px-5 py-3.5 text-sm font-semibold backdrop-blur-md transition-all sm:w-auto ${
-              saved
-                ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
-                : 'border-zinc-800 bg-zinc-900/80 text-zinc-200 hover:bg-zinc-800'
-            }`}
+            className={`btn btn-secondary btn-lg w-full sm:w-auto ${saved ? 'btn-saved' : ''}`}
           >
             {saved ? <Check size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
             {saved ? 'Remove from watchlist' : 'Add to watchlist'}

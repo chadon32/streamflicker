@@ -43,12 +43,12 @@ import { CATALOG_CHECKED_AT, getValidatedCatalog, getValidatedCatalogMetadata } 
 import { SORT_OPTIONS, countBrowsable, isKnownUnreleased, sortMovies, type SortMode } from './services/browseOrder';
 import { getSpotlightMovies } from './services/spotlight';
 import { formatCheckedDate } from './services/shareText';
-import { TMDB_NOTICE } from './services/attribution';
 import { useAuthSession } from './hooks/useAuthSession';
 import { useBrowserCatalog } from './hooks/useBrowserCatalog';
 import { PageSeo } from './seo/PageSeo';
 import { hasPrivateQuery, SEO_PAGES } from './seo/pages';
 import { DiscoveryExplainer } from './components/DiscoveryExplainer';
+import { SiteFooter } from './components/SiteChrome';
 import {
   getLegacyWatchlist,
   getWatchlistStorageKey,
@@ -729,19 +729,19 @@ export function AppContent() {
       {/* Main Page Container */}
       <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-16 flex-1 w-full">
         {catalogUsingFallback && (
-          <div role="status" className="mb-4 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-100/90">
+          <div role="status" className="notice notice-warn mb-4">
             The catalog could not be refreshed, so your saved watchlist is shown as a local fallback. <button className="min-h-11 font-bold text-amber-300 underline" onClick={retryCatalog}>Retry catalog</button>
           </div>
         )}
 
-        <section aria-label="Quick discovery" className="mb-5">
+        <section aria-label="Quick discovery" className="mb-6">
           {isHomeView && (
             <div className="flex flex-col gap-4 py-2 sm:py-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">What are we watching tonight?</h1>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-ink-2">Answer three questions, get three picks, watch the trailer, then see where to stream.</p>
+                <h1 className="font-display text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">What are we watching tonight?</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-2 sm:text-base">Answer three questions, get three picks, watch the trailer, then see where to stream.</p>
               </div>
-              <button type="button" onClick={handleOpenMovieNight} className="inline-flex min-h-12 w-fit shrink-0 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-700">
+              <button type="button" onClick={handleOpenMovieNight} className="btn btn-primary btn-lg w-fit shrink-0">
                 <Sparkles size={18} aria-hidden="true" /> Plan a movie night <ArrowRight size={16} aria-hidden="true" />
               </button>
             </div>
@@ -757,33 +757,50 @@ export function AppContent() {
               </p>
             </details>
           )}
-          <div
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 pt-2 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-            role="group"
-            aria-label="Ways to discover movies"
-          >
-            <button type="button" onClick={() => startDiscovery('all')} className="discovery-shortcut shrink-0">
-              <LayoutGrid size={15} aria-hidden="true" /> Browse all <span className="text-ink-2">{browsableCount.toLocaleString()}</span>
-            </button>
-            {shortcutVisible(SHORTCUT_COUNTS.family) && (
-              <button type="button" onClick={() => startDiscovery('family')} aria-pressed={discoveryMode === 'family'} className="discovery-shortcut shrink-0">
-                <UsersRound size={15} aria-hidden="true" /> Family night
-              </button>
+
+          <FilterBar
+            selectedGenre={selectedGenre}
+            setSelectedGenre={setSelectedGenre}
+            selectedEra={selectedEra}
+            setSelectedEra={setSelectedEra}
+            selectedTag={selectedTag}
+            setSelectedTag={setSelectedTag}
+            selectedProviders={selectedProviders}
+            setSelectedProviders={setSelectedProviders}
+            counts={filterCounts}
+            resultCount={filteredMovies.length}
+            discoveryMode={discoveryMode}
+            setDiscoveryMode={setDiscoveryMode}
+            occasion={occasion}
+            setOccasion={setOccasion}
+            catalogReady={catalogComplete}
+            onOpen={() => setFiltersOpened(true)}
+            shortcuts={(
+              <>
+                <button type="button" onClick={() => startDiscovery('all')} className="chip">
+                  <LayoutGrid size={15} aria-hidden="true" /> Browse all <span className="chip-count">{browsableCount.toLocaleString()}</span>
+                </button>
+                {shortcutVisible(SHORTCUT_COUNTS.family) && (
+                  <button type="button" onClick={() => startDiscovery('family')} aria-pressed={discoveryMode === 'family'} className="chip">
+                    <UsersRound size={15} aria-hidden="true" /> Family night
+                  </button>
+                )}
+                {shortcutVisible(SHORTCUT_COUNTS.dateNight) && (
+                  <button type="button" onClick={() => startDiscovery('date-night')} aria-pressed={occasion === 'date-night'} className="chip">
+                    <Heart size={15} aria-hidden="true" /> Date night
+                  </button>
+                )}
+                {shortcutVisible(SHORTCUT_COUNTS.quickWatch) && (
+                  <button type="button" onClick={() => startDiscovery('quick-watch')} aria-pressed={occasion === 'quick-watch'} className="chip">
+                    <Clock3 size={15} aria-hidden="true" /> Quick watch
+                  </button>
+                )}
+                {shortcutVisible(SHORTCUT_COUNTS.zombies) && (
+                  <button type="button" onClick={() => startDiscovery('zombies')} aria-pressed={selectedTag === '#ZombieOutbreak'} className="chip">Zombie movies</button>
+                )}
+              </>
             )}
-            {shortcutVisible(SHORTCUT_COUNTS.dateNight) && (
-              <button type="button" onClick={() => startDiscovery('date-night')} aria-pressed={occasion === 'date-night'} className="discovery-shortcut shrink-0">
-                <Heart size={15} aria-hidden="true" /> Date night
-              </button>
-            )}
-            {shortcutVisible(SHORTCUT_COUNTS.quickWatch) && (
-              <button type="button" onClick={() => startDiscovery('quick-watch')} aria-pressed={occasion === 'quick-watch'} className="discovery-shortcut shrink-0">
-                <Clock3 size={15} aria-hidden="true" /> Quick watch
-              </button>
-            )}
-            {shortcutVisible(SHORTCUT_COUNTS.zombies) && (
-              <button type="button" onClick={() => startDiscovery('zombies')} aria-pressed={selectedTag === '#ZombieOutbreak'} className="discovery-shortcut shrink-0">Zombie movies</button>
-            )}
-          </div>
+          />
         </section>
 
         {/* Spotlight Hero Carousel */}
@@ -795,26 +812,6 @@ export function AppContent() {
             onToggleBookmark={toggleBookmark}
           />
         )}
-
-        {/* Filter Bar */}
-        <FilterBar
-          selectedGenre={selectedGenre}
-          setSelectedGenre={setSelectedGenre}
-          selectedEra={selectedEra}
-          setSelectedEra={setSelectedEra}
-          selectedTag={selectedTag}
-          setSelectedTag={setSelectedTag}
-          selectedProviders={selectedProviders}
-          setSelectedProviders={setSelectedProviders}
-          counts={filterCounts}
-          resultCount={filteredMovies.length}
-          discoveryMode={discoveryMode}
-          setDiscoveryMode={setDiscoveryMode}
-          occasion={occasion}
-          setOccasion={setOccasion}
-          catalogReady={catalogComplete}
-          onOpen={() => setFiltersOpened(true)}
-        />
 
         {isHomeView
           && showWebMonetizationLinks
@@ -838,7 +835,7 @@ export function AppContent() {
             <MovieRow
               title="Family movie night"
               subtitle="PG-13 and under, with higher-risk themes filtered out"
-              icon={<UsersRound className="text-emerald-400" size={24} aria-hidden="true" />}
+              icon={<UsersRound className="text-rose-400" size={24} aria-hidden="true" />}
               movies={familyMovieNight}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
@@ -858,7 +855,7 @@ export function AppContent() {
             <MovieRow
               title="Quick watches"
               subtitle="Under 110 minutes, for when time is short"
-              icon={<Clock3 className="text-amber-400" size={24} aria-hidden="true" />}
+              icon={<Clock3 className="text-rose-400" size={24} aria-hidden="true" />}
               movies={quickWatchPicks}
               onWatchTrailer={openTrailer}
               isBookmarked={isBookmarked}
@@ -899,10 +896,10 @@ export function AppContent() {
                     : selectedEra !== 'All'
                     ? `${ERA_FILTERS.find(({ id }) => id === selectedEra)?.label ?? selectedEra} movies`
                     : searchQuery
-                    ? `Results for "${searchQuery.length > 80 ? `${searchQuery.slice(0, 77)}...` : searchQuery}"`
+                    ? `Results for “${searchQuery.length > 80 ? `${searchQuery.slice(0, 77)}…` : searchQuery}”`
                     : 'Browse all movies'}
                 </h1>
-                <p className="text-xs sm:text-sm text-ink-2 mt-0.5" aria-live="polite">
+                <p className="mt-1 text-sm text-ink-2" aria-live="polite">
                   {resultsLoading
                     ? 'Loading the full catalog…'
                     : isSearchingTMDB
@@ -916,23 +913,23 @@ export function AppContent() {
                     : ''}
                 </p>
                 {searchQuery && tmdbExpandedCollections.length > 0 && (
-                  <p role="status" className="mt-2 max-w-xl text-xs leading-relaxed text-sky-200/90">
+                  <p role="status" className="mt-2 max-w-xl text-xs leading-relaxed text-ink-2">
                     Including franchise titles from {tmdbExpandedCollections.map(({ name }) => name).join(', ')}. TMDB lists {tmdbExpandedCollections.reduce((total, collection) => total + (collection.partCount ?? 0), 0)} parts across these collections; direct search remains paginated.
                   </p>
                 )}
                 {searchQuery && tmdbWarnings.length > 0 && (
-                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
+                  <p role="status" className="notice notice-warn mt-2 max-w-xl">
                     Live catalog note: {tmdbWarnings[0]}
                     {tmdbWarnings.length > 1 ? ` (${tmdbWarnings.length - 1} more verification note${tmdbWarnings.length === 2 ? '' : 's'}.)` : ''}
                   </p>
                 )}
                 {searchQuery && liveSearchStatus === 'unavailable' && (
-                  <p role="status" className="mt-2 max-w-xl rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs leading-relaxed text-amber-100/90">
+                  <p role="status" className="notice notice-warn mt-2 max-w-xl">
                     Expanded live catalog search is unavailable right now, so these results come from StreamFlicker&apos;s built-in catalog. &ldquo;Where to watch&rdquo; opens a separate availability search.
                   </p>
                 )}
                 {(getSearchReason(filteredMovies[0], searchQuery) || discoveryMode === 'family' || occasion !== 'all') && (
-                  <p className="text-xs text-emerald-200/90 mt-2 max-w-xl">
+                  <p className="mt-2 max-w-xl text-xs leading-relaxed text-ink-2">
                     {getSearchReason(filteredMovies[0], searchQuery)
                       ?? (discoveryMode === 'family'
                         ? 'This filter keeps titles with a confirmed PG-13 or lower rating and drops high-risk horror and thriller themes.'
@@ -946,7 +943,7 @@ export function AppContent() {
                     type="button"
                     onClick={loadMoreLiveResults}
                     disabled={isLoadingMoreLive}
-                    className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-sky-400/30 bg-sky-500/10 px-4 py-2.5 text-xs font-bold text-sky-100 transition hover:bg-sky-500/20 disabled:cursor-wait disabled:opacity-60"
+                    className="btn btn-secondary mt-4 disabled:cursor-wait"
                   >
                     {isLoadingMoreLive
                       ? 'Loading more live results…'
@@ -957,12 +954,12 @@ export function AppContent() {
 
               {!searchQuery.trim() && !resultsLoading && (
                 <div className="flex items-center gap-2">
-                  <label htmlFor="sort-movies" className="text-xs font-semibold text-ink-2">Sort by</label>
+                  <label htmlFor="sort-movies" className="text-sm font-semibold text-ink-2">Sort by</label>
                   <select
                     id="sort-movies"
                     value={sortMode}
                     onChange={(event) => setSortMode(event.target.value as SortMode)}
-                    className="min-h-11 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-xs font-semibold text-zinc-200"
+                    className="min-h-11 rounded-xl border border-zinc-700 bg-zinc-900 px-3 text-sm font-semibold text-zinc-200"
                   >
                     {SORT_OPTIONS.map(({ id, label }) => <option key={id} value={id}>{label}</option>)}
                   </select>
@@ -975,10 +972,7 @@ export function AppContent() {
                 <Film size={36} className="mx-auto mb-3 text-rose-400" aria-hidden="true" />
                 <h2 className="font-display text-2xl font-bold text-white">The catalog could not be loaded</h2>
                 <p className="mt-2 text-sm text-ink-2">Check your connection and retry. Your watchlist stays in this browser.</p>
-                <button
-                  onClick={retryCatalog}
-                  className="mt-5 min-h-11 rounded-xl bg-rose-600 px-5 py-3 text-sm font-bold text-white hover:bg-rose-700 active:scale-[0.98]"
-                >
+                <button onClick={retryCatalog} className="btn btn-primary mt-5">
                   Retry catalog
                 </button>
               </section>
@@ -991,6 +985,8 @@ export function AppContent() {
               </div>
             ) : filteredMovies.length > 0 ? (
               <>
+                {/* Card titles are h3s; this keeps the outline h1 → h2 → h3 for screen-reader navigation. */}
+                <h2 className="sr-only">Matching movies</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                   {displayedMovies.map((movie) => (
                     <MovieCard
@@ -1016,10 +1012,7 @@ export function AppContent() {
                 {/* Show more */}
                 {displayLimit < filteredMovies.length && (
                   <div className="flex justify-center mt-12 mb-6">
-                    <button
-                      onClick={() => setDisplayLimit((prev) => prev + 30)}
-                      className="min-h-12 bg-zinc-900 hover:bg-zinc-800 text-white font-bold px-8 py-3.5 rounded-2xl border border-zinc-700 hover:border-zinc-500 shadow-xl transition-all flex items-center gap-2 text-sm"
-                    >
+                    <button onClick={() => setDisplayLimit((prev) => prev + 30)} className="btn btn-secondary btn-lg px-8">
                       <span>Show {Math.min(30, filteredMovies.length - displayLimit)} more <span className="font-medium text-ink-2">({(filteredMovies.length - displayLimit).toLocaleString()} left)</span></span>
                     </button>
                   </div>
@@ -1028,7 +1021,11 @@ export function AppContent() {
             ) : (
               <div className="glass-panel rounded-3xl px-5 py-10 sm:p-12 text-center my-8 max-w-xl mx-auto border border-zinc-800">
                 <Film size={40} className="mx-auto mb-4 text-ink-3" aria-hidden="true" />
-                <h2 className="font-display font-bold text-xl text-white mb-2">No movies match your filters</h2>
+                <h2 className="font-display font-bold text-xl text-white mb-2 break-words">
+                  {searchQuery.trim()
+                    ? `No movies match “${searchQuery.length > 60 ? `${searchQuery.slice(0, 57)}…` : searchQuery}”`
+                    : 'No movies match these filters'}
+                </h2>
                 <p className="text-sm text-ink-2 mb-6">
                   {searchQuery
                     ? 'Try a shorter title or remove one of the active filters above. You can also clear everything and browse the catalog.'
@@ -1040,10 +1037,7 @@ export function AppContent() {
                     ? 'Try Everything if you can spend a little longer with your movie.'
                     : 'Try resetting a filter to discover more titles.'}
                 </p>
-                <button
-                  onClick={() => startDiscovery('all')}
-                  className="min-h-11 bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
-                >
+                <button onClick={() => startDiscovery('all')} className="btn btn-primary">
                   Clear filters and browse all
                 </button>
               </div>
@@ -1060,46 +1054,26 @@ export function AppContent() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-900 bg-[#070709] py-10 mt-auto safe-area-bottom">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center md:items-start justify-between gap-6 text-center md:text-left text-xs text-ink-3">
-          <div className="max-w-xl">
-            <span className="font-display font-bold text-zinc-300 text-sm block mb-1">
-              StreamFlicker
-            </span>
-            <p>© {new Date().getFullYear()} StreamFlicker. Movie discovery, not a streaming service.</p>
-            <p className="mt-2 flex items-start gap-2 leading-relaxed">
-              <img src="/tmdb-logo.svg" alt="TMDB" width="92" height="12" loading="lazy" decoding="async" className="mt-1 h-3 w-auto shrink-0" />
-              <span>{TMDB_NOTICE}</span>
-            </p>
-            {affiliateConfig.amazonTag && (
-              <p className="mt-2 leading-relaxed">
-                As an Amazon Associate, StreamFlicker earns from qualifying purchases.
-              </p>
-            )}
-          </div>
-          <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-ink-2 font-medium">
-            <a href="/movie-night" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Movie night guide</a>
-            <a href="/about" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">About</a>
-            <a href="/privacy" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Privacy</a>
-            <a href="/terms" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Terms</a>
-            <a href="/contact" className="min-h-11 inline-flex items-center hover:text-white focus-visible:text-white transition-colors">Contact</a>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
-            >
-              My streaming services
-            </button>
-            {authEnabled && !user && (
-              <button
-                onClick={handleOpenAuth}
-                className="min-h-11 hover:text-white focus-visible:text-white transition-colors"
-              >
-                Sign in
-              </button>
-            )}
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter
+        disclosure={affiliateConfig.amazonTag && (
+          <p>As an Amazon Associate, StreamFlicker earns from qualifying purchases.</p>
+        )}
+      >
+        <button
+          onClick={() => setShowSettings(true)}
+          className="min-h-11 transition-colors hover:text-white"
+        >
+          My streaming services
+        </button>
+        {authEnabled && !user && (
+          <button
+            onClick={handleOpenAuth}
+            className="min-h-11 transition-colors hover:text-white"
+          >
+            Sign in
+          </button>
+        )}
+      </SiteFooter>
 
       <Suspense fallback={null}>
         {/* Trailer Video Player Modal */}
@@ -1123,6 +1097,10 @@ export function AppContent() {
             onClose={() => setShowWatchlist(false)}
             onWatchTrailer={openTrailer}
             onRemove={toggleBookmark}
+            onBrowse={() => {
+              setShowWatchlist(false);
+              startDiscovery('all');
+            }}
           />
         )}
 

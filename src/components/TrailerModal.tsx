@@ -50,8 +50,9 @@ export function TrailerModal({
   const embedUrl = `https://www.youtube-nocookie.com/embed/${trailerId}?autoplay=1&playsinline=1&rel=0&modestbranding=1`;
   const hasDirector = movie.director.trim().length > 0 && !/director|studio release/i.test(movie.director);
   const visibleCast = movie.cast.filter((name) => name.trim().length > 0 && !/cast/i.test(name));
-  const contentWarnings = getContentWarnings(movie);
   const showFacts = hasVerifiedRatingAndRuntime(movie);
+  // The rating badge in the facts row already says "R"; the notes carry only what it doesn't.
+  const contentWarnings = getContentWarnings(movie).filter((warning) => !(showFacts && warning.startsWith('Rated ')));
   const canShare = Boolean(onShare) && getShareEligibility(movie).shareable;
 
   const handleOpenTrailer = (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -115,16 +116,16 @@ export function TrailerModal({
               target="_blank"
               rel="noopener noreferrer"
               onClick={handleOpenTrailer}
-              className="hidden min-h-11 items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition-all hover:bg-zinc-800 sm:flex"
+              className="btn btn-secondary hidden sm:inline-flex"
             >
               <span>{hasTrailer ? 'Watch on YouTube' : 'Find trailer on YouTube'}</span>
-              <ExternalLink size={13} aria-hidden="true" />
+              <ExternalLink size={14} aria-hidden="true" />
             </a>
 
-            {/* Play Next Trailer Button */}
+            {/* Next trailer: a secondary action, so the trailer itself stays the one primary on screen. */}
             <button
               onClick={onNextTrailer}
-              className="hidden min-h-11 items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/30 transition-all hover:bg-rose-700 min-[430px]:flex"
+              className="btn btn-secondary hidden min-[430px]:inline-flex"
               title="Skip to the next movie trailer"
             >
               <span>Next trailer</span>
@@ -161,7 +162,7 @@ export function TrailerModal({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleOpenTrailer}
-                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-700"
+                  className="btn btn-primary btn-lg shadow-xl"
                 >
                   <Search size={18} aria-hidden="true" /> Find the official trailer
                   <ExternalLink size={14} aria-hidden="true" />
@@ -180,7 +181,7 @@ export function TrailerModal({
               <div className="absolute inset-0 bg-zinc-950/45" />
               <button
                 onClick={() => setTrailerRequested(true)}
-                className="relative z-10 flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-700 active:scale-[0.98]"
+                className="btn btn-primary btn-lg relative z-10 shadow-xl"
               >
                 <Play size={19} className="fill-current" aria-hidden="true" />
                 Load trailer from YouTube
@@ -228,7 +229,7 @@ export function TrailerModal({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleOpenTrailer}
-                  className="inline-flex min-h-12 items-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 font-bold text-white shadow-xl hover:bg-rose-700"
+                  className="btn btn-primary btn-lg shadow-xl"
                 >
                   <ExternalLink size={17} aria-hidden="true" /> Watch on YouTube
                 </a>
@@ -285,10 +286,7 @@ export function TrailerModal({
 
             <div className="flex flex-wrap items-center gap-2">
               {canShare && onShare && (
-                <button
-                  onClick={() => onShare(movie)}
-                  className="flex min-h-11 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-bold text-zinc-300 transition-all hover:bg-zinc-800"
-                >
+                <button onClick={() => onShare(movie)} className="btn btn-secondary">
                   <Share2 size={16} aria-hidden="true" />
                   Share
                 </button>
@@ -296,11 +294,7 @@ export function TrailerModal({
               <button
                 onClick={() => onToggleBookmark(movie)}
                 aria-label={isBookmarked ? `Remove from watchlist: ${movie.title}` : `Add to watchlist: ${movie.title}`}
-                className={`flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2 text-xs font-bold transition-all ${
-                  isBookmarked
-                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                    : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800'
-                }`}
+                className={`btn btn-secondary ${isBookmarked ? 'btn-saved' : ''}`}
               >
                 {isBookmarked ? <Check size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}
                 {isBookmarked ? 'Remove from watchlist' : 'Add to watchlist'}
@@ -320,7 +314,7 @@ export function TrailerModal({
 
           {/* Description */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-ink-3 mb-2">Overview</h3>
+            <h3 className="eyebrow mb-2">Overview</h3>
             <p id="trailer-overview" className="text-zinc-200 text-sm sm:text-base leading-relaxed">
               {movie.description}
             </p>
@@ -343,10 +337,7 @@ export function TrailerModal({
           {/* Micro-Tags */}
           <div className="flex flex-wrap gap-2">
             {movie.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs font-medium text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full"
-              >
+              <span key={tag} className="tag">
                 {getMicroTagLabel(tag)}
               </span>
             ))}

@@ -76,8 +76,8 @@ export function AccountSettingsModal({
         <>
             <section className="space-y-3" aria-labelledby="account-identity-heading">
               <div className="flex items-center gap-2">
-                <Shield className="text-emerald-400" size={17} />
-                <h3 id="account-identity-heading" className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                <Shield className="text-rose-400" size={17} aria-hidden="true" />
+                <h3 id="account-identity-heading" className="eyebrow">
                   Signed-in account
                 </h3>
               </div>
@@ -88,14 +88,14 @@ export function AccountSettingsModal({
                 Your watchlist is stored in a separate device namespace for this account. Signing out clears it from the current view.
               </p>
               {legacyWatchlistCount > 0 && (
-                <div className="space-y-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-                  <p className="text-xs leading-relaxed text-amber-100">
+                <div className="notice notice-warn space-y-2">
+                  <p>
                     An older watchlist with {legacyWatchlistCount} saved movie{legacyWatchlistCount === 1 ? '' : 's'} was found on this device. Its original owner cannot be determined; importing it merges those movies into this account.
                   </p>
                   <button
                     type="button"
                     onClick={onImportLegacyWatchlist}
-                    className="min-h-10 rounded-lg border border-amber-400/40 px-3 py-2 text-xs font-bold text-amber-100 hover:bg-amber-500/10"
+                    className="btn btn-secondary"
                   >
                     Import saved movies to this account
                   </button>
@@ -152,7 +152,7 @@ export function AccountSettingsModal({
                         <button
                           type="submit"
                           disabled={!canDelete || isDeleting}
-                          className="min-h-11 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="btn btn-primary"
                         >
                           {isDeleting ? 'Deleting…' : 'Permanently delete'}
                         </button>

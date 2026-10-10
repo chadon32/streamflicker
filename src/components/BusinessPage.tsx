@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import type { Movie } from '../data/catalog';
 import { getTMDBImageSrcSet, getTMDBImageUrl } from '../services/images';
-import { TMDB_NOTICE } from '../services/attribution';
+import { SiteFooter, SiteHeader } from './SiteChrome';
 
 interface BusinessPageProps {
   movies: Movie[];
@@ -27,44 +27,12 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
     <div className="min-h-[100dvh] overflow-x-hidden bg-[#070709] text-zinc-100 selection:bg-rose-600 selection:text-white">
       <a href="#about-content" className="sr-only focus:not-sr-only focus:block focus:p-4 focus:text-rose-300">Skip to About StreamFlicker</a>
 
-      <header className="border-b border-white/[0.08] bg-[#070709]/90 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
-          <a href="/" className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="StreamFlicker home">
-            <img
-              src="/streamflicker-logo.svg"
-              width="40"
-              height="40"
-              alt=""
-              aria-hidden="true"
-              className="h-9 w-9 rounded-xl shadow-lg shadow-rose-600/25 sm:h-10 sm:w-10"
-            />
-            <span className="font-display text-base font-extrabold tracking-tight text-white sm:text-2xl">
-              Stream<span className="text-rose-500">Flicker</span>
-            </span>
-          </a>
-
-          <nav className="flex items-center gap-3 text-sm font-semibold text-zinc-400 sm:gap-6">
-            <a className="hidden transition-colors hover:text-white sm:inline" href="#why">
-              Why it exists
-            </a>
-            <a className="hidden transition-colors hover:text-white sm:inline" href="#how">
-              How it works
-            </a>
-            <a
-              href="/"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-xs text-white transition-colors hover:bg-rose-700 active:scale-[0.98] sm:px-4 sm:text-sm"
-            >
-              Open the app
-              <ArrowRight size={16} aria-hidden="true" />
-            </a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader current="about" />
 
       <main id="about-content">
         <section className="mx-auto grid min-h-[calc(100dvh-5rem)] max-w-7xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20 lg:px-8 lg:py-16">
           <div className="max-w-xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">
+            <p className="eyebrow eyebrow-brand mb-5">
               A better way to choose tonight&apos;s movie
             </p>
             <h1 className="font-display text-5xl font-black leading-[0.98] tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
@@ -76,14 +44,14 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
                 href="/"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-950/40 transition-all hover:bg-rose-700 active:scale-[0.98]"
+                className="btn btn-primary btn-lg"
               >
                 Start exploring
                 <ArrowRight size={17} aria-hidden="true" />
               </a>
               <a
                 href="#how"
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900/70 px-6 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white"
+                className="btn btn-secondary btn-lg"
               >
                 See how it works
               </a>
@@ -230,15 +198,15 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
             </div>
             <ul className="space-y-4 text-sm text-zinc-300">
               <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
-                <Check className="mt-0.5 shrink-0 text-emerald-400" size={18} aria-hidden="true" />
+                <Check className="mt-0.5 shrink-0 text-rose-400" size={18} aria-hidden="true" />
                 Browse without an account.
               </li>
               <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
-                <Check className="mt-0.5 shrink-0 text-emerald-400" size={18} aria-hidden="true" />
+                <Check className="mt-0.5 shrink-0 text-rose-400" size={18} aria-hidden="true" />
                 Save a local watchlist and share a title link.
               </li>
               <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
-                <ShieldCheck className="mt-0.5 shrink-0 text-emerald-400" size={18} aria-hidden="true" />
+                <ShieldCheck className="mt-0.5 shrink-0 text-rose-400" size={18} aria-hidden="true" />
                 Provider links and sponsorships stay clearly labeled.
               </li>
             </ul>
@@ -249,7 +217,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
           <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
             <div className="flex flex-col justify-between gap-8 rounded-[2rem] border border-rose-500/25 bg-rose-950/20 p-7 sm:p-10 lg:flex-row lg:items-end">
               <div className="max-w-2xl">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-rose-300">For partners</p>
+                <p className="eyebrow eyebrow-brand">For partners</p>
                 <h2 className="mt-4 font-display text-3xl font-black tracking-[-0.03em] text-white sm:text-4xl">
                   Reach people planning their next movie night.
                 </h2>
@@ -261,7 +229,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
                 href={sponsorInquiryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
+                className="btn btn-primary btn-lg shrink-0"
               >
                 Start a partner conversation
                 <ArrowRight size={17} aria-hidden="true" />
@@ -271,26 +239,7 @@ export function BusinessPage({ movies, sponsorInquiryUrl }: BusinessPageProps) {
         )}
       </main>
 
-      <footer className="border-t border-white/[0.08] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-ink-3 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-xl">
-            <p>© {new Date().getFullYear()} StreamFlicker.</p>
-            <p className="mt-2 text-xs leading-relaxed">{TMDB_NOTICE}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-5 text-ink-2">
-            <a className="inline-flex min-h-11 items-center hover:text-white" href="/movie-night">Movie night guide</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/privacy">Privacy</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/terms">Terms</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/contact">Contact</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="#why">Why it exists</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="#how">How it works</a>
-            <a className="inline-flex items-center gap-2 font-semibold text-zinc-300 transition-colors hover:text-white" href="/">
-              Open movie discovery
-              <ArrowRight size={15} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -46,7 +46,7 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
             href={availabilityUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-950 transition-colors hover:bg-white"
+            className="btn btn-secondary"
             aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
           >
             Where to watch <ExternalLink size={14} aria-hidden="true" />
@@ -82,21 +82,21 @@ export function AvailabilityLinks({ movie, variant = 'card' }: AvailabilityLinks
   if (variant === 'hero') {
     return (
       <div className="flex max-w-full flex-wrap items-center gap-2">
-        {providers.slice(0, 3).map((provider) => (
-          <span key={`${provider.id}-${provider.type}`} className="hidden rounded-lg bg-zinc-800 px-2.5 py-1.5 text-xs font-bold text-zinc-200 lg:inline-flex">
-            {provider.name}
-          </span>
-        ))}
         <a
           href={availabilityUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-950 hover:bg-white"
+          className="btn btn-secondary btn-lg w-full sm:w-auto"
           aria-label={`Where to watch ${movie.title} (opens in a new tab)`}
         >
           Where to watch
-          <ExternalLink size={14} aria-hidden="true" />
+          <ExternalLink size={16} aria-hidden="true" />
         </a>
+        {providers.slice(0, 3).map((provider) => (
+          <span key={`${provider.id}-${provider.type}`} className="tag hidden lg:inline-flex">
+            {provider.name}
+          </span>
+        ))}
       </div>
     );
   }

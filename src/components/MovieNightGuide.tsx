@@ -7,7 +7,7 @@ import {
   ShieldCheck,
   UsersRound,
 } from 'lucide-react';
-import { TMDB_NOTICE } from '../services/attribution';
+import { SiteFooter, SiteHeader } from './SiteChrome';
 
 /**
  * A static, route-friendly guide for the practical question behind Movie Night.
@@ -19,40 +19,11 @@ export function MovieNightGuide() {
     <div className="min-h-[100dvh] overflow-x-hidden bg-[#070709] text-zinc-100 selection:bg-rose-600 selection:text-white">
       <a
         href="#guide-content"
-        className="fixed left-4 top-3 z-[110] -translate-y-20 rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white transition-transform focus:translate-y-0"
+        className="fixed left-4 top-3 z-[110] -translate-y-20 rounded-lg bg-rose-700 px-4 py-2 text-sm font-bold text-white transition-transform focus:translate-y-0"
       >
         Skip to movie-night guide
       </a>
-      <header className="border-b border-white/[0.08] bg-[#070709]/90 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
-          <a href="/" className="flex min-w-0 items-center gap-3" aria-label="StreamFlicker home">
-            <img
-              src="/streamflicker-logo.svg"
-              alt=""
-              aria-hidden="true"
-              width={40}
-              height={40}
-              className="h-10 w-10 shrink-0 rounded-xl shadow-lg shadow-rose-600/25"
-            />
-            <span className="whitespace-nowrap font-display text-lg font-extrabold tracking-tight text-white sm:text-2xl">
-              Stream<span className="text-rose-500">Flicker</span>
-            </span>
-          </a>
-
-          <nav className="flex shrink-0 items-center gap-3 text-sm font-semibold text-zinc-400 sm:gap-6" aria-label="Guide navigation">
-            <a className="hidden transition-colors hover:text-white sm:inline" href="/about">
-              About
-            </a>
-            <a
-              href="/"
-              className="inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-xl bg-rose-600 px-3 py-2.5 text-white transition-colors hover:bg-rose-700 active:scale-[0.98] sm:px-4"
-            >
-              Open the app
-              <ArrowRight size={16} aria-hidden="true" />
-            </a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader current="guide" />
 
       <main id="guide-content" aria-labelledby="movie-night-guide-heading">
         <section className="mx-auto max-w-7xl px-4 pb-16 pt-14 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8 lg:pb-24 lg:pt-24">
@@ -66,7 +37,7 @@ export function MovieNightGuide() {
             </ol>
           </nav>
           <div className="max-w-3xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">
+            <p className="eyebrow eyebrow-brand mb-5">
               Movie night guide
             </p>
             <h1
@@ -81,14 +52,14 @@ export function MovieNightGuide() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <a
                 href="/?plan=1"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3 text-sm font-bold text-white shadow-xl shadow-rose-950/40 transition-colors hover:bg-rose-700 active:scale-[0.98]"
+                className="btn btn-primary btn-lg"
               >
                 Plan a movie night
                 <ArrowRight size={17} aria-hidden="true" />
               </a>
               <a
                 href="/"
-                className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900/70 px-6 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white"
+                className="btn btn-secondary btn-lg"
               >
                 Browse movies
               </a>
@@ -186,14 +157,14 @@ export function MovieNightGuide() {
             <div className="mt-7 flex flex-col gap-3">
               <a
                 href="/?q=zombie"
-                className="inline-flex min-h-11 items-center justify-between gap-3 rounded-xl border border-rose-400/35 bg-rose-500/10 px-4 py-2.5 text-sm font-bold text-rose-100 transition-colors hover:border-rose-300/60 hover:bg-rose-500/20"
+                className="btn btn-primary justify-between"
               >
                 Try zombie movies
                 <ArrowRight size={16} aria-hidden="true" />
               </a>
               <a
                 href="/"
-                className="inline-flex min-h-11 items-center justify-between gap-3 rounded-xl border border-zinc-700 bg-zinc-900/65 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:text-white"
+                className="btn btn-secondary justify-between"
               >
                 Search the catalog
                 <ArrowRight size={16} aria-hidden="true" />
@@ -210,15 +181,15 @@ export function MovieNightGuide() {
             </div>
             <ul className="space-y-4 text-sm text-zinc-300">
               <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
-                <Check className="mt-0.5 shrink-0 text-emerald-400" size={18} aria-hidden="true" />
+                <Check className="mt-0.5 shrink-0 text-rose-400" size={18} aria-hidden="true" />
                 Open the title&apos;s provider links and recheck your region before leaving the guide.
               </li>
               <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
-                <Check className="mt-0.5 shrink-0 text-emerald-400" size={18} aria-hidden="true" />
+                <Check className="mt-0.5 shrink-0 text-rose-400" size={18} aria-hidden="true" />
                 Availability can change by region and time. StreamFlicker does not host movies.
               </li>
               <li className="flex items-start gap-3 border-t border-white/[0.08] pt-4">
-                <Check className="mt-0.5 shrink-0 text-emerald-400" size={18} aria-hidden="true" />
+                <Check className="mt-0.5 shrink-0 text-rose-400" size={18} aria-hidden="true" />
                 Guest watchlists stay on this device. They are not cross-device synced.
               </li>
             </ul>
@@ -264,25 +235,7 @@ export function MovieNightGuide() {
         </section>
       </main>
 
-      <footer className="border-t border-white/[0.08] px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-ink-3 md:flex-row md:items-start md:justify-between">
-          <div className="max-w-xl">
-            <p>StreamFlicker. Movie discovery for the moment before play.</p>
-            <p className="mt-2 text-xs leading-relaxed">{TMDB_NOTICE}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-5">
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/about">About StreamFlicker</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/privacy">Privacy</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/terms">Terms</a>
-            <a className="inline-flex min-h-11 items-center transition-colors hover:text-white" href="/contact">Contact</a>
-
-            <a className="inline-flex min-h-11 items-center gap-2 font-semibold text-zinc-300 transition-colors hover:text-white" href="/">
-              Open movie discovery
-              <ArrowRight size={15} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

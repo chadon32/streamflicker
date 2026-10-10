@@ -15,32 +15,198 @@
 @source not "../api";
 @source not "../.github";
 
+/*
+ * The shared controls. Every button, chip, label and notice in the app is one of these, so a
+ * control looks and behaves the same wherever it appears. Utilities still win over these
+ * (they live in a later layer), so layout classes such as w-full or sm:w-auto sit alongside.
+ *
+ * Colour roles: rose is the only accent (primary actions, selection, links). Emerald means
+ * "saved" or "done". Amber means "be careful" (content notes, warnings). Nothing else.
+ */
 @layer components {
-  .discovery-shortcut {
+  /* Buttons: 44px tall (48px for a page's main call to action), 12px corners, 14px bold text. */
+  .btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background-color 160ms, border-color 160ms, color 160ms;
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* 11px padding + 24px line + 1px borders = exactly 48px. */
+  .btn-lg {
+    min-height: 48px;
+    padding: 0.6875rem 1.25rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+
+  /* One per view: the thing most people came to do. White on rose-600 is 4.5:1, on rose-700 6:1. */
+  .btn-primary {
+    background: var(--color-rose-600);
+    color: #fff;
+  }
+
+  .btn-primary:not(:disabled):hover {
+    background: var(--color-rose-700);
+  }
+
+  .btn-secondary {
+    border-color: var(--color-zinc-700);
+    background: var(--color-zinc-900);
+    color: var(--color-zinc-100);
+  }
+
+  .btn-secondary:not(:disabled):hover {
+    border-color: var(--color-zinc-500);
+    background: var(--color-zinc-800);
+    color: #fff;
+  }
+
+  /* A toggle that is on ("Saved", "Remove from watchlist"). */
+  .btn-saved,
+  .btn-saved:not(:disabled):hover {
+    border-color: color-mix(in oklab, var(--color-emerald-400) 45%, transparent);
+    background: color-mix(in oklab, var(--color-emerald-500) 15%, transparent);
+    color: var(--color-emerald-200);
+  }
+
+  /* Round icon-only control (carousel arrows, the card bookmark). */
+  .icon-btn {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid var(--color-zinc-800);
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--color-zinc-900) 85%, transparent);
+    color: #fff;
+    transition: background-color 160ms, border-color 160ms, opacity 160ms;
+  }
+
+  .icon-btn:not(:disabled):hover {
+    border-color: var(--color-zinc-600);
+    background: var(--color-zinc-800);
+  }
+
+  .icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  /* Chips: choices you switch on and off. Selected is always the same rose treatment. */
+  .chip {
     display: inline-flex;
     min-height: 44px;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     padding: 0.625rem 0.875rem;
-    border: 1px solid #3f3f46;
+    border: 1px solid var(--color-zinc-700);
     border-radius: 0.75rem;
-    background: #18181b;
-    color: #e4e4e7;
-    font-size: 0.75rem;
+    background: var(--color-zinc-900);
+    color: var(--color-zinc-200);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
     font-weight: 600;
-    transition: background-color 160ms, border-color 160ms;
+    white-space: nowrap;
+    transition: background-color 160ms, border-color 160ms, color 160ms;
   }
 
-  .discovery-shortcut:hover {
-    background: #27272a;
-    border-color: #71717a;
+  .chip:not(:disabled):hover {
+    border-color: var(--color-zinc-500);
+    background: var(--color-zinc-800);
+    color: #fff;
   }
 
-  .discovery-shortcut[aria-pressed="true"] {
+  .chip[aria-expanded="true"] {
+    border-color: var(--color-zinc-500);
+    background: var(--color-zinc-800);
+    color: #fff;
+  }
+
+  /* Pressed toggles, and the "remove this filter" buttons that stand for an active choice. */
+  .chip[aria-pressed="true"],
+  .chip[aria-pressed="true"]:hover,
+  .chip-selected,
+  .chip-selected:hover {
+    border-color: var(--color-rose-400);
     background: #4c1024;
-    border-color: #fb7185;
-    color: #ffe4e6;
+    color: var(--color-rose-50);
+  }
+
+  .chip:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  .chip-count {
+    color: var(--color-ink-3);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip[aria-pressed="true"] .chip-count {
+    color: var(--color-rose-200);
+  }
+
+  /* Small read-only labels on posters and in dialogs (a theme, a genre). */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-zinc-800);
+    border-radius: 9999px;
+    background: color-mix(in oklab, var(--color-zinc-900) 90%, transparent);
+    padding: 0.25rem 0.75rem;
+    color: var(--color-zinc-300);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 500;
+  }
+
+  /* Section labels ("Step 1", "Rating"). Neutral by default, rose where it introduces a step. */
+  .eyebrow {
+    color: var(--color-ink-3);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow-brand {
+    color: var(--color-rose-300);
+  }
+
+  /* Supporting information. Amber only when the reader should be careful. */
+  .notice {
+    border: 1px solid var(--color-zinc-800);
+    border-radius: 0.75rem;
+    background: color-mix(in oklab, var(--color-zinc-900) 60%, transparent);
+    padding: 0.75rem 1rem;
+    color: var(--color-ink-2);
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+
+  .notice-warn {
+    border-color: color-mix(in oklab, var(--color-amber-500) 25%, transparent);
+    background: color-mix(in oklab, var(--color-amber-500) 6%, transparent);
+    color: var(--color-amber-100);
   }
 
   #movie-filter-controls button {

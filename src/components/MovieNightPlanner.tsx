@@ -239,7 +239,7 @@ export function MovieNightPlanner({
   };
 
   const countBadge = (count: number) => (
-    <span className="ml-auto pl-2 text-xs font-semibold tabular-nums text-ink-3" aria-hidden="true">{count}</span>
+    <span className="chip-count ml-auto pl-2" aria-hidden="true">{count}</span>
   );
   const reviewedChecked = formatCheckedDate(CATALOG_CHECKED_AT);
 
@@ -261,7 +261,7 @@ export function MovieNightPlanner({
       >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800 bg-zinc-950/90 px-5 py-4 sm:px-7">
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 hidden h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-600 text-white sm:flex">
+            <div className="mt-0.5 hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-700 text-white sm:flex">
               <Sparkles size={20} aria-hidden="true" />
             </div>
             <div>
@@ -282,7 +282,7 @@ export function MovieNightPlanner({
           <div className="grid gap-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
             <section className="space-y-5" aria-label="Movie night preferences">
               <div>
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">Step 1</p>
+                <p className="eyebrow eyebrow-brand mb-2">Step 1</p>
                 <h3 className="font-display text-lg font-bold text-white">Who is watching?</h3>
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2">
                   {OCCASION_OPTIONS.map(({ id, label, icon: Icon }) => {
@@ -297,9 +297,9 @@ export function MovieNightPlanner({
                         disabled={unavailable}
                         title={unavailable ? noPicksHint : undefined}
                         onClick={() => updatePreference('occasion', id)}
-                        className={`flex min-h-12 items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${selected ? 'border-rose-400/70 bg-rose-500/15 text-rose-100' : 'border-zinc-800 bg-zinc-900/70 text-zinc-300 hover:border-zinc-600 hover:text-white'}`}
+                        className="chip min-h-12 justify-start whitespace-normal text-left"
                       >
-                        <Icon size={16} className={selected ? 'text-rose-300' : 'text-ink-3'} aria-hidden="true" />
+                        <Icon size={16} className={`shrink-0 ${selected ? 'text-rose-300' : 'text-ink-3'}`} aria-hidden="true" />
                         {label}
                         {countBadge(count)}
                         <span className="sr-only">{`, ${count} ${count === 1 ? 'pick' : 'picks'}`}</span>
@@ -310,7 +310,7 @@ export function MovieNightPlanner({
               </div>
 
               <div>
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">Step 2</p>
+                <p className="eyebrow eyebrow-brand mb-2">Step 2</p>
                 <h3 className="font-display text-lg font-bold text-white">How much time do you have?</h3>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {LENGTH_OPTIONS.map(({ id, label }) => {
@@ -325,9 +325,9 @@ export function MovieNightPlanner({
                         disabled={unavailable}
                         title={unavailable ? noPicksHint : undefined}
                         onClick={() => updatePreference('length', id)}
-                        className={`flex min-h-11 items-center rounded-xl border px-3 py-2 text-left text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-50 ${selected ? 'border-amber-400/70 bg-amber-500/15 text-amber-100' : 'border-zinc-800 bg-zinc-900/70 text-zinc-300 hover:border-zinc-600 hover:text-white'}`}
+                        className="chip min-h-12 justify-start whitespace-normal text-left"
                       >
-                        <Clock3 size={14} className="mr-1.5 inline-block text-amber-300" aria-hidden="true" />
+                        <Clock3 size={16} className={`shrink-0 ${selected ? 'text-rose-300' : 'text-ink-3'}`} aria-hidden="true" />
                         {label}
                         {countBadge(count)}
                         <span className="sr-only">{`, ${count} ${count === 1 ? 'pick' : 'picks'}`}</span>
@@ -338,7 +338,7 @@ export function MovieNightPlanner({
               </div>
 
               <div>
-                <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">Step 3</p>
+                <p className="eyebrow eyebrow-brand mb-2">Step 3</p>
                 <label htmlFor="movie-night-genre" className="font-display text-lg font-bold text-white">Pick a vibe</label>
                 <select
                   id="movie-night-genre"
@@ -353,7 +353,7 @@ export function MovieNightPlanner({
 
               {providerOptions.length > 0 ? (
                 <div>
-                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-rose-300">Step 4</p>
+                  <p className="eyebrow eyebrow-brand mb-2">Step 4</p>
                   <h3 className="font-display text-lg font-bold text-white">Where can you watch?</h3>
                   <label htmlFor="movie-night-provider" className="sr-only">Choose a verified streaming service</label>
                   <select
@@ -368,19 +368,19 @@ export function MovieNightPlanner({
                   <p className="mt-2 text-xs leading-relaxed text-ink-3">Services appear only when availability has been verified for a title. Availability can vary by title and region.</p>
                 </div>
               ) : (
-                <p className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-3 py-2 text-xs leading-relaxed text-ink-3">We haven&apos;t checked streaming services for these picks. Use &ldquo;Where to watch&rdquo; on a pick to see what&apos;s playing in your region.</p>
+                <p className="notice">We haven&apos;t checked streaming services for these picks. Use &ldquo;Where to watch&rdquo; on a pick to see what&apos;s playing in your region.</p>
               )}
 
-              <div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-4">
-                <p className="text-xs font-semibold text-sky-100">{watchlist.length > 0 ? `${watchlist.length} saved movie${watchlist.length === 1 ? '' : 's'} are included in your choices.` : 'Save a few movies to your watchlist and they will be considered here.'}</p>
-                <p className="mt-1 text-xs leading-relaxed text-sky-100/70">Picks use the movies on this device. Saving keeps your list in this browser.</p>
+              <div className="notice">
+                <p className="font-semibold text-zinc-200">{watchlist.length > 0 ? `${watchlist.length} saved movie${watchlist.length === 1 ? '' : 's'} are included in your choices.` : 'Save a few movies to your watchlist and they will be considered here.'}</p>
+                <p className="mt-1">Picks use the movies on this device. Saving keeps your list in this browser.</p>
               </div>
             </section>
 
             <section className="min-w-0" aria-live="polite" aria-label="Movie night shortlist">
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
-                   <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">Your shortlist</p>
+                   <p className="eyebrow eyebrow-brand">Your shortlist</p>
                    <h3 className="mt-1 font-display text-xl font-black text-white">{shortlistHeading}</h3>
                    <p className="mt-1 text-xs text-ink-2">{getMovieNightSummary(preferences)}</p>
                    <p className="mt-2 text-xs leading-relaxed text-ink-3">
@@ -390,27 +390,27 @@ export function MovieNightPlanner({
                    </p>
                    {!catalogReady && <p className="mt-1 text-xs text-ink-3">Loading more titles…</p>}
                 </div>
-                <button type="button" onClick={handlePickAgain} disabled={!hasAlternatives} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:border-rose-400/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" onClick={handlePickAgain} disabled={!hasAlternatives} className="btn btn-secondary">
                   <RefreshCw size={15} aria-hidden="true" /> Pick again
                 </button>
               </div>
 
               <div className="space-y-3">
                 {recommendations.length === 0 ? (
-                  <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4" role="status">
-                    <p className="text-sm font-bold text-amber-100">
+                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/65 p-4" role="status">
+                    <p className="text-sm font-bold text-white">
                       {restoredMovieIds
                         ? (restoredPending ? 'Loading your saved titles…' : `${restoredUnavailableCount} saved title${restoredUnavailableCount === 1 ? ' is' : 's are'} no longer available in the current catalog.`)
                         : (hasCheckedTitles ? 'No titles match every choice.' : 'None of our reviewed titles match every choice.')}
                     </p>
-                    <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+                    <p className="mt-1 text-sm leading-relaxed text-ink-2">
                       {restoredMovieIds
                         ? (restoredPending ? 'They are part of the full catalog, which is still arriving.' : 'Generate a new set from the saved preferences, or reset them to broaden the match.')
                         : (hasCheckedTitles ? "Loosen a choice, or browse the full catalog (most of those titles haven't been reviewed)." : "Loosen a choice, or browse the full catalog (those titles haven't been reviewed).")}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button type="button" onClick={resetPreferences} className="inline-flex min-h-11 items-center rounded-xl border border-amber-300/40 px-3 py-2 text-xs font-bold text-amber-100 hover:border-amber-200 hover:text-white">Reset choices</button>
-                      <button type="button" onClick={onBrowseAll} className="inline-flex min-h-11 items-center rounded-xl bg-amber-500/20 px-3 py-2 text-xs font-bold text-amber-50 hover:bg-amber-500/30">Browse all movies</button>
+                      <button type="button" onClick={resetPreferences} className="btn btn-primary">Reset choices</button>
+                      <button type="button" onClick={onBrowseAll} className="btn btn-secondary">Browse all movies</button>
                     </div>
                   </div>
                 ) : recommendations.map((movie, index) => (
@@ -421,7 +421,7 @@ export function MovieNightPlanner({
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-xs font-black text-rose-300">{index + 1}</span>
                         <div className="min-w-0">
                           <h4 className="line-clamp-2 font-display text-base font-bold text-white sm:text-lg">{movie.title}</h4>
-                          <p className="mt-0.5 truncate text-xs text-ink-2">{movie.year} · {movie.duration} · {movie.genre.slice(0, 2).join(', ')}</p>
+                          <p className="mt-0.5 text-xs text-ink-2">{movie.year} · {movie.duration} · {movie.genre.slice(0, 2).join(', ')}</p>
                           {movie.recordSource === 'tmdb-checked' && (
                             <p className="mt-1.5">
                               <span title="Matched to TMDB. Not hand-reviewed." className="inline-flex items-center rounded-md border border-zinc-700 bg-zinc-950/50 px-2 py-0.5 text-xs font-semibold text-ink-2">Checked on TMDB</span>
@@ -429,15 +429,15 @@ export function MovieNightPlanner({
                           )}
                         </div>
                       </div>
-                      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-ink-2">{movie.description}</p>
+                      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-2 sm:line-clamp-2">{movie.description}</p>
                       <div className="mt-2">
                         <AvailabilityLinks movie={movie} />
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <button type="button" onClick={() => onWatchTrailer(movie)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-2 text-xs font-bold text-white hover:bg-rose-700">
-                          <Film size={14} aria-hidden="true" /> See trailer
+                        <button type="button" onClick={() => onWatchTrailer(movie)} className="btn btn-primary">
+                          <Film size={15} aria-hidden="true" /> See trailer
                         </button>
-                        <button type="button" onClick={() => onToggleBookmark(movie)} aria-label={`${isBookmarked(movie.id) ? 'Saved' : 'Save'}: ${movie.title}`} aria-pressed={isBookmarked(movie.id)} className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold ${isBookmarked(movie.id) ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200' : 'border-zinc-700 bg-zinc-950/50 text-zinc-300 hover:border-zinc-500 hover:text-white'}`}>
+                        <button type="button" onClick={() => onToggleBookmark(movie)} aria-label={`${isBookmarked(movie.id) ? 'Saved' : 'Save'}: ${movie.title}`} aria-pressed={isBookmarked(movie.id)} className={`btn btn-secondary ${isBookmarked(movie.id) ? 'btn-saved' : ''}`}>
                           {isBookmarked(movie.id) ? <Check size={14} aria-hidden="true" /> : <Bookmark size={14} aria-hidden="true" />}
                           {isBookmarked(movie.id) ? 'Saved' : 'Save'}
                         </button>
@@ -449,7 +449,7 @@ export function MovieNightPlanner({
               </div>
 
               {restoredMovieIds && recommendations.length > 0 && (
-                <div className="mt-3 rounded-xl border border-sky-400/25 bg-sky-500/10 px-3 py-2 text-xs leading-relaxed text-sky-100" role="status">
+                <div className="notice mt-3" role="status">
                   Restored {recommendations.length} saved title{recommendations.length === 1 ? '' : 's'} from this browser.
                   {restoredUnavailableCount > 0 && (restoredPending
                     ? ' Loading the rest of your saved titles…'
@@ -458,11 +458,12 @@ export function MovieNightPlanner({
               )}
 
               {/* Stays in view while the shortlist scrolls, so Save and Copy are never below the fold. */}
-              <div className="sticky bottom-0 z-10 -mx-5 mt-5 flex flex-wrap gap-2 border-t border-zinc-800 bg-zinc-950/95 px-5 py-3 backdrop-blur sm:-mx-7 sm:px-7 lg:mx-0 lg:px-0">
-                <button type="button" onClick={handleSave} disabled={recommendations.length === 0} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50">
+              {/* Same surface as the dialog, with a shadow above, so it reads as a bar the picks scroll under. */}
+              <div className="sticky bottom-0 z-10 -mx-5 mt-5 flex flex-wrap gap-2 border-t border-zinc-800 bg-[#0c0c10] px-5 py-3 shadow-[0_-12px_24px_-12px_rgba(0,0,0,0.9)] sm:-mx-7 sm:px-7 lg:-ml-2 lg:mr-0 lg:pl-2 lg:pr-0">
+                <button type="button" onClick={handleSave} disabled={recommendations.length === 0} className="btn btn-secondary">
                   <Check size={15} aria-hidden="true" /> Save movie night
                 </button>
-                <button type="button" onClick={() => void handleShare()} disabled={recommendations.length === 0} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2.5 text-xs font-bold text-zinc-200 hover:border-zinc-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" onClick={() => void handleShare()} disabled={recommendations.length === 0} className="btn btn-secondary">
                   {Capacitor.isNativePlatform() ? <Share2 size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
                   {Capacitor.isNativePlatform() ? 'Share with iPhone' : 'Copy plan'}
                 </button>

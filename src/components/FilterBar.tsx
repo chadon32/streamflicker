@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
-import { CalendarDays, Check, ChevronDown, Filter, RotateCcw, Sparkles, X } from 'lucide-react';
+import { useCallback, useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import { Check, ChevronDown, Filter, RotateCcw, X } from 'lucide-react';
 import { STREAMING_PROVIDERS } from '../data/catalog';
 import {
   ERA_FILTERS,
@@ -39,6 +39,8 @@ interface FilterBarProps {
   catalogReady: boolean;
   /** Called when the panel opens, so the full catalog can load if it has not yet. */
   onOpen: () => void;
+  /** Shortcut chips shown in the same row as the Filters button. */
+  shortcuts?: ReactNode;
 }
 
 export function FilterBar({
@@ -58,6 +60,7 @@ export function FilterBar({
   setOccasion,
   catalogReady,
   onOpen,
+  shortcuts,
 }: FilterBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1280px)').matches);
@@ -115,17 +118,11 @@ export function FilterBar({
   };
 
   return (
-    <div className="space-y-4 my-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-zinc-200" id="filter-help">
-            Make it your kind of movie.
-          </p>
-          <p className="text-xs text-ink-2 mt-1">
-            Narrow by genre, year, or a theme like zombies.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
+    <div className="space-y-4">
+      {/* One row for every way into the catalog: the shortcuts, then Filters (and Reset once something is set). */}
+      <div className="flex flex-wrap items-center gap-2 pt-2" role="group" aria-label="Ways to discover movies">
+        {shortcuts}
+        <div className="flex gap-2 sm:ml-auto">
           <button
             type="button"
             onClick={() => {
@@ -134,22 +131,19 @@ export function FilterBar({
             }}
             aria-expanded={mobileOpen}
             aria-controls="movie-filter-controls"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-bold text-zinc-200 hover:border-zinc-500 hover:text-white"
+            className="chip"
           >
-            <Filter size={14} aria-hidden="true" /> {mobileOpen ? 'Hide filters' : 'Filters'}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+            <Filter size={15} aria-hidden="true" /> {mobileOpen ? 'Hide filters' : 'Filters'}
+            {activeFilterCount > 0 && <span className="chip-count">{activeFilterCount}<span className="sr-only"> active</span></span>}
             <ChevronDown
-              size={14}
+              size={15}
               aria-hidden="true"
               className={mobileOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
             />
           </button>
           {activeFilterCount > 0 && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-zinc-800 px-3 py-2 text-xs font-semibold text-ink-2 hover:text-white"
-            >
-              <RotateCcw size={13} aria-hidden="true" /> Reset
+            <button type="button" onClick={resetFilters} className="chip">
+              <RotateCcw size={14} aria-hidden="true" /> Reset
             </button>
           )}
         </div>
@@ -158,7 +152,7 @@ export function FilterBar({
       {activeFilters.length > 0 && (
         <div className="flex flex-wrap gap-2" role="group" aria-label="Active filters">
           {activeFilters.map(({ label, clear }) => (
-            <button key={label} type="button" onClick={clear} aria-label={`Remove ${label} filter`} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-3 text-xs font-semibold text-rose-200 hover:bg-rose-500/20">
+            <button key={label} type="button" onClick={clear} aria-label={`Remove ${label} filter`} className="chip chip-selected">
               {label}<X size={14} aria-hidden="true" />
             </button>
           ))}
@@ -179,25 +173,20 @@ export function FilterBar({
             <p id="mobile-filter-title" className="text-sm font-bold text-white">Filters</p>
             <p className="mt-0.5 text-xs text-ink-2" role="status">{catalogReady ? `${resultCount.toLocaleString()} matching ${resultCount === 1 ? 'movie' : 'movies'}` : 'Loading the catalog…'}</p>
           </div>
-          <button
-            type="button"
-            onClick={closeMobileFilters}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-100 px-3 py-2 text-xs font-bold text-zinc-950"
-          >
-            <Check size={13} aria-hidden="true" /> Show results
+          <button type="button" onClick={closeMobileFilters} className="btn btn-primary">
+            <Check size={15} aria-hidden="true" /> Show results
           </button>
         </div>
 
         {!catalogReady ? (
-          <p role="status" className="glass-panel rounded-2xl p-4 text-sm text-ink-2">Loading filters…</p>
+          <p role="status" className="notice text-sm">Loading filters…</p>
         ) : (
           <>
-        <div className="flex flex-col gap-4 glass-panel p-4 rounded-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div role="group" aria-label="Rating filter">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3 mb-2 block">
-                Rating
-              </span>
+        {/* Boxed only where it sits inline on wide screens; the phone sheet is already its own surface. */}
+        <div className="flex flex-col gap-6 xl:rounded-2xl xl:border xl:border-white/[0.08] xl:bg-zinc-900/60 xl:p-5">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div role="group" aria-labelledby="filter-rating-label">
+              <p id="filter-rating-label" className="eyebrow mb-2">Rating</p>
               <div className="flex flex-wrap gap-2">
                 {DISCOVERY_MODE_OPTIONS.map((option) => (
                   <button
@@ -206,27 +195,21 @@ export function FilterBar({
                     onClick={() => setDiscoveryMode(option.id)}
                     aria-pressed={discoveryMode === option.id}
                     title={option.description}
-                    className={`min-h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
-                      discoveryMode === option.id
-                        ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
-                        : 'bg-zinc-900/90 border-zinc-800 text-ink-2 hover:text-zinc-100 hover:bg-zinc-800'
-                    }`}
+                    className="chip"
                   >
                     {option.label}
                   </button>
                 ))}
               </div>
               {discoveryMode === 'family' && (
-                <p className="mt-2 text-xs text-emerald-200/90">
+                <p className="mt-2 text-xs leading-relaxed text-ink-2">
                   Only titles with a confirmed PG-13 or lower rating, minus high-risk horror and thriller themes. Always confirm the rating before you watch.
                 </p>
               )}
             </div>
 
-            <div role="group" aria-label="Occasion filter">
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3 mb-2 block">
-                Occasion
-              </span>
+            <div role="group" aria-labelledby="filter-occasion-label">
+              <p id="filter-occasion-label" className="eyebrow mb-2">Occasion</p>
               <div className="flex flex-wrap gap-2">
                 {OCCASION_OPTIONS.map((option) => (
                   <button
@@ -235,52 +218,40 @@ export function FilterBar({
                     onClick={() => setOccasion(option.id)}
                     aria-pressed={occasion === option.id}
                     title={option.description}
-                    className={`min-h-10 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border ${
-                      occasion === option.id
-                        ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
-                        : 'bg-zinc-900/90 border-zinc-800 text-ink-2 hover:text-zinc-100 hover:bg-zinc-800'
-                    }`}
+                    className="chip"
                   >
                     {option.label}
                   </button>
                 ))}
               </div>
               {occasion !== 'all' && (
-                <p className="mt-2 text-xs text-ink-2">
+                <p className="mt-2 text-xs leading-relaxed text-ink-2">
                   {OCCASION_OPTIONS.find((option) => option.id === occasion)?.description}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
-            <div
-              className="flex flex-wrap items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none"
-              role="group"
-              aria-label="Movie era and genre filters"
-            >
-              <span className="basis-full text-xs font-semibold uppercase tracking-wider text-ink-2 mb-1 flex items-center gap-1">
-                <CalendarDays size={14} aria-hidden="true" /> Era:
-              </span>
+          <div role="group" aria-labelledby="filter-era-label">
+            <p id="filter-era-label" className="eyebrow mb-2">Era</p>
+            <div className="flex flex-wrap gap-2">
               {ERA_FILTERS.filter(({ id }) => id === 'All' || id === selectedEra || (counts.eras[id] ?? 0) > 0).map((era) => (
                 <button
                   key={era.id}
                   type="button"
                   onClick={() => setSelectedEra(era.id)}
                   aria-pressed={selectedEra === era.id}
-                  className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border ${
-                    selectedEra === era.id
-                      ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
-                      : 'bg-zinc-900/90 border-zinc-800 text-ink-2 hover:text-zinc-100 hover:bg-zinc-800'
-                  }`}
+                  className="chip"
                 >
-                  {era.label} <span className="opacity-70">({counts.eras[era.id] ?? 0})</span>
+                  {era.label} <span className="chip-count">{(counts.eras[era.id] ?? 0).toLocaleString()}</span>
                 </button>
               ))}
+            </div>
+          </div>
 
-              <span className="basis-full text-xs font-semibold uppercase tracking-wider text-ink-2 mt-3 mb-1">
-                Genre:
-              </span>
+          <div role="group" aria-labelledby="filter-genre-label">
+            <p id="filter-genre-label" className="eyebrow mb-2">Genre</p>
+            <div className="flex flex-wrap gap-2">
               {GENRE_FILTERS.filter((genre) => genre === 'All' || genre === selectedGenre || (counts.genres[genre] ?? 0) > 0).map((genre) => (
                 <button
                   key={genre}
@@ -292,123 +263,82 @@ export function FilterBar({
                       ? 'Titles whose synopsis does not fit one of the focused categories'
                       : undefined
                   }
-                  className={`min-h-10 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border ${
-                    selectedGenre === genre
-                      ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
-                      : 'bg-zinc-900/90 border-zinc-800 text-ink-2 hover:text-zinc-100 hover:bg-zinc-800'
-                  }`}
+                  className="chip"
                 >
-                  {genre} <span className="opacity-70">({counts.genres[genre] ?? 0})</span>
+                  {genre} <span className="chip-count">{(counts.genres[genre] ?? 0).toLocaleString()}</span>
                 </button>
               ))}
             </div>
+            {selectedGenre === 'Other' && (
+              <p className="notice notice-warn mt-3">
+                Other means the synopsis doesn&apos;t give enough evidence for one of StreamFlicker&apos;s focused genres.
+              </p>
+            )}
+          </div>
 
-            {hasVerifiedProviders && (
-              <div
-                className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0"
-                role="group"
-                aria-label="Verified streaming service filters"
-              >
-              <span className="text-xs font-semibold uppercase tracking-wider text-ink-3 mr-2 shrink-0 flex items-center gap-1">
-                <Filter size={14} aria-hidden="true" /> Stream on:
-              </span>
+          {hasVerifiedProviders && (
+            <div role="group" aria-labelledby="filter-service-label">
+              <p id="filter-service-label" className="eyebrow mb-2">Streaming service</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedProviders([])}
+                  aria-pressed={selectedProviders.length === 0}
+                  className="chip"
+                >
+                  All services
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setSelectedProviders([])}
-                aria-pressed={selectedProviders.length === 0}
-                className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                  selectedProviders.length === 0
-                    ? 'bg-zinc-100 text-zinc-950 font-extrabold'
-                    : 'bg-zinc-900/80 text-ink-2 hover:text-zinc-200'
-                }`}
-              >
-                All apps
-              </button>
+                <button
+                  type="button"
+                  onClick={toggleMyServices}
+                  aria-pressed={selectedProviders.includes('my_services')}
+                  className="chip"
+                >
+                  My services
+                </button>
 
-              <button
-                type="button"
-                onClick={toggleMyServices}
-                aria-pressed={selectedProviders.includes('my_services')}
-                className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1 ${
-                  selectedProviders.includes('my_services')
-                    ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-md'
-                    : 'bg-zinc-900/80 border-zinc-800 text-emerald-300 hover:border-emerald-500/50'
-                }`}
-              >
-                My services
-              </button>
-
-              {STREAMING_PROVIDERS.filter(({ id }) => (counts.providers[id] ?? 0) > 0).map((provider) => {
-                const isSelected = selectedProviders.includes(provider.id);
-                return (
+                {STREAMING_PROVIDERS.filter(({ id }) => (counts.providers[id] ?? 0) > 0).map((provider) => (
                   <button
                     key={provider.id}
                     type="button"
                     onClick={() => toggleProvider(provider.id)}
-                    aria-pressed={isSelected}
-                    className={`min-h-10 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-rose-700 text-white border-rose-500 shadow-md shadow-rose-600/40'
-                        : 'bg-zinc-900/80 border-zinc-800 text-ink-2 hover:border-zinc-700 hover:text-zinc-200'
-                    }`}
+                    aria-pressed={selectedProviders.includes(provider.id)}
+                    className="chip"
                   >
-                    <span>{provider.name}</span>
-                    <span className="opacity-65">({counts.providers[provider.id]})</span>
-                    {isSelected && <Check size={12} aria-hidden="true" />}
+                    {provider.name} <span className="chip-count">{(counts.providers[provider.id] ?? 0).toLocaleString()}</span>
                   </button>
-                );
-              })}
+                ))}
               </div>
-            )}
-          </div>
-        </div>
-
-        {selectedGenre === 'Other' && (
-          <p className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2 text-xs text-amber-100/90">
-            Other means the synopsis doesn&apos;t give enough evidence for one of StreamFlicker&apos;s focused genres.
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2 pb-2" role="group" aria-label="Movie theme filters">
-          <span
-            className="text-xs font-semibold text-rose-300 uppercase tracking-wider shrink-0 flex items-center gap-1.5 mr-1"
-            title="Themes detected from each movie's synopsis."
-          >
-            <Sparkles size={13} aria-hidden="true" /> Popular themes:
-          </span>
-
-          {selectedTag && (
-            <button
-              type="button"
-              onClick={() => setSelectedTag(null)}
-              className="flex min-h-10 items-center gap-1 rounded-full border border-rose-500/40 bg-rose-600/30 px-3 py-1 text-xs font-bold text-rose-200 hover:bg-rose-600/50 shrink-0"
-            >
-              <X size={12} aria-hidden="true" /> Clear theme
-            </button>
+            </div>
           )}
 
-          {MICRO_TAG_DEFINITIONS.filter(({ id }) => id === selectedTag || (counts.tags[id] ?? 0) >= MIN_THEME_RESULTS).map((tag) => {
-            const isSelected = selectedTag === tag.id;
-            return (
-              <button
-                key={tag.id}
-                type="button"
-                onClick={() => setSelectedTag(isSelected ? null : tag.id)}
-                aria-pressed={isSelected}
-                title={tag.description}
-                className={`min-h-10 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 border ${
-                  isSelected
-                    ? 'bg-rose-500/15 text-rose-200 border-rose-400/60'
-                    : 'bg-zinc-900/80 border-zinc-800 text-ink-2 hover:text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800'
-                }`}
-              >
-                {tag.label} <span className="opacity-65">({counts.tags[tag.id] ?? 0})</span>
-              </button>
-            );
-          })}
+          <div role="group" aria-labelledby="filter-theme-label">
+            <p id="filter-theme-label" className="eyebrow mb-2" title="Themes detected from each movie's synopsis.">Popular themes</p>
+            <div className="flex flex-wrap gap-2">
+              {selectedTag && (
+                <button type="button" onClick={() => setSelectedTag(null)} className="chip">
+                  <X size={14} aria-hidden="true" /> Clear theme
+                </button>
+              )}
+
+              {MICRO_TAG_DEFINITIONS.filter(({ id }) => id === selectedTag || (counts.tags[id] ?? 0) >= MIN_THEME_RESULTS).map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
+                  aria-pressed={selectedTag === tag.id}
+                  title={tag.description}
+                  className="chip"
+                >
+                  {tag.label} <span className="chip-count">{(counts.tags[tag.id] ?? 0).toLocaleString()}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs leading-relaxed text-ink-2">Counts show each option within your search, before combining filters. Streaming services appear only with verified regional listings.</p>
         </div>
-        <p className="text-xs leading-relaxed text-ink-2">Counts show each option within your search, before combining filters. Streaming services appear only with verified regional listings.</p>
           </>
         )}
       </div>

@@ -95,7 +95,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             <button
               type="button"
               onClick={handleNativeShare}
-              className="w-full inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-rose-600/25 transition-colors hover:bg-rose-700"
+              className="btn btn-primary btn-lg w-full"
             >
               <Share2 size={18} aria-hidden="true" />
               Share with iPhone
@@ -111,8 +111,8 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
         )}
 
         {/* The message exactly as it will be sent: text only, no artwork. */}
-        <div className="rounded-2xl border border-rose-400/20 bg-rose-500/5 p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-rose-300">What you&apos;ll share</h3>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+          <h3 className="eyebrow">What you&apos;ll share</h3>
           <p className="mt-2 break-words text-sm leading-relaxed text-zinc-200">{shareText}</p>
         </div>
 
@@ -122,7 +122,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(headline)}&url=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-16 flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-sky-400 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
             <Globe size={20} aria-hidden="true" />
             <span className="text-xs font-bold text-zinc-300">X</span>
@@ -132,7 +132,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-16 flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-blue-400 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
             <Globe size={20} aria-hidden="true" />
             <span className="text-xs font-bold text-zinc-300">Facebook</span>
@@ -142,7 +142,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-16 flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-emerald-400 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
             <MessageSquare size={20} aria-hidden="true" />
             <span className="text-xs font-bold text-zinc-300">WhatsApp</span>
@@ -152,7 +152,7 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             href={`https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(headline)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-16 flex-col items-center gap-1.5 p-3 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-orange-400 transition-colors"
+            className="flex min-h-16 flex-col items-center justify-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-800"
           >
             <Send size={20} aria-hidden="true" />
             <span className="text-xs font-bold text-zinc-300">Reddit</span>
@@ -167,12 +167,12 @@ export function ShareModal({ movie, onClose }: ShareModalProps) {
             readOnly
             value={shareUrl}
             aria-label="Shareable movie link"
-            className="min-h-11 flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-300"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-300"
           />
           <button
             type="button"
             onClick={handleCopy}
-            className="flex min-h-11 items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shrink-0"
+            className="btn btn-primary shrink-0"
           >
             {copyStatus === 'copied' ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
             <span>{copyStatus === 'copied' ? 'Copied' : 'Copy message'}</span>

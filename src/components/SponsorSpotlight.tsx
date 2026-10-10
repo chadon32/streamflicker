@@ -28,7 +28,7 @@ export function SponsorSpotlight({ sponsorship }: SponsorSpotlightProps) {
             href={sponsorship.url}
             target="_blank"
             rel="sponsored noopener noreferrer"
-            className="mt-5 inline-flex min-h-11 w-fit items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
+            className="btn btn-primary mt-5 w-fit"
           >
             {sponsorship.ctaLabel}
             <ExternalLink size={15} aria-hidden="true" />
