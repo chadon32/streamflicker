@@ -1,0 +1,22 @@
+# EAS only needs the web source, Capacitor native project, and package manifests.
+node_modules/
+dist/
+dist-ssr/
+*.log
+.git/
+.vercel/
+# The Capacitor bundle needs the public VITE_* client settings during the
+# cloud sync. The release preflight rejects server-only keys if they are
+# accidentally placed in .env.
+.env.*
+!.env
+!.env.example
+
+# Marketing video source/renders are not bundled into the iOS app.
+videos/
+remotion/
+public/remotion/
+
+# Local audit screenshots and generated notes are not build inputs.
+audit_*.png
+luna_*.png
